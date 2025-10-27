@@ -1,0 +1,96 @@
+.digit-input-container {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  cursor: text;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  background: rgba(255, 255, 255, 0.05);
+  transition: all var(--transition-speed);
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.digit-input-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.digit-input-container.focused {
+  border-color: var(--lottery-gold);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.digit-input-container.focused::before {
+  left: 100%;
+}
+
+.digit-box {
+  width: 60px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text-color);
+  background: var(--card-background-color);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  transition: all var(--transition-speed);
+  position: relative;
+  overflow: hidden;
+}
+
+.digit-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-speed);
+}
+
+.digit-box:not(:empty)::before {
+  opacity: 1;
+}
+
+.digit-box:not(:empty) {
+  background: var(--gold-gradient);
+  color: #000000;
+  border-color: var(--lottery-gold);
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  animation: numberGlow 2s ease-in-out infinite;
+}
+
+.digit-placeholder {
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 215, 0, 0.5);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.hidden-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
