@@ -19,6 +19,7 @@ import {
   useIonToast,
 } from '@ionic/react';
 import {
+  cardOutline,
   cashOutline,
   copyOutline,
   giftOutline,
@@ -100,6 +101,49 @@ const ProfilePage: React.FC = () => {
               >
                 {walletAddress}
               </p>
+            </IonCardContent>
+          </IonCard>
+
+          <IonCard className="custom-card">
+            <IonCardHeader>
+              <IonCardTitle className="custom-card-title">💳 Your Wallet Balance</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent style={{ padding: '0' }}>
+              <IonList lines="full" style={{ background: 'transparent', padding: '0' }}>
+                <IonItem
+                  style={
+                    {
+                      '--background': 'transparent',
+                      '--border-color': 'rgba(255, 215, 0, 0.2)',
+                      '--padding-start': '16px',
+                      '--inner-padding-end': '16px',
+                    } as any
+                  }
+                >
+                  <IonIcon
+                    icon={cardOutline}
+                    slot="start"
+                    style={{ color: 'var(--lottery-emerald)' }}
+                  />
+                  <IonLabel>
+                    <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
+                      Total Rebates Earned
+                    </IonText>
+                  </IonLabel>
+                  <IonBadge
+                    slot="end"
+                    style={{
+                      background: 'var(--lottery-emerald)',
+                      color: '#ffffff',
+                      fontWeight: '700',
+                      fontSize: '0.9rem',
+                      padding: '6px 10px',
+                    }}
+                  >
+                    ${(userProfile?.totalRebates || 0).toFixed(2)}
+                  </IonBadge>
+                </IonItem>
+              </IonList>
             </IonCardContent>
           </IonCard>
 

@@ -145,7 +145,7 @@ const RegistrationPage: React.FC = () => {
                     fontSize: '2rem',
                   }}
                 >
-                  INFINITE JACKPOT
+                  WEB3 LOTTERY
                 </h1>
               </IonText>
               <IonText>

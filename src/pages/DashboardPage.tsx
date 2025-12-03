@@ -15,7 +15,13 @@ import {
   IonToolbar,
   useIonLoading,
   useIonToast,
+  IonLabel,
+  IonSegment,
+  IonSegmentButton,
+  IonSegmentContent,
+  IonSegmentView,
 } from '@ionic/react';
+
 import React, { useState } from 'react';
 import DigitInput from '../components/DigitInput';
 import { PLACE_BET } from '../graphql/queries';
@@ -127,6 +133,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ data, loading, refetch })
         </IonRefresher>
 
         <div className="fade-in">
+          <IonSegment value="first">
+            <IonSegmentButton value="first" contentId="first">
+              <IonLabel>10 AM Draw</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="second" contentId="second">
+              <IonLabel>10 PM Draw</IonLabel>
+            </IonSegmentButton>
+          </IonSegment>
+          <IonSegmentView>
+            <IonSegmentContent id="first">10 am draw scoreboard</IonSegmentContent>
+            <IonSegmentContent id="second">10 pm draw scoreboard</IonSegmentContent>
+          </IonSegmentView>
+
           <IonCard className="custom-card jackpot-card">
             <IonCardHeader>
               <IonCardTitle className="custom-card-title ion-text-center">
