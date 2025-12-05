@@ -188,7 +188,7 @@ const RegistrationPage: React.FC = () => {
                     fontSize: '2rem',
                   }}
                 >
-                  WEB3 LOTTERY
+                  LOTTERY
                 </h1>
               </IonText>
               <IonText>
