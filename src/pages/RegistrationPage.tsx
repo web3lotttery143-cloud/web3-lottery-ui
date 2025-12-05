@@ -15,11 +15,13 @@ import {
   useIonToast,
 } from '@ionic/react';
 import { clipboardOutline } from 'ionicons/icons';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Logo from '../components/Logo';
 import { REGISTER_USER } from '../graphql/queries';
 import xteriumService from '../services/xteriumService';
 import useAppStore from '../store/useAppStore';
+import { App, URLOpenListenerEvent } from '@capacitor/app';
+import walletService from '../services/walletService';
 
 const ADMIN_WALLET = import.meta.env.VITE_OPERATOR_WALLET_ADDRESS?.toLowerCase();
 
@@ -51,6 +53,8 @@ const RegistrationPage: React.FC = () => {
   };
 
   const handleManualRegister = async () => {
+    //   const savedWallets = JSON.parse(localStorage.getItem("connectedWallets") || "[]");
+
     if (walletInput.trim().length < 42) {
       presentToast({
         message: 'Please enter a valid wallet address.',
@@ -60,13 +64,16 @@ const RegistrationPage: React.FC = () => {
       return;
     }
 
+    //ADD THE CONNECTION OF WALLET LOGIC HERE
+
     const searchParams = new URLSearchParams(window.location.search);
     const referrer = searchParams.get('ref')?.toLowerCase() || undefined;
 
     await present({ message: 'Registering...' });
     try {
+      setWalletInput('wallet address here');
       const { data } = await registerUser({
-        variables: { walletAddress: walletInput.trim().toLowerCase(), referrer },
+        variables: { walletAddress: walletInput, referrer },
       });
 
       if (data && data.registerUser) {
@@ -124,6 +131,42 @@ const RegistrationPage: React.FC = () => {
       dismiss();
     }
   };
+
+  useEffect(() => {
+    const fetchWallets = async () => {
+      const wallets = await walletService.checkWalletsFromUrl();
+
+      if (wallets) {
+        let walletList = '';
+        if (Array.isArray(wallets)) {
+          walletList = wallets
+            .map(w => (typeof w === 'string' ? w : w.address ?? JSON.stringify(w)))
+            .join(', ');
+        } else if (typeof wallets === 'object') {
+          walletList = JSON.stringify(wallets);
+        } else {
+          walletList = String(wallets);
+        }
+
+        presentToast({
+          message: `Connected wallets: ${walletList}`,
+          duration: 2000,
+          color: 'success',
+        });
+        // You can save wallets in state or context here
+        // something like save localStorage.set(wallets)
+        // then router.push(/dashboard)
+      }
+    };
+
+    fetchWallets();
+  }, []);
+
+  function handleOpen() {
+    const callbackUrl = encodeURIComponent(window.location.href);
+    const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}`;
+    window.location.href = deeplink;
+  }
 
   return (
     <IonPage>
@@ -311,7 +354,7 @@ const RegistrationPage: React.FC = () => {
                 on-chain validation. The live smart contract will programmatically validate wallet
                 eligibility against an access list before processing transactions.)
               </p>
-              <IonItem
+              {/* <IonItem
                 lines="none"
                 style={{
                   '--background': 'rgba(255,255,255,0.05)',
@@ -329,9 +372,18 @@ const RegistrationPage: React.FC = () => {
                   clearInput
                   style={{ color: 'var(--text-color)' }}
                 />
-              </IonItem>
+              </IonItem> */}
 
               {walletInput.trim().length < 42 ? (
+                <IonButton
+                  className="custom-button"
+                  expand="block"
+                  onClick={handleOpen}
+                  style={{ marginTop: '24px', '--background': 'var(--lottery-emerald)' }}
+                >
+                  Register This Address
+                </IonButton>
+              ) : (
                 <IonButton
                   className="custom-button"
                   expand="block"
@@ -340,15 +392,6 @@ const RegistrationPage: React.FC = () => {
                 >
                   <IonIcon slot="start" icon={clipboardOutline} />
                   Paste from Clipboard
-                </IonButton>
-              ) : (
-                <IonButton
-                  className="custom-button"
-                  expand="block"
-                  onClick={handleManualRegister}
-                  style={{ marginTop: '24px', '--background': 'var(--lottery-emerald)' }}
-                >
-                  Register This Address
                 </IonButton>
               )}
             </div>

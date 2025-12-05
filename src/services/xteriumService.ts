@@ -10,14 +10,22 @@ const dummyWallets = [
 ];
 
 class XteriumService {
-  async connectUser(): Promise<{ walletAddress: string }> {
+  // async connectUser(): Promise<{ walletAddress: string }> {
+  //   return new Promise(resolve => {
+  //     setTimeout(() => {
+  //       const randomIndex = Math.floor(Math.random() * dummyWallets.length);
+  //       const selectedWallet = dummyWallets[randomIndex];
+  //       console.log(`[Xterium Simulator] Connected with USER wallet: ${selectedWallet}`);
+  //       resolve({ walletAddress: selectedWallet });
+  //     }, 500);
+  //   });
+  // }
+
+  async connectUser(walletAddress: string): Promise<{ walletAddress: string }> {
     return new Promise(resolve => {
-      setTimeout(() => {
-        const randomIndex = Math.floor(Math.random() * dummyWallets.length);
-        const selectedWallet = dummyWallets[randomIndex];
+        const selectedWallet = walletAddress
         console.log(`[Xterium Simulator] Connected with USER wallet: ${selectedWallet}`);
         resolve({ walletAddress: selectedWallet });
-      }, 500);
     });
   }
 

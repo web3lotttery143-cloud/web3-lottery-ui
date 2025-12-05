@@ -4,9 +4,14 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 
-// https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    host: true,        // exposes to your local network
+    port: 5173,        // optional
+  },
   plugins: [
     react(),
     VitePWA({
@@ -38,15 +43,33 @@ export default defineConfig({
       },
     }),
   ],
-  build: {
-    sourcemap: true,
+
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'window', // Fix "global is not defined"
+      },
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          buffer: true, // Fix "Buffer is not defined"
+        }),
+        NodeModulesPolyfillPlugin(),
+      ],
+    },
   },
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      buffer: 'buffer',
     },
   },
+
   define: {
     'process.env': {},
+  },
+
+  build: {
+    sourcemap: true,
   },
 });
