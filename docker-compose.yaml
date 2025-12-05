@@ -1,0 +1,7 @@
+services:
+  app:
+    image: web3lotttery143/web3-lottery-ui:latest
+    container_name: web3-lottery-ui
+    ports:
+     - 3008:3000
+  
