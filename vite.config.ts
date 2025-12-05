@@ -12,6 +12,10 @@ export default defineConfig({
     host: true,        // exposes to your local network
     port: 5173,        // optional
   },
+  preview: {
+    host: true,
+    port: 3000
+  },
   plugins: [
     react(),
     VitePWA({
