@@ -125,6 +125,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ data, loading, refetch })
       <IonHeader translucent={true}>
         <IonToolbar>
           <IonTitle>🛖 Dashboard</IonTitle>
+            {walletAddress && (
+            <IonLabel slot="end" className="ion-padding-end" style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                {walletAddress.substring(0, 6)}...{walletAddress.substring(walletAddress.length - 4)}
+            </IonLabel>
+            )}
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>

@@ -1,5 +1,6 @@
 import { ApolloProvider } from '@apollo/client';
 import { IonApp, IonSpinner, setupIonicReact } from '@ionic/react';
+import { IonReactRouter } from '@ionic/react-router';
 import { useEffect, useState } from 'react';
 import client from './services/apolloClient';
 
@@ -72,10 +73,14 @@ const App: React.FC = () => {
   return (
     <ApolloProvider client={client}>
       <IonApp>
-        <AppContent />
+        {/* @ts-ignore */}
+        <IonReactRouter>
+          <AppContent />
+        </IonReactRouter>
       </IonApp>
     </ApolloProvider>
   );
 };
+
 
 export default App;
