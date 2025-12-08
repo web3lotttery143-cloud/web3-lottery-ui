@@ -16,6 +16,7 @@ import {
   IonText,
   IonTitle,
   IonToolbar,
+  IonSpinner,
   useIonToast,
 } from '@ionic/react';
 import {
@@ -26,14 +27,38 @@ import {
   logOutOutline,
   trophyOutline,
 } from 'ionicons/icons';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import useAppStore from '../store/useAppStore';
+import walletService from '../services/walletService';
 
 const ProfilePage: React.FC = () => {
   const { walletAddress, userProfile, disconnectWallet } = useAppStore();
   const [presentToast] = useIonToast();
-
+  const [walletBalance, setWalletBalance] = useState(0)
+  const [isWalletBalanceLoading, setIsWalletBalanceLoading] = useState(false)
   const affiliateLink = `${window.location.origin}/accept-referral?ref=${walletAddress}`;
+
+  useEffect(() => {
+    fetchBalance();
+  }, []); 
+
+  const fetchBalance = async () => {
+    try {
+      setIsWalletBalanceLoading(true)
+      const res = await walletService.getBalance(walletAddress ?? '')
+
+    setWalletBalance(res ?? 0)
+    } catch (error) {
+      presentToast({
+      message: `${error}`,
+      duration: 1500,
+      color: 'error',
+    });
+    } finally {
+      setIsWalletBalanceLoading(false)
+    }
+    
+  }
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -127,7 +152,7 @@ const ProfilePage: React.FC = () => {
                   />
                   <IonLabel>
                     <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
-                      Total Rebates Earned
+                      Wallet Balance
                     </IonText>
                   </IonLabel>
                   <IonBadge
@@ -140,7 +165,11 @@ const ProfilePage: React.FC = () => {
                       padding: '6px 10px',
                     }}
                   >
-                    ${(userProfile?.totalRebates || 0).toFixed(2)}
+                    {isWalletBalanceLoading ? (
+                        <IonSpinner name="crescent" color="light" style={{ width: '1rem', height: '1rem' }} />
+                      ) : (
+                        `$${walletBalance.toFixed(2)}`
+                      )}
                   </IonBadge>
                 </IonItem>
               </IonList>
