@@ -12,13 +12,22 @@ class WalletService {
       ]); // or local node
       const api = await ApiPromise.create({ provider });
 
-      // Cast the result to AccountInfo
-      const accountInfo = (await api.query.system.account(address)) as unknown as AccountInfo;
+      const USDT_CURRENCY_ID = 1; // Xode uses ORML Tokens pallet
 
-      const res = accountInfo.data.free.toHuman(); 
-      const balance = parseFloat(res)
-    
-      return balance
+      const accountData = await api.query.tokens.accounts(address, USDT_CURRENCY_ID);
+
+      const human = accountData.toHuman() as any;
+
+      // human example:
+      // {
+      //   free: "1,234,567,890,000",
+      //   reserved: "0"
+      // }
+
+      if (!human || !human.free) return 0;
+
+      const sanitized = human.free.replace(/,/g, '');
+      return Number(sanitized);
     } catch (error) {
       console.log(`There is an error: ${error}`);
     }
@@ -30,6 +39,16 @@ class WalletService {
       const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}`;
 
       return deeplink
+    } catch (error) {
+      return error;
+    }
+  }
+
+  signTransaction (hex: string, address: string) {
+    try {
+      const callbackUrl = encodeURIComponent(window.location.href);
+      const deeplink = `xterium://app/web3/sign-transaction?callback=${callbackUrl}`;
+      window.open(deeplink, '_self');
     } catch (error) {
       return error;
     }
