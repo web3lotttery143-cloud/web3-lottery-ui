@@ -13,6 +13,7 @@ import {
   IonText,
   useIonLoading,
   useIonToast,
+  useIonRouter,
 } from '@ionic/react';
 import { clipboardOutline } from 'ionicons/icons';
 import React, { useState, useEffect } from 'react';
@@ -26,6 +27,7 @@ import walletService from '../services/walletService';
 const ADMIN_WALLET = import.meta.env.VITE_OPERATOR_WALLET_ADDRESS?.toLowerCase();
 
 const RegistrationPage: React.FC = () => {
+  const router = useIonRouter();
   const { connectWallet, setUserProfile, setIsAdmin } = useAppStore();
   const [present, dismiss] = useIonLoading();
   const [presentToast] = useIonToast();
@@ -33,6 +35,7 @@ const RegistrationPage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [walletInput, setWalletInput] = useState('');
+  const [detectedWallet, setDetectedWallet] = useState<string | null>(null);
 
   const handlePaste = async () => {
     try {
@@ -53,8 +56,6 @@ const RegistrationPage: React.FC = () => {
   };
 
   const handleManualRegister = async () => {
-    //   const savedWallets = JSON.parse(localStorage.getItem("connectedWallets") || "[]");
-
     if (walletInput.trim().length < 42) {
       presentToast({
         message: 'Please enter a valid wallet address.',
@@ -64,35 +65,30 @@ const RegistrationPage: React.FC = () => {
       return;
     }
 
-    //ADD THE CONNECTION OF WALLET LOGIC HERE
-
-    const searchParams = new URLSearchParams(window.location.search);
-    const referrer = searchParams.get('ref')?.toLowerCase() || undefined;
-
-    await present({ message: 'Registering...' });
     try {
-      setWalletInput('wallet address here');
-      const { data } = await registerUser({
-        variables: { walletAddress: walletInput, referrer },
-      });
-
-      if (data && data.registerUser) {
+        await present({ message: 'Registering...' });
+        const response = await walletService.registerWallet(walletInput.trim());
+        
         dismiss();
         presentToast({
           message: 'Registration successful! Logging in...',
           duration: 2000,
           color: 'success',
         });
-        connectWallet(data.registerUser.walletAddress);
-        setUserProfile(data.registerUser);
+        
+        connectWallet(walletInput.trim());
+        if (response) {
+            // setUserProfile(response);
+        }
+        
         setIsModalOpen(false);
         setWalletInput('');
-      } else {
-        throw new Error('Registration did not return user data.');
-      }
+        router.push('/dashboard');
+
     } catch (error: any) {
       dismiss();
-      presentToast({ message: error.message, duration: 3000, color: 'danger' });
+      console.error(error);
+      presentToast({ message: error.message || 'Registration failed', duration: 3000, color: 'danger' });
     }
   };
 
@@ -137,25 +133,66 @@ const RegistrationPage: React.FC = () => {
       const wallets = await walletService.checkWalletsFromUrl();
 
       if (wallets) {
+        let firstWallet = '';
         let walletList = '';
         if (Array.isArray(wallets)) {
+          firstWallet = typeof wallets[0] === 'string' ? wallets[0] : (wallets[0]?.address ?? '');
           walletList = wallets
             .map(w => (typeof w === 'string' ? w : w.address ?? JSON.stringify(w)))
             .join(', ');
         } else if (typeof wallets === 'object') {
+          firstWallet = (wallets as any).address ?? '';
           walletList = JSON.stringify(wallets);
         } else {
+          firstWallet = String(wallets);
           walletList = String(wallets);
         }
 
-        presentToast({
-          message: `Connected wallets: ${walletList}`,
-          duration: 2000,
-          color: 'success',
-        });
-        // You can save wallets in state or context here
-        // something like save localStorage.set(wallets)
-        // then router.push(/dashboard)
+        console.log('[RegistrationPage] First wallet detected:', firstWallet);
+
+        if (firstWallet) {
+             setDetectedWallet(firstWallet);
+             console.log('[RegistrationPage] Set detectedWallet state to:', firstWallet);
+             
+             // AUTO-REGISTER AND REDIRECT
+             try {
+                presentToast({
+                    message: `Wallet detected! Auto-registering...`,
+                    duration: 2000,
+                    color: 'primary',
+                });
+                
+                console.log('[RegistrationPage] Auto-registering wallet:', firstWallet);
+                const response = await walletService.registerWallet(firstWallet.trim());
+                console.log('[RegistrationPage] Auto-registration response:', response);
+
+                connectWallet(firstWallet);
+                
+                presentToast({
+                    message: 'Registration successful! Redirecting...',
+                    duration: 2000,
+                    color: 'success',
+                });
+                
+                setTimeout(() => {
+                    router.push('/dashboard', 'root', 'replace');
+                }, 1000);
+
+             } catch (err: any) {
+                 console.error('[RegistrationPage] Auto-registration failed:', err);
+                 presentToast({
+                    message: 'Auto-registration failed. Please try clicking Register manually.',
+                    duration: 3000,
+                    color: 'warning',
+                });
+             }
+        } else {
+             presentToast({
+                message: `Connected wallets: ${walletList}`,
+                duration: 2000,
+                color: 'success',
+             });
+        }
       }
     };
 
@@ -165,8 +202,66 @@ const RegistrationPage: React.FC = () => {
   function handleOpen() {
     const callbackUrl = encodeURIComponent(window.location.href);
     const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}`;
-    window.location.href = deeplink;
+    
+    // Attempt: window.open with _self target
+    window.open(deeplink, '_self');
   }
+
+  const handleRegisterAndStart = async () => {
+    // Robust check: Use state or re-fetch from URL to be sure
+    let walletToRegister = detectedWallet;
+    
+    if (!walletToRegister) {
+        // Double check URL just in case state update was slow/missed
+        const walletsFromUrl = await walletService.checkWalletsFromUrl();
+        if (walletsFromUrl) {
+           if (Array.isArray(walletsFromUrl)) {
+             walletToRegister = typeof walletsFromUrl[0] === 'string' ? walletsFromUrl[0] : (walletsFromUrl[0]?.address ?? '');
+           } else if (typeof walletsFromUrl === 'object') {
+             walletToRegister = (walletsFromUrl as any).address ?? '';
+           } else {
+             walletToRegister = String(walletsFromUrl);
+           }
+        }
+    }
+
+    if (!walletToRegister) {
+        console.log('No wallet detected, opening modal');
+        setIsModalOpen(true);
+        return;
+    }
+    
+    try {
+        console.log('Registering wallet:', walletToRegister);
+        await present({ message: 'Registering via API...' });
+        
+        const response = await walletService.registerWallet(walletToRegister);
+        
+        console.log('API Response:', response);
+        
+        // Connect BEFORE dismissing loading to prevent UI flicker
+        connectWallet(walletToRegister); // Sets isConnected = true
+
+        dismiss();
+        presentToast({
+            message: 'Registration successful!',
+            duration: 2000,
+            color: 'success'
+        });
+
+        // Use replace to prevent back navigation loop
+        router.push('/dashboard', 'root', 'replace');
+        
+    } catch (err: any) {
+        dismiss();
+        console.error('Registration error:', err);
+        presentToast({
+            message: 'Registration failed: ' + (err.message || err),
+            duration: 3000,
+            color: 'danger'
+        });
+    }
+  };
 
   return (
     <IonPage>
@@ -188,7 +283,7 @@ const RegistrationPage: React.FC = () => {
                     fontSize: '2rem',
                   }}
                 >
-                  LOTTERY
+                  WEB3 LOTTERY
                 </h1>
               </IonText>
               <IonText>
@@ -204,7 +299,7 @@ const RegistrationPage: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={() => setIsModalOpen(true)}
+                onClick={handleRegisterAndStart}
                 className="custom-button"
                 style={{
                   marginTop: '12px',
@@ -384,15 +479,25 @@ const RegistrationPage: React.FC = () => {
                   Register This Address
                 </IonButton>
               ) : (
+                <>
                 <IonButton
-                  className="custom-button"
+                    className="custom-button"
+                    expand="block"
+                    onClick={handleManualRegister}
+                    style={{ marginTop: '24px', '--background': 'var(--lottery-gold)', color: 'black', fontWeight: 'bold' }}
+                >
+                    🚀 Register & Play
+                </IonButton>
+                <IonButton
+                  fill="clear"
                   expand="block"
                   onClick={handlePaste}
-                  style={{ marginTop: '24px' }}
+                  style={{ marginTop: '12px' }}
                 >
                   <IonIcon slot="start" icon={clipboardOutline} />
                   Paste from Clipboard
                 </IonButton>
+                </>
               )}
             </div>
           </IonContent>
