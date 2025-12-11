@@ -34,7 +34,7 @@ import walletService from '../services/walletService';
 const ProfilePage: React.FC = () => {
   const { walletAddress, userProfile, disconnectWallet } = useAppStore();
   const [presentToast] = useIonToast();
-  const [walletBalance, setWalletBalance] = useState(0)
+  const [walletBalance, setWalletBalance] = useState('0')
   const [isWalletBalanceLoading, setIsWalletBalanceLoading] = useState(false)
   const affiliateLink = `${window.location.origin}/accept-referral?ref=${walletAddress}`;
 
@@ -47,7 +47,8 @@ const ProfilePage: React.FC = () => {
       setIsWalletBalanceLoading(true)
       const res = await walletService.getBalance(walletAddress ?? '')
 
-    setWalletBalance(res ?? 0)
+    setWalletBalance(res ?? '')
+
     } catch (error) {
       presentToast({
       message: `${error}`,
@@ -168,7 +169,7 @@ const ProfilePage: React.FC = () => {
                     {isWalletBalanceLoading ? (
                         <IonSpinner name="crescent" color="light" style={{ width: '1rem', height: '1rem' }} />
                       ) : (
-                        `$${walletBalance.toFixed(2)}`
+                        `$${walletBalance}`
                       )}
                   </IonBadge>
                 </IonItem>

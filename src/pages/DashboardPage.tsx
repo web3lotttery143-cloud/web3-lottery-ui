@@ -28,7 +28,7 @@ import {
 	IonSelectOption,
 } from "@ionic/react";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DigitInput from "../components/DigitInput";
 import { PLACE_BET } from "../graphql/queries";
 import xteriumService from "../services/xteriumService";
@@ -53,7 +53,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [presentToast] = useIonToast();
 	const [selectedSegment, setSelectedSegment] = useState<SegmentValue>("first");
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [draw, setDraw] = useState(1);
+	const [draw, setDraw] = useState("1");
+	const [winnerNumber, setWinnerNumber] = useState("");
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
 		onCompleted: (data) => {
@@ -101,27 +102,28 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		await presentLoading({ message: "Waiting for signature..." });
 
 		try {
-			const hex = await lotteryService.addBet();
+			const result = await lotteryService.addBet();
 
-			if (!hex) {
-				throw new Error("Transaction signature was rejected.");
+			if (!result.ok) {
+				presentToast({
+					message: `Add bet failed: ${result.error}`,
+					color: "danger",
+					duration: 5000,
+				});
+				return;
 			}
 
+			const hex = result.data;
 			const signed_hex = await walletService.signTransaction(
 				hex,
 				walletAddress
 			);
 
-			presentLoading({ message: "Submitting transaction..." });
-
-			const payload = {
-				signed_hex: hex, // replace this to signed_hex
-				draw_number: draw, // <-- YOU must set this
-				bet_number: Number(betNumber),
-				bettor: walletAddress,
-				upline: "", // also add this in the env
-			};
-			const result = await lotteryService.executeBet(payload);
+			presentToast({
+				message: `${signed_hex}`,
+				color: "success",
+				duration: 5000,
+			});
 		} catch (e: any) {
 			console.error(e);
 			presentToast({
@@ -130,7 +132,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				color: "danger",
 			});
 		} finally {
-			dismissLoading();
+			dismissLoading;
 		}
 	};
 
@@ -138,6 +140,79 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		refetch().finally(() => event.detail.complete());
 	};
 
+	useEffect(() => {
+		const getDraws = async () => {
+			try {
+				const data = await lotteryService.getDraws();
+				const winningNumber = data.Ok?.[0]?.winningNumber;
+				setWinnerNumber(winningNumber || "N/A"); // update state
+			} catch (error) {
+				presentToast({
+					message: `${error}`,
+					duration: 3000,
+					color: "danger",
+				});
+			}
+		};
+
+		getDraws();
+	}, []);
+
+	const [signedHex, setSignedHex] = useState<string>("");
+
+	useEffect(() => {
+		const run = async () => {
+			try {
+				const signed = await walletService.checkSignedTxFromUrl();
+
+				if (!signed) return; // no callback → do nothing
+
+				//await presentLoading({ message: "Submitting transaction..." });
+
+
+				// Update state
+				// setSignedHex(signed);
+
+				// Test this, this is to cleanup the url
+				window.history.replaceState(
+					{},
+					document.title,
+					window.location.pathname
+				);
+				//Notify user
+
+				// Build payload (💥 you must use `signed`, NOT `signedHex`)
+				const payload = {
+					signed_hex: signed,
+					draw_number: draw,
+					bet_number: Number(betNumber),
+					bettor: walletAddress!,
+					upline: "XqDGJ69MXL1WhHZiQHsA8HJTu7auK3ZePQZJetMrq3GT5smso",
+				};
+
+				
+				const result = await lotteryService.executeBet(payload);
+
+				presentToast({
+					message: `Result: Transaction Successful!`, // pretty print
+					duration: 5000,
+					color: "success",
+				});
+			} catch (err) {
+				presentToast({
+					message: `Error: ${String(err)}`,
+					duration: 5000,
+					color: "danger",
+				});
+			} finally {
+				await dismissLoading();
+			}
+		};
+
+		run();
+	}, []);
+
+	
 	const cycle = data?.currentCycle;
 
 	return (
@@ -189,11 +264,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										<h3
 											style={{ fontWeight: 600, color: "var(--lottery-gold)" }}
 										>
-											No Results Yet
+											Winning number:{" "}
+											{winnerNumber !== "N/A" ? winnerNumber : "No results yet"}
 										</h3>
-										<p style={{ color: "var(--text-color-secondary)" }}>
-											No lottery draws have been completed yet.
-										</p>
 									</IonText>
 								</div>
 							</IonCardContent>

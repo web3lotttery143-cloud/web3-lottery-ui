@@ -131,7 +131,6 @@ const RegistrationPage: React.FC = () => {
   useEffect(() => {
     const fetchWallets = async () => {
       const wallets = await walletService.checkWalletsFromUrl();
-      console.log('[RegistrationPage] Checked wallets from URL:', wallets);
 
       if (wallets) {
         let firstWallet = '';
@@ -284,7 +283,7 @@ const RegistrationPage: React.FC = () => {
                     fontSize: '2rem',
                   }}
                 >
-                  LOTTERY
+                  WEB3 LOTTERY
                 </h1>
               </IonText>
               <IonText>
