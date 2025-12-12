@@ -6,7 +6,7 @@ class WalletService {
 
 	async getBalance(address: string) {
 		try {
-			const provider = new WsProvider("wss://zombienet-02.staginglab.info");
+			const provider = new WsProvider(import.meta.env.VITE_WS_PROVIDER || "");
 			const api = await ApiPromise.create({ provider });
 
 			const USDT_CURRENCY_ID = 1984;
@@ -58,7 +58,7 @@ class WalletService {
 			const apiUrl =
 				import.meta.env.VITE_API_URL ||
 				//"https://web3-lottery-api.blockspacecorp.com";
-				"http://192.168.1.24:3000";
+				"";
 			console.log(`Registering wallet: ${address} at ${apiUrl}/members`);
 			const response = await fetch(`${apiUrl}/members`, {
 				method: "POST",

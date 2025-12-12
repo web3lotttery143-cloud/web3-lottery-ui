@@ -1,9 +1,7 @@
 import { ExecuteBetDto } from "../models/executeBet.model";
 
-const LIVE_API =
-	import.meta.env.VITE_API_URL || "https://web3-lottery-api.blockspacecorp.com";
-//const LIVE_API = "http://192.168.1.24:3000";
-
+const LIVE_API = import.meta.env.VITE_API_URL || "";
+	
 class LotteryService {
 	// DRAWS
 	async getDraws() {
