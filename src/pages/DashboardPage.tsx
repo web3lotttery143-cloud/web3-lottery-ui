@@ -26,6 +26,7 @@ import {
 	IonItem,
 	IonSelect,
 	IonSelectOption,
+	IonProgressBar,
 } from "@ionic/react";
 
 import React, { useState, useEffect } from "react";
@@ -53,8 +54,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [presentToast] = useIonToast();
 	const [selectedSegment, setSelectedSegment] = useState<SegmentValue>("first");
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [confirmationModal, setConfirmationModal] = useState(false);
 	const [draw, setDraw] = useState("1");
 	const [winnerNumber, setWinnerNumber] = useState("");
+	const [signedHex, setSignedHex] = useState("");
+	const [progress, setProgress] = useState(0);
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
 		onCompleted: (data) => {
@@ -78,6 +82,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		},
 	});
 
+	const handleCancel = () => {
+		window.history.replaceState({}, document.title, window.location.pathname);
+		setConfirmationModal(false);
+	};
+
 	const handleOpen = () => {
 		if (betNumber.trim().length !== 3) {
 			presentToast({
@@ -89,6 +98,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		}
 		setIsModalOpen(true);
 	};
+
 	const handlePlaceBet = async () => {
 		if (!walletAddress) {
 			presentToast({
@@ -116,14 +126,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			const hex = result.data;
 			const signed_hex = await walletService.signTransaction(
 				hex,
-				walletAddress
+				walletAddress,
+				betNumber
 			);
-
-			presentToast({
-				message: `${signed_hex}`,
-				color: "success",
-				duration: 5000,
-			});
 		} catch (e: any) {
 			console.error(e);
 			presentToast({
@@ -158,46 +163,48 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		getDraws();
 	}, []);
 
-	const [signedHex, setSignedHex] = useState<string>("");
+	const handleSubmit = async () => {
+		presentLoading("Submitting transaction...");
+		window.history.replaceState({}, document.title, window.location.pathname);
+
+		try {
+			const payload = {
+				signed_hex: signedHex,
+				draw_number: draw,
+				bet_number: Number(betNumber),
+				bettor: walletAddress!,
+				upline: "XqDGJ69MXL1WhHZiQHsA8HJTu7auK3ZePQZJetMrq3GT5smso",
+			};
+			const executeBet = await lotteryService.executeBet(payload);
+
+			presentToast({
+				message: `${JSON.stringify(executeBet, null, 2)}`,
+				duration: 10000,
+				color: "success",
+			});
+		} catch (error) {
+			presentToast({
+				message: `${error}`,
+				duration: 10000,
+				color: "danger",
+			});
+		} finally {
+			dismissLoading();
+			setConfirmationModal(false);
+		}
+	};
 
 	useEffect(() => {
+		// what i am gonna do this just check the url if there is a signedHex, and if there is, open a confirmation modal. this prevents to call the api (executebet endpoint multiple times)
 		const run = async () => {
 			try {
-				const signed = await walletService.checkSignedTxFromUrl();
+				const signed = await walletService.checkSignedTxFromUrl(); // make this return an array of success: true, signedHex: string, use the success to be the trigger if u should open a modal
 
-				if (!signed) return; // no callback → do nothing
-
-				//await presentLoading({ message: "Submitting transaction..." });
-
-
-				// Update state
-				// setSignedHex(signed);
-
-				// Test this, this is to cleanup the url
-				window.history.replaceState(
-					{},
-					document.title,
-					window.location.pathname
-				);
-				//Notify user
-
-				// Build payload (💥 you must use `signed`, NOT `signedHex`)
-				const payload = {
-					signed_hex: signed,
-					draw_number: draw,
-					bet_number: Number(betNumber),
-					bettor: walletAddress!,
-					upline: "XqDGJ69MXL1WhHZiQHsA8HJTu7auK3ZePQZJetMrq3GT5smso",
-				};
-
-				
-				const result = await lotteryService.executeBet(payload);
-
-				presentToast({
-					message: `Result: Transaction Successful!`, // pretty print
-					duration: 5000,
-					color: "success",
-				});
+				setSignedHex(signed!);
+				// ⛔ If URL no longer has the tx, skip
+				if (signed) {
+					setConfirmationModal(true);
+				}
 			} catch (err) {
 				presentToast({
 					message: `Error: ${String(err)}`,
@@ -212,7 +219,28 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		run();
 	}, []);
 
-	
+	useEffect(() => {
+		if (!confirmationModal) return;
+
+		setProgress(0);
+
+		const duration = 5000;
+		const interval = 50;
+		let current = 0;
+
+		const timer = setInterval(() => {
+			current += interval;
+			setProgress(current / duration);
+
+			if (current >= duration) {
+				clearInterval(timer);
+				setConfirmationModal(false);
+				window.history.replaceState({}, document.title, window.location.pathname);
+			}
+		}, interval);
+		return () => clearInterval(timer);
+	}, [confirmationModal]);
+
 	const cycle = data?.currentCycle;
 
 	return (
@@ -390,6 +418,59 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 						</IonCardContent>
 					</IonCard>
 				</div>
+
+				<IonModal
+					isOpen={confirmationModal}
+					onDidDismiss={() => setConfirmationModal(false)}
+					initialBreakpoint={1}
+				>
+					<IonContent
+						className="ion-padding"
+						style={{
+							"--background": "var(--background-color)",
+						}}
+					>
+						<IonProgressBar value={progress}></IonProgressBar>
+				
+								<div style={{ padding: "8px" }}>
+									<h2 style={{ color: "var(--lottery-gold)" }}>
+										Confirm Transaction ✅
+									</h2>
+									<div style={{ color: "var(--lottery-gold)" }}>
+										<p>Draw number: {draw}</p>
+										<p>Bet number: {betNumber}</p>
+										<p>Ticket Price: $ 0.5</p>
+									</div>
+								</div>
+
+
+						<div style={{ display: "flex", gap: "12px" }}>
+							<IonButton
+								className="custom-button"
+								expand="block"
+								onClick={handleCancel}
+								style={{
+									flex: 1,
+									"--background": "var(--lottery-crimson)",
+								}}
+							>
+								Cancel
+							</IonButton>
+
+							<IonButton
+								className="custom-button"
+								expand="block"
+								onClick={handleSubmit}
+								style={{
+									flex: 1,
+									"--background": "var(--lottery-emerald)",
+								}}
+							>
+								Confirm
+							</IonButton>
+						</div>
+					</IonContent>
+				</IonModal>
 
 				<IonModal
 					isOpen={isModalOpen}
