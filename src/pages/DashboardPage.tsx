@@ -28,6 +28,7 @@ import {
 	IonSelectOption,
 	IonProgressBar,
 	IonBadge,
+	IonSpinner,
 } from "@ionic/react";
 
 import React, { useState, useEffect } from "react";
@@ -58,6 +59,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [confirmationModal, setConfirmationModal] = useState(false);
 	const [draw, setDraw] = useState("1");
 	const [winnerNumber, setWinnerNumber] = useState("");
+	const [isWinnerNumberLoading, setIsWinnerNumberLoading] = useState(false);
 	const [signedHex, setSignedHex] = useState("");
 	const [progress, setProgress] = useState(0);
 
@@ -130,8 +132,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			const hex = result.data;
 			const signed_hex = await walletService.signTransaction(
 				hex,
-				walletAddress,
-				
+				walletAddress
 			);
 		} catch (e: any) {
 			console.error(e);
@@ -152,8 +153,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	useEffect(() => {
 		const getDraws = async () => {
 			try {
+				setIsWinnerNumberLoading(true);
 				const data = await lotteryService.getDraws();
 				const winningNumber = data.Ok?.[0]?.winningNumber;
+				setIsWinnerNumberLoading(false);
 				setWinnerNumber(winningNumber || "N/A"); // update state
 			} catch (error) {
 				presentToast({
@@ -206,9 +209,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				const response = await walletService.checkSignedTxFromUrl(); // make this return an array of success: true, signedHex: string, use the success to be the trigger if u should open a modal
 
 				if (response.success) {
-					setConfirmationModal(true)
+					setConfirmationModal(true);
 				} else {
-					return
+					return;
 				}
 
 				setSignedHex(response.signedTx);
@@ -346,7 +349,45 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													Winning Number
 												</IonText>
 											</IonLabel>
-											<div style={{ display: "flex", gap: "8px" }}></div>
+											<div style={{ display: "flex", gap: "8px" }}>
+												{isWinnerNumberLoading ? (
+													<div style={{ display: "flex", gap: "8px" }}>
+														{[1, 2, 3].map((_, i) => (
+															<div
+																key={i}
+																className="lottery-number"
+																style={{
+																	width: "45px",
+																	height: "45px",
+																	fontSize: "1.1rem",
+																	opacity: 0.5,
+																	display: "flex",
+																	alignItems: "center",
+																	justifyContent: "center",
+																}}
+															>
+																<IonSpinner name="crescent" />
+															</div>
+														))}
+													</div>
+												) : (
+													winnerNumber
+														.split("")
+														.map((digit: string, index: number) => (
+															<div
+																key={index}
+																className="lottery-number"
+																style={{
+																	width: "45px",
+																	height: "45px",
+																	fontSize: "1.1rem",
+																}}
+															>
+																{digit}
+															</div>
+														))
+												)}
+											</div>
 										</IonItem>
 										<IonItem
 											style={
@@ -370,11 +411,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 											</IonLabel>
 											<IonText
 												style={{
+													color:
+														0 > 1
+															? "var(--lottery-emerald)"
+															: "var(--text-color-secondary)",
 													fontWeight: "700",
 													fontSize: "1.1rem",
 												}}
 											>
-												Total winners
+												10
 											</IonText>
 										</IonItem>
 										<IonItem
@@ -404,7 +449,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													fontSize: "1.1rem",
 												}}
 											>
-												$
+												$ 1,000,000
 											</IonText>
 										</IonItem>
 										<IonItem
@@ -432,7 +477,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													fontSize: "0.9rem",
 												}}
 											>
-												{/* //{new Date(cycle.endedAt).toLocaleDateString()} */}
+												Dec. 12, 2025
 											</IonText>
 										</IonItem>
 									</IonList>
@@ -455,7 +500,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										className="custom-card-title"
 										style={{ display: "flex", alignItems: "center" }}
 									>
-										🎯 Draw # 1
+										🎯 Draw # 2
 										<IonBadge
 											style={{
 												background: "var(--gold-gradient)",
@@ -494,7 +539,45 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													Winning Number
 												</IonText>
 											</IonLabel>
-											<div style={{ display: "flex", gap: "8px" }}></div>
+											<div style={{ display: "flex", gap: "8px" }}>
+												{isWinnerNumberLoading ? (
+													<div style={{ display: "flex", gap: "8px" }}>
+														{[1, 2, 3].map((_, i) => (
+															<div
+																key={i}
+																className="lottery-number"
+																style={{
+																	width: "45px",
+																	height: "45px",
+																	fontSize: "1.1rem",
+																	opacity: 0.5,
+																	display: "flex",
+																	alignItems: "center",
+																	justifyContent: "center",
+																}}
+															>
+																<IonSpinner name="crescent" />
+															</div>
+														))}
+													</div>
+												) : (
+													winnerNumber
+														.split("")
+														.map((digit: string, index: number) => (
+															<div
+																key={index}
+																className="lottery-number"
+																style={{
+																	width: "45px",
+																	height: "45px",
+																	fontSize: "1.1rem",
+																}}
+															>
+																{digit}
+															</div>
+														))
+												)}
+											</div>
 										</IonItem>
 										<IonItem
 											style={
@@ -518,11 +601,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 											</IonLabel>
 											<IonText
 												style={{
+													color:
+														0 > 1
+															? "var(--lottery-emerald)"
+															: "var(--text-color-secondary)",
 													fontWeight: "700",
 													fontSize: "1.1rem",
 												}}
 											>
-												Total winners
+												10
 											</IonText>
 										</IonItem>
 										<IonItem
@@ -552,7 +639,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													fontSize: "1.1rem",
 												}}
 											>
-												$
+												$ 1,000,000
 											</IonText>
 										</IonItem>
 										<IonItem
@@ -580,7 +667,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													fontSize: "0.9rem",
 												}}
 											>
-												{/* //{new Date(cycle.endedAt).toLocaleDateString()} */}
+												Dec. 12, 2025
 											</IonText>
 										</IonItem>
 									</IonList>
@@ -608,7 +695,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										textShadow: "0 4px 8px rgba(255, 215, 0, 0.3)",
 									}}
 								>
-									${cycle ? parseFloat(cycle.totalJackpot).toFixed(2) : "0.00"}
+									$
+									{cycle
+										? parseFloat(cycle.totalJackpot).toFixed(2)
+										: "1,000,000"}
 								</h1>
 							</IonText>
 							<IonText>
@@ -620,13 +710,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										fontWeight: "500",
 									}}
 								>
-									{cycle ? cycle.totalBets : 0} / 10,000 Tickets Sold
+									{cycle ? cycle.totalBets : 5000} / 10,000 Tickets Sold
 								</p>
 							</IonText>
 							<div className="progress-container">
 								<div
 									className="progress-bar"
-									style={{ width: `${(cycle?.totalBets || 0) / 100}%` }}
+									style={{ width: `${(cycle?.totalBets || 5000) / 100}%` }}
 								></div>
 							</div>
 							<IonText>
