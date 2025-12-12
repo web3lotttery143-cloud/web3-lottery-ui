@@ -27,6 +27,7 @@ import {
 	IonSelect,
 	IonSelectOption,
 	IonProgressBar,
+	IonBadge,
 } from "@ionic/react";
 
 import React, { useState, useEffect } from "react";
@@ -48,7 +49,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	loading,
 	refetch,
 }) => {
-	const { walletAddress } = useAppStore();
+	const { walletAddress, globalBetNumber, setGlobalBetNumber } = useAppStore();
 	const [betNumber, setBetNumber] = useState("");
 	const [presentLoading, dismissLoading] = useIonLoading();
 	const [presentToast] = useIonToast();
@@ -85,6 +86,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const handleCancel = () => {
 		window.history.replaceState({}, document.title, window.location.pathname);
 		setConfirmationModal(false);
+		setGlobalBetNumber(0);
 	};
 
 	const handleOpen = () => {
@@ -109,6 +111,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			return;
 		}
 
+		const persistedBetNumber = Number(betNumber);
+		setGlobalBetNumber(persistedBetNumber);
 		await presentLoading({ message: "Waiting for signature..." });
 
 		try {
@@ -122,12 +126,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				});
 				return;
 			}
-
+			setBetNumber(betNumber);
 			const hex = result.data;
 			const signed_hex = await walletService.signTransaction(
 				hex,
 				walletAddress,
-				betNumber
+				
 			);
 		} catch (e: any) {
 			console.error(e);
@@ -137,7 +141,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				color: "danger",
 			});
 		} finally {
-			dismissLoading;
+			dismissLoading();
 		}
 	};
 
@@ -171,10 +175,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			const payload = {
 				signed_hex: signedHex,
 				draw_number: draw,
-				bet_number: Number(betNumber),
+				bet_number: globalBetNumber,
 				bettor: walletAddress!,
 				upline: "XqDGJ69MXL1WhHZiQHsA8HJTu7auK3ZePQZJetMrq3GT5smso",
 			};
+
 			const executeBet = await lotteryService.executeBet(payload);
 
 			presentToast({
@@ -198,13 +203,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		// what i am gonna do this just check the url if there is a signedHex, and if there is, open a confirmation modal. this prevents to call the api (executebet endpoint multiple times)
 		const run = async () => {
 			try {
-				const signed = await walletService.checkSignedTxFromUrl(); // make this return an array of success: true, signedHex: string, use the success to be the trigger if u should open a modal
+				const response = await walletService.checkSignedTxFromUrl(); // make this return an array of success: true, signedHex: string, use the success to be the trigger if u should open a modal
 
-				setSignedHex(signed!);
-				// ⛔ If URL no longer has the tx, skip
-				if (signed) {
-					setConfirmationModal(true);
+				if (response.success) {
+					setConfirmationModal(true)
+				} else {
+					return
 				}
+
+				setSignedHex(response.signedTx);
 			} catch (err) {
 				presentToast({
 					message: `Error: ${String(err)}`,
@@ -235,7 +242,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			if (current >= duration) {
 				clearInterval(timer);
 				setConfirmationModal(false);
-				window.history.replaceState({}, document.title, window.location.pathname);
+				setGlobalBetNumber(0);
+				// window.history.replaceState(
+				// 	{},
+				// 	document.title,
+				// 	window.location.pathname
+				// );
 			}
 		}, interval);
 		return () => clearInterval(timer);
@@ -282,45 +294,299 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					</IonSegment>
 
 					{selectedSegment === "first" && (
-						<IonCard className="custom-card">
-							<IonCardContent className="ion-text-center">
-								<div
-									className="ion-text-center ion-padding fade-in"
-									style={{ marginTop: "20vh" }}
-								>
-									<IonText>
-										<h3
-											style={{ fontWeight: 600, color: "var(--lottery-gold)" }}
+						<div
+							className="fade-in"
+							style={{ padding: "8px" }}
+						>
+							<IonCard
+								className="custom-card"
+								style={{ margin: "0 0 0 0" }}
+							>
+								<IonCardHeader>
+									<IonCardTitle
+										className="custom-card-title"
+										style={{ display: "flex", alignItems: "center" }}
+									>
+										🎯 Draw # 1
+										<IonBadge
+											style={{
+												background: "var(--gold-gradient)",
+												color: "#000000",
+												marginLeft: "auto", // pushes badge to the end
+												fontWeight: "700",
+												fontSize: "0.8rem",
+											}}
 										>
-											Winning number:{" "}
-											{winnerNumber !== "N/A" ? winnerNumber : "No results yet"}
-										</h3>
-									</IonText>
-								</div>
-							</IonCardContent>
-						</IonCard>
+											JACKPOT ROLLED
+										</IonBadge>
+									</IonCardTitle>
+								</IonCardHeader>
+								<IonCardContent style={{ padding: "0" }}>
+									<IonList
+										lines="full"
+										style={{ background: "transparent", padding: "0" }}
+									>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Winning Number
+												</IonText>
+											</IonLabel>
+											<div style={{ display: "flex", gap: "8px" }}></div>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Total Winners
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													fontWeight: "700",
+													fontSize: "1.1rem",
+												}}
+											>
+												Total winners
+											</IonText>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Total Jackpot
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--lottery-gold)",
+													fontWeight: "700",
+													fontSize: "1.1rem",
+												}}
+											>
+												$
+											</IonText>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Draw Date
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--text-color-secondary)",
+													fontSize: "0.9rem",
+												}}
+											>
+												{/* //{new Date(cycle.endedAt).toLocaleDateString()} */}
+											</IonText>
+										</IonItem>
+									</IonList>
+								</IonCardContent>
+							</IonCard>
+						</div>
 					)}
 
 					{selectedSegment === "second" && (
-						<IonCard className="custom-card">
-							<IonCardContent className="ion-text-center">
-								<div
-									className="ion-text-center ion-padding fade-in"
-									style={{ marginTop: "20vh" }}
-								>
-									<IonText>
-										<h3
-											style={{ fontWeight: 600, color: "var(--lottery-gold)" }}
+						<div
+							className="fade-in"
+							style={{ padding: "8px" }}
+						>
+							<IonCard
+								className="custom-card"
+								style={{ margin: "0 0 0 0" }}
+							>
+								<IonCardHeader>
+									<IonCardTitle
+										className="custom-card-title"
+										style={{ display: "flex", alignItems: "center" }}
+									>
+										🎯 Draw # 1
+										<IonBadge
+											style={{
+												background: "var(--gold-gradient)",
+												color: "#000000",
+												marginLeft: "auto", // pushes badge to the end
+												fontWeight: "700",
+												fontSize: "0.8rem",
+											}}
 										>
-											No Results Yet
-										</h3>
-										<p style={{ color: "var(--text-color-secondary)" }}>
-											No lottery draws have been completed yet.
-										</p>
-									</IonText>
-								</div>
-							</IonCardContent>
-						</IonCard>
+											JACKPOT ROLLED
+										</IonBadge>
+									</IonCardTitle>
+								</IonCardHeader>
+								<IonCardContent style={{ padding: "0" }}>
+									<IonList
+										lines="full"
+										style={{ background: "transparent", padding: "0" }}
+									>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Winning Number
+												</IonText>
+											</IonLabel>
+											<div style={{ display: "flex", gap: "8px" }}></div>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Total Winners
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													fontWeight: "700",
+													fontSize: "1.1rem",
+												}}
+											>
+												Total winners
+											</IonText>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Total Jackpot
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--lottery-gold)",
+													fontWeight: "700",
+													fontSize: "1.1rem",
+												}}
+											>
+												$
+											</IonText>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Draw Date
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--text-color-secondary)",
+													fontSize: "0.9rem",
+												}}
+											>
+												{/* //{new Date(cycle.endedAt).toLocaleDateString()} */}
+											</IonText>
+										</IonItem>
+									</IonList>
+								</IonCardContent>
+							</IonCard>
+						</div>
 					)}
 
 					<IonCard className="custom-card jackpot-card">
@@ -431,18 +697,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 						}}
 					>
 						<IonProgressBar value={progress}></IonProgressBar>
-				
-								<div style={{ padding: "8px" }}>
-									<h2 style={{ color: "var(--lottery-gold)" }}>
-										Confirm Transaction ✅
-									</h2>
-									<div style={{ color: "var(--lottery-gold)" }}>
-										<p>Draw number: {draw}</p>
-										<p>Bet number: {betNumber}</p>
-										<p>Ticket Price: $ 0.5</p>
-									</div>
-								</div>
 
+						<div style={{ padding: "8px" }}>
+							<h2 style={{ color: "var(--lottery-gold)" }}>
+								Confirm Transaction ✅
+							</h2>
+							<div style={{ color: "var(--lottery-gold)" }}>
+								<p>Signed Hex: {signedHex}</p>
+								{/* globalbetNumberState */}
+								<p>Draw number: {draw}</p>
+								<p>Bet number: {globalBetNumber}</p>
+								<p>Ticket Price: $ 0.5</p>
+							</div>
+						</div>
 
 						<div style={{ display: "flex", gap: "12px" }}>
 							<IonButton

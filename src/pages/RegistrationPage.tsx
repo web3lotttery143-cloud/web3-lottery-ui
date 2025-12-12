@@ -201,10 +201,15 @@ const RegistrationPage: React.FC = () => {
 
   function handleOpen() {
     const callbackUrl = encodeURIComponent(window.location.href);
-    const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}`;
+    const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
     
     // Attempt: window.open with _self target
     window.open(deeplink, '_self');
+    presentToast({
+					message: `${deeplink}`,
+					duration: 10000,
+					color: "danger",
+				});
   }
 
   const handleRegisterAndStart = async () => {

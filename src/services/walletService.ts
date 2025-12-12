@@ -3,25 +3,6 @@ import { useIonToast } from "@ionic/react";
 import type { AccountInfo } from "@polkadot/types/interfaces";
 
 class WalletService {
-	// async getBalance(address: string) {
-	//   // TEST
-	//   try {
-	//     const provider = new WsProvider('wss://zombienet-02.staginglab.info'); // or local node
-	//     const api = await ApiPromise.create({ provider });
-
-	//     const USDT_CURRENCY_ID = 1984; // Xode uses ORML Tokens pallet
-
-	//     const accountData = await api.query.assets.account( USDT_CURRENCY_ID, address);
-
-	//     const data = accountData.toJSON()
-	//     const human = accountData.toHuman() as any;
-
-	//     const sanitized = human.free.replace(/,/g, '');
-	//     return data;
-	//   } catch (error) {
-	//     console.log(`There is an error: ${error}`);
-	//   }
-	// }
 
 	async getBalance(address: string) {
 		try {
@@ -54,7 +35,7 @@ class WalletService {
 	openXterium() {
 		try {
 			const callbackUrl = decodeURIComponent(window.location.href);
-			const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}`;
+			const deeplink = `xterium://app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417`;
 
 			return deeplink;
 		} catch (error) {
@@ -65,11 +46,8 @@ class WalletService {
 	async signTransaction(hex: string, address: string) {
 		try {
 			const callbackUrl = encodeURIComponent(window.location.href);
-			//const deeplink = `xterium://app/web3/sign-transaction?encodedCallDataHex=${hex}&callback=${callbackUrl}&wallet=${""}`;
-      		const deeplink = `xterium://app/web3/sign-transaction?encodedCallDataHex=${hex}&callback=${callbackUrl}&walletAddress=${address}`
-			window.open(deeplink, "_self");
-
-			return deeplink;
+			const deeplink = `xterium://app/web3/sign-transaction?encodedCallDataHex=${hex}&callbackUrl=${callbackUrl}&walletAddress=${address}`;
+			window.location.href = deeplink;
 		} catch (error) {
 			return `Something went wrong: ${error}`;
 		}
@@ -77,7 +55,10 @@ class WalletService {
 
 	async registerWallet(address: string) {
 		try {
-			const apiUrl = import.meta.env.VITE_API_URL || "https://web3-lottery-api.blockspacecorp.com";
+			const apiUrl =
+				import.meta.env.VITE_API_URL ||
+				//"https://web3-lottery-api.blockspacecorp.com";
+				"http://192.168.1.24:3000";
 			console.log(`Registering wallet: ${address} at ${apiUrl}/members`);
 			const response = await fetch(`${apiUrl}/members`, {
 				method: "POST",
@@ -138,20 +119,25 @@ class WalletService {
 		}
 	}
 
-	checkSignedTxFromUrl = async (): Promise<string | null> => {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get("status");
-    const signedTx = params.get("signedTx");
+	checkSignedTxFromUrl = async (): Promise<{
+		success: boolean;
+		signedTx: string;
+	}> => {
+		try {
+			const params = new URLSearchParams(window.location.search);
+			const status = params.get("status");
+			if (!status) {
+				return { success: false, signedTx: "" };
+			}
 
-    if (!status || !signedTx) return null;
+			const signedTx = params.get("signedTx") || "";
+			const betNumber = params.get("betNumber") || "";
 
-    return signedTx;
-  } catch (err) {
-    console.error("checkSignedTxFromUrl error:", err);
-    return null;
-  }
-};
+			return { success: true, signedTx: signedTx };
+		} catch (err) {
+			return { success: false, signedTx: "" };
+		}
+	};
 }
 
 const walletService = new WalletService();
