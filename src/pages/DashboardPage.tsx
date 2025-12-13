@@ -29,6 +29,8 @@ import {
 	IonProgressBar,
 	IonBadge,
 	IonSpinner,
+	IonChip,
+	IonFooter,
 } from "@ionic/react";
 
 import React, { useState, useEffect } from "react";
@@ -58,6 +60,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [selectedSegment, setSelectedSegment] = useState<SegmentValue>("first");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [confirmationModal, setConfirmationModal] = useState(false);
+	const [winnersModal, setWinnersModal] = useState(false)
 	const [draw, setDraw] = useState("1");
 	const [winnerNumber, setWinnerNumber] = useState("");
 	const [isWinnerNumberLoading, setIsWinnerNumberLoading] = useState(false);
@@ -91,6 +94,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		setConfirmationModal(false);
 		setGlobalBetNumber(0);
 	};
+
 
 	const handleOpen = () => {
 		if (betNumber.trim().length !== 3) {
@@ -145,6 +149,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			dismissLoading();
 		}
 	};
+
+	const handleOpenWinnersModal = () => {
+		setWinnersModal(true)
+	}
+
+	const handleCloseWinnersModal = () => {
+		setWinnersModal(false)
+	}
 
 	const handleRefresh = (event: CustomEvent) => {
 		refetch().finally(() => event.detail.complete());
@@ -410,18 +422,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													Total Winners
 												</IonText>
 											</IonLabel>
-											<IonText
-												style={{
-													color:
-														0 > 1
-															? "var(--lottery-emerald)"
-															: "var(--text-color-secondary)",
-													fontWeight: "700",
-													fontSize: "1.1rem",
-												}}
-											>
-												10
-											</IonText>
+											<div style={{
+													display: "flex",
+													alignItems: "center",
+													gap: "8px", // 👈 adjust spacing here
+												}}>
+												<IonChip outline={true} color="success" onClick={handleOpenWinnersModal}>See winners 👉</IonChip>
+												<IonText
+													style={{
+														color:
+															2 > 1
+																? "var(--lottery-emerald)"
+																: "var(--text-color-secondary)",
+														fontWeight: "700",
+														fontSize: "1.1rem",
+													}}
+												>
+													10
+												</IonText>
+											</div>
 										</IonItem>
 										<IonItem
 											style={
@@ -869,6 +888,46 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							</IonButton>
 						</div>
 					</IonContent>
+				</IonModal>
+
+				<IonModal
+					isOpen={winnersModal}
+					onDidDismiss={() => setWinnersModal(false)}
+					initialBreakpoint={1}
+				>
+					<IonContent
+						className="ion-padding"
+						style={{
+							"--background": "var(--background-color)",
+						}}
+					>
+
+						<div style={{ padding: "8px"}}>
+							<div style={{ display: "flex", justifyContent: "center" }}>
+								<h2 style={{ color: "var(--lottery-gold)" }}>
+									🏆 Winners 🏆
+								</h2>
+							</div>
+							
+						</div>
+						</IonContent>
+
+						<IonFooter>
+							<div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)",}}>
+								<IonButton
+									className="custom-button"
+									expand="block"
+									onClick={handleCloseWinnersModal}
+									style={{
+										flex: 1,
+										"--background": "var(--lottery-crimson)",
+									}}
+								>
+									Close
+								</IonButton>
+							</div>
+						</IonFooter>
+					
 				</IonModal>
 			</IonContent>
 		</IonPage>
