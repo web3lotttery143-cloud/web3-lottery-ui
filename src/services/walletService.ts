@@ -36,8 +36,8 @@ class WalletService {
 		try {
 			const callbackUrl = decodeURIComponent(window.location.href);
 			const deeplink = `xterium://app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417`;
-
-			return deeplink;
+			window.open(deeplink, '_self');
+			
 		} catch (error) {
 			return error;
 		}
@@ -119,10 +119,8 @@ class WalletService {
 		}
 	}
 
-	checkSignedTxFromUrl = async (): Promise<{
-		success: boolean;
-		signedTx: string;
-	}> => {
+	async checkSignedTxFromUrl(): Promise<{success: boolean, signedTx: string}> {
+		
 		try {
 			const params = new URLSearchParams(window.location.search);
 			const status = params.get("status");

@@ -205,11 +205,6 @@ const RegistrationPage: React.FC = () => {
     
     // Attempt: window.open with _self target
     window.open(deeplink, '_self');
-    presentToast({
-					message: `${deeplink}`,
-					duration: 10000,
-					color: "danger",
-				});
   }
 
   const handleRegisterAndStart = async () => {

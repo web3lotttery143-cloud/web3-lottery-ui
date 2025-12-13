@@ -38,6 +38,7 @@ import xteriumService from "../services/xteriumService";
 import useAppStore from "../store/useAppStore";
 import lotteryService from "../services/lotteryService";
 import walletService from "../services/walletService";
+import { execute } from "graphql";
 
 interface DashboardPageProps {
 	data: any;
@@ -120,22 +121,21 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		try {
 			const result = await lotteryService.addBet();
 
-			if (!result.ok) {
+			if (!result.success) {
 				presentToast({
-					message: `Add bet failed: ${result.error}`,
+					message: `Add bet failed: ${result.message}`,
 					color: "danger",
 					duration: 5000,
 				});
 				return;
 			}
 			setBetNumber(betNumber);
-			const hex = result.data;
+			const hex = result.message
 			const signed_hex = await walletService.signTransaction(
 				hex,
 				walletAddress
 			);
 		} catch (e: any) {
-			console.error(e);
 			presentToast({
 				message: e.message || "An error occurred.",
 				duration: 3000,
@@ -173,9 +173,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const handleSubmit = async () => {
 		presentLoading("Submitting transaction...");
 		window.history.replaceState({}, document.title, window.location.pathname);
-
-		try {
-			const payload = {
+		const payload = {
 				signed_hex: signedHex,
 				draw_number: draw,
 				bet_number: globalBetNumber,
@@ -185,14 +183,21 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 			const executeBet = await lotteryService.executeBet(payload);
 
+		try {
+			
+
+			if(!executeBet.success) {
+				throw new Error
+			}
+
 			presentToast({
-				message: `${JSON.stringify(executeBet, null, 2)}`,
+				message: `${executeBet.message}`,
 				duration: 10000,
 				color: "success",
 			});
 		} catch (error) {
 			presentToast({
-				message: `${error}`,
+				message: `${executeBet.message}`,
 				duration: 10000,
 				color: "danger",
 			});
@@ -203,16 +208,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	};
 
 	useEffect(() => {
-		// what i am gonna do this just check the url if there is a signedHex, and if there is, open a confirmation modal. this prevents to call the api (executebet endpoint multiple times)
 		const run = async () => {
 			try {
-				const response = await walletService.checkSignedTxFromUrl(); // make this return an array of success: true, signedHex: string, use the success to be the trigger if u should open a modal
+				const response = await walletService.checkSignedTxFromUrl();
 
-				if (response.success) {
-					setConfirmationModal(true);
-				} else {
-					return;
-				}
+				if (!response.success) return
+				setConfirmationModal(true);
 
 				setSignedHex(response.signedTx);
 			} catch (err) {
@@ -246,11 +247,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				clearInterval(timer);
 				setConfirmationModal(false);
 				setGlobalBetNumber(0);
-				// window.history.replaceState(
-				// 	{},
-				// 	document.title,
-				// 	window.location.pathname
-				// );
+				window.history.replaceState(
+					{},
+					document.title,
+					window.location.pathname
+				);
 			}
 		}, interval);
 		return () => clearInterval(timer);
