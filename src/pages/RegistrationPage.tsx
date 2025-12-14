@@ -29,7 +29,7 @@ const ADMIN_WALLET = import.meta.env.VITE_OPERATOR_WALLET_ADDRESS?.toLowerCase()
 
 const RegistrationPage: React.FC = () => {
   const router = useIonRouter();
-  const { connectWallet, setUserProfile, setIsAdmin, loginState, setLoginState } = useAppStore();
+  const { connectWallet, setUserProfile, setIsAdmin, loginState, setLoginState, setReferralUpline } = useAppStore();
   const [present, dismiss] = useIonLoading();
   const [presentToast] = useIonToast();
   const [registerUser] = useMutation(REGISTER_USER); 
@@ -137,6 +137,7 @@ const RegistrationPage: React.FC = () => {
       let response;
       if(loginState) {
         response = await walletService.loginWallet(connectedWallet);
+        setReferralUpline(response.data)
       } else {
         response = await walletService.registerWallet(connectedWallet)
       }

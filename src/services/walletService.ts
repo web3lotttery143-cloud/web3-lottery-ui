@@ -48,10 +48,8 @@ class WalletService {
 		}
 	}
 
-	async registerWallet(address: string): Promise<{success: boolean, message: string}> {
+	async registerWallet(address: string, uplineAddress?: string): Promise<{success: boolean, message: string}> {
 		try {
-			const params = new URLSearchParams(window.location.search)
-			let uplineAddress = params.get('ref')
 			const response = await fetch(`${this.apiUrl}/members`, {
 				method: "POST",
 				headers: {
@@ -71,7 +69,7 @@ class WalletService {
 		}
 	}
 
-	async loginWallet(address: string): Promise<{success: boolean, message: string}> {
+	async loginWallet(address: string): Promise<{success: boolean, message: string, data?: any}> {
     try {		
         const response = await fetch(`${this.apiUrl}/members/login`, {
             method: "POST",
@@ -87,7 +85,7 @@ class WalletService {
             return {success: false, message: data.error}
         }
 
-        return {success: true, message: data.message};
+        return {success: true, message: data.message, data: data.data.upline_address};
     } catch (error) {
         return {success: false, message: `${error}`}
     	}
