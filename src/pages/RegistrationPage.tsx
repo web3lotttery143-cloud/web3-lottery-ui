@@ -513,7 +513,7 @@ const RegistrationPage: React.FC = () => {
                         </div>
                   </IonFooter>
 
-                </IonModal>
+        </IonModal>
       </IonContent>
     </IonPage>
   );
