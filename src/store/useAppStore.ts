@@ -18,12 +18,14 @@ export interface AppState {
   userProfile: UserProfile | null;
   lastSeenCompletedCycle: number;
   globalBetNumber: number;
+  loginState: boolean;
   connectWallet: (address: string) => void;
   disconnectWallet: () => void;
   setUserProfile: (profile: UserProfile) => void;
   setIsAdmin: (isAdmin: boolean) => void;
   setLastSeenCompletedCycle: (cycleNumber: number) => void;
   setGlobalBetNumber: (betNumber: number) => void;
+  setLoginState: (login: boolean) => void;
 }
 
 const useAppStore = create<AppState>()(
@@ -35,6 +37,7 @@ const useAppStore = create<AppState>()(
       userProfile: null,
       lastSeenCompletedCycle: 0,
       globalBetNumber: 0,
+      loginState: false,
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
         set({
@@ -48,6 +51,7 @@ const useAppStore = create<AppState>()(
       setIsAdmin: isAdmin => set({ isAdmin }),
       setLastSeenCompletedCycle: cycleNumber => set({ lastSeenCompletedCycle: cycleNumber }),
       setGlobalBetNumber: betNumber => set({ globalBetNumber: betNumber }),
+      setLoginState: login => set({loginState: login}),
     }),
     {
       name: 'web3-lottery-app-storage',

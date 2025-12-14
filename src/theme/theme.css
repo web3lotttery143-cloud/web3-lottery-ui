@@ -353,5 +353,25 @@ ion-select::part(icon) {
   opacity: 1;
 }
 
+.divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.divider .line {
+  flex: 1;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.3); /* adjust for dark/light */
+}
+
+.divider .text {
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
+  white-space: nowrap;
+}
+
 
 

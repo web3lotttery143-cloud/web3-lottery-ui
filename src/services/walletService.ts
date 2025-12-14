@@ -3,7 +3,7 @@ import { useIonToast } from "@ionic/react";
 import type { AccountInfo } from "@polkadot/types/interfaces";
 
 class WalletService {
-
+	apiUrl = import.meta.env.VITE_API_URL
 	async getBalance(address: string) {
 		try {
 			const provider = new WsProvider(import.meta.env.VITE_WS_PROVIDER || "");
@@ -32,15 +32,10 @@ class WalletService {
 		}
 	}
 
-	openXterium() {
-		try {
-			const callbackUrl = decodeURIComponent(window.location.href);
-			const deeplink = `xterium://app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417`;
-			window.open(deeplink, '_self');
-			
-		} catch (error) {
-			return error;
-		}
+	 openXterium() {
+		const callbackUrl = decodeURIComponent(window.location.href);
+		const deeplink = `xterium://app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417`;
+		window.open(deeplink, "_self");
 	}
 
 	async signTransaction(hex: string, address: string) {
@@ -53,33 +48,50 @@ class WalletService {
 		}
 	}
 
-	async registerWallet(address: string) {
+	async registerWallet(address: string): Promise<{success: boolean, message: string}> {
 		try {
-			const apiUrl =
-				import.meta.env.VITE_API_URL ||
-				//"https://web3-lottery-api.blockspacecorp.com";
-				"";
-			console.log(`Registering wallet: ${address} at ${apiUrl}/members`);
-			const response = await fetch(`${apiUrl}/members`, {
+			const params = new URLSearchParams(window.location.search)
+			let uplineAddress = params.get('ref')
+			const response = await fetch(`${this.apiUrl}/members`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ member_address: address, upline_address: "" }),
+				body: JSON.stringify({ member_address: address, upline_address: uplineAddress || import.meta.env.VITE_OPERATOR_ADDRESS }),
 			});
 
-			if (!response.ok) {
-				throw new Error(`Registration failed: ${response.statusText}`);
-			}
-
 			const data = await response.json();
-			console.log("Registration success:", data);
-			return data;
+
+			if (!response.ok) {
+				return {success: false, message: data.message}
+			}
+			return {success: true, message: data.message}
 		} catch (error) {
-			console.error("Error in registerWallet:", error);
-			throw error;
+			return {success: false, message: `${error}`}
 		}
 	}
+
+	async loginWallet(address: string): Promise<{success: boolean, message: string}> {
+    try {		
+        const response = await fetch(`${this.apiUrl}/members/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ member_address: address, upline_address: "" }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            return {success: false, message: data.error}
+        }
+
+        return {success: true, message: data.message};
+    } catch (error) {
+        return {success: false, message: `${error}`}
+    	}
+	}	
 
 	async checkWalletsFromUrl() {
 		try {

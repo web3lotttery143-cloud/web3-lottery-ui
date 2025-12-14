@@ -145,31 +145,10 @@ const ReferralAcceptPage: React.FC = () => {
               <IonCard className="custom-card">
                 <IonCardHeader>
                   <IonCardTitle className="custom-card-title">
-                    Enter Your Wallet Address
+                    🚀 Register & Start Playing
                   </IonCardTitle>
                 </IonCardHeader>
                 <IonCardContent>
-                  <IonList style={{ background: 'transparent' }}>
-                    <IonItem
-                      lines="none"
-                      style={{
-                        '--background': 'rgba(255,255,255,0.05)',
-                        '--min-height': '60px',
-                        borderRadius: 'var(--border-radius)',
-                        '--padding-start': '16px',
-                        '--padding-end': '16px',
-                      }}
-                    >
-                      <IonInput
-                        placeholder="Paste your wallet address here"
-                        value={userWalletAddress}
-                        onIonInput={e => setUserWalletAddress(e.detail.value!)}
-                        clearInput
-                        style={{ color: 'var(--text-color)' }}
-                      />
-                    </IonItem>
-                  </IonList>
-
                   <IonButton
                     className="custom-button"
                     expand="block"
