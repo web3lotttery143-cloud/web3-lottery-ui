@@ -108,20 +108,32 @@ const RegistrationPage: React.FC = () => {
   const openXteriumApp = () => {
   const tg = window.Telegram?.WebApp;
   
+  if (!tg) {
+    presentToast({ message: 'Telegram WebApp API is not available', duration: 2000, color: 'warning' });
+    return;
+  }
+
   try {
     const callbackUrl = encodeURIComponent('https://t.me/Loters12345_bot/httpsweb3lotteryuiblockspa');
     const xteriumDeepLink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
     
-    if (tg) {
-      tg.HapticFeedback?.impactOccurred('medium');
-      presentToast({ message: 'If TG is true', duration: 2000, color: 'success' });
-    }
+    console.log('Opening Xterium with:', xteriumDeepLink);
     
-    // Direct navigation (like Chrome)
-    window.location.href = xteriumDeepLink;
+    // Use MainButton with openLink - this can open external apps
+    tg.MainButton.setText('Opening Xterium...');
+    tg.MainButton.show();
+    
+    // Small delay to ensure UI updates
+    setTimeout(() => {
+      tg.openLink(xteriumDeepLink, { try_instant_view: false });
+      tg.MainButton.hide();
+    }, 100);
+    
+    tg.HapticFeedback?.impactOccurred('medium');
     
   } catch (error) {
-    presentToast({ message: `${error}`, duration: 2000, color: 'danger' });
+    console.error('Error opening Xterium app:', error);
+    presentToast({ message: `Error: ${error}`, duration: 2000, color: 'danger' });
   }
 };
 
