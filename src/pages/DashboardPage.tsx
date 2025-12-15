@@ -53,7 +53,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	loading,
 	refetch,
 }) => {
-	const { walletAddress, globalBetNumber, setGlobalBetNumber } = useAppStore();
+	const { walletAddress, globalBetNumber, setGlobalBetNumber, referralUpline } = useAppStore();
 	const [betNumber, setBetNumber] = useState("");
 	const [presentLoading, dismissLoading] = useIonLoading();
 	const [presentToast] = useIonToast();
@@ -190,7 +190,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				draw_number: draw,
 				bet_number: globalBetNumber,
 				bettor: walletAddress!,
-				upline: "XqDGJ69MXL1WhHZiQHsA8HJTu7auK3ZePQZJetMrq3GT5smso",
+				upline: referralUpline || import.meta.env.VITE_OPERATOR_ADDRESS,
 			};
 
 			const executeBet = await lotteryService.executeBet(payload);
@@ -817,6 +817,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 								{/* globalbetNumberState */}
 								<p>Draw number: {draw}</p>
 								<p>Bet number: {globalBetNumber}</p>
+								<p>Referrer {referralUpline}</p>
 								<p>Ticket Price: $ 0.5</p>
 							</div>
 						</div>
