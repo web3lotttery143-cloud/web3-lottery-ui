@@ -26,35 +26,43 @@ import { App, URLOpenListenerEvent } from '@capacitor/app';
 import walletService from '../services/walletService';
 
 const ADMIN_WALLET = import.meta.env.VITE_OPERATOR_WALLET_ADDRESS?.toLowerCase();
-declare global {
-  interface Window {
-    Telegram: any;
-  }
+interface XteriumConnectButtonProps {
+  onSuccess?: () => void;
+  onError?: (error: string) => void;
 }
 
 const RegistrationPage: React.FC = () => {
 
-  useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
-      tg.expand();
-    }
-  }, []);
-
-  const openXteriumApp = () => {
-    try {
-      const tg = window.Telegram.WebApp
-      const deepLink = `xterium://app/web3/approval?callback=${tg}&chainId=3417`;
-
-      tg.openLink(deepLink, {
-        try_instant_view: false,
-      });
-    } catch (error) {
-      presentToast({ message: `${error}`, duration: 2000, color: 'warning' });
-     
-    }
+const openXteriumApp = () => {
+    const tg = window.Telegram?.WebApp;
     
+    if (!tg) {
+      const errorMsg = 'Telegram WebApp API is not available';
+      presentToast({ message: `${errorMsg}`, duration: 2000, color: 'warning' });
+     
+      return;
+    }
+
+    try {
+      // Replace with actual Xterium deep link
+      const xteriumDeepLink = 'xterium://open';
+      
+      // Trigger haptic feedback for better UX
+      tg.HapticFeedback?.impactOccurred('medium');
+      
+      // Open the app
+      tg.openLink(xteriumDeepLink, { try_instant_view: false });
+      
+      console.log('Attempted to open Xterium app');
+      presentToast({ message: `Attempted to open Xterium app`, duration: 2000, color: 'warning' });
+      
+      // Handle success - optional
+      // You can show a toast or perform other actions
+      
+    } catch (error) {
+      const errorMsg = `Error opening Xterium app: ${error}`;
+      presentToast({ message: `${errorMsg}`, duration: 2000, color: 'danger' });
+    }
   };
 
   const router = useIonRouter();
