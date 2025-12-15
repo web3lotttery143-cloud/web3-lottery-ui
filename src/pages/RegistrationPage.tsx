@@ -137,7 +137,6 @@ const RegistrationPage: React.FC = () => {
       let response;
       if(loginState) {
         response = await walletService.loginWallet(connectedWallet);
-        setReferralUpline(response.data)
       } else {
         response = await walletService.registerWallet(connectedWallet)
       }
@@ -145,7 +144,7 @@ const RegistrationPage: React.FC = () => {
       if(!response.success) {
         throw new Error(response.message)
       }
-
+      setReferralUpline(response.data)
       presentToast({ message: response.message, duration: 2000, color: 'success'})
       connectWallet(connectedWallet)
       router.push('/dashboard', 'root', 'replace');

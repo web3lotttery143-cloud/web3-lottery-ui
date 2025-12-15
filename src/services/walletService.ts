@@ -48,7 +48,7 @@ class WalletService {
 		}
 	}
 
-	async registerWallet(address: string, uplineAddress?: string): Promise<{success: boolean, message: string}> {
+	async registerWallet(address: string, uplineAddress?: string): Promise<{success: boolean, message: string, data?: any}> {
 		try {
 			const response = await fetch(`${this.apiUrl}/members`, {
 				method: "POST",
@@ -63,7 +63,7 @@ class WalletService {
 			if (!response.ok) {
 				return {success: false, message: data.message}
 			}
-			return {success: true, message: data.message}
+			return {success: true, message: data.message, data: data.data.upline_address}
 		} catch (error) {
 			return {success: false, message: `${error}`}
 		}
