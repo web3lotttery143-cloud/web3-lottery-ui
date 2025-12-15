@@ -45,7 +45,8 @@ const openXteriumApp = () => {
 
     try {
       // Replace with actual Xterium deep link
-      const xteriumDeepLink = 'xterium://open';
+      const callbackUrl = encodeURIComponent(window.location.href);
+      const xteriumDeepLink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
       
       // Trigger haptic feedback for better UX
       tg.HapticFeedback?.impactOccurred('medium');
