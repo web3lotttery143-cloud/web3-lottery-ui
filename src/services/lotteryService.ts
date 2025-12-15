@@ -1,9 +1,7 @@
 import { ExecuteBetDto } from "../models/executeBet.model";
 
-const LIVE_API =
-	import.meta.env.VITE_API_URL || "https://web3-lottery-api.blockspacecorp.com";
-//const LIVE_API = "http://192.168.1.24:3000";
-
+const LIVE_API = import.meta.env.VITE_API_URL || "";
+	
 class LotteryService {
 	// DRAWS
 	async getDraws() {
@@ -29,7 +27,7 @@ class LotteryService {
 		}
 	}
 
-	async executeBet(transactionData: ExecuteBetDto) {
+	async executeBet(transactionData: ExecuteBetDto): Promise <{success: boolean, message: string}> {
 		try {
 			const response = await fetch(`${LIVE_API}/api/bets/execute`, {
 				method: "POST",
@@ -38,119 +36,35 @@ class LotteryService {
 				},
 				body: JSON.stringify(transactionData),
 			});
+			const data = await response.json()
 
-			// if (response.status == 500) {
-			// 	throw new Error(`Adding of bet failed: ${response.status}`);
-			// }
-
-			// Read raw response
-			const text = await response.text();
-			console.log("RAW RESPONSE:", text);
-
-			// Try parsing JSON
-			try {
-				return JSON.parse(text);
-			} catch {
-				console.error("Backend returned NON-JSON response.");
-				return text; // return raw text instead of crashing
+			if (!response.ok) {
+				return {success: false, message: data.error}
 			}
+			
+			return {success: true, message: data}
+			
+		
 		} catch (error) {
-			throw error;
+			return {success: false, message: `${error}`}
 		}
 	}
 
-	//     async executeBet(transactionData: ExecuteBetDto) {
-	//     try {
-	//         const response = await fetch(`${LIVE_API}/api/bets/execute`, {
-	//             method: "POST",
-	//             headers: {
-	//                 "Content-Type": "application/json",
-	//             },
-	//             body: JSON.stringify(transactionData),
-	//         });
-
-	//         const raw = await response.text(); // read raw response
-
-	//         if (!response.ok) {
-	//             // Backend returned an error (4xx / 5xx)
-	//             return {
-	//                 ok: false,
-	//                 error: raw || `Execute bet failed: ${response.status}`,
-	//             };
-	//         }
-
-	//         // Try parsing JSON
-	//         try {
-	//             const parsed = JSON.parse(raw);
-	//             return {
-	//                 ok: true,
-	//                 data: parsed,
-	//             };
-	//         } catch {
-	//             // Valid response but not JSON
-	//             return {
-	//                 ok: true,
-	//                 data: raw,
-	//             };
-	//         }
-	//     } catch (err) {
-	//         // Network errors, crashed server, no internet, etc.
-	//         let message = "Unknown error";
-
-	//         if (err instanceof Error) message = err.message;
-
-	//         return {
-	//             ok: false,
-	//             error: message,
-	//         };
-	//     }
-	// }
-
-	// async addBet() { //WORKING VERSION
-	// 	try {
-	// 		const response = await fetch(`${LIVE_API}/api/bets/add`, {
-	// 			method: "POST",
-	// 		});
-
-	// 		if (response.status != 201) {
-	// 			throw new Error();
-	// 		}
-
-	// 		const data = await response.json();
-	// 		return data;
-	// 	} catch (error) {
-	// 		return error;
-	// 	}
-	// }
-
-	async addBet() {
+	async addBet(): Promise<{success: boolean, message: string}> {
 		try {
 			const response = await fetch(`${LIVE_API}/api/bets/add`, {
 				method: "POST",
 			});
 
+			const data = await response.json()
+
 			if (!response.ok) {
-				return {
-					ok: false,
-					error: await response.text(),
-				};
+				throw new Error 
 			}
 
-			return {
-				ok: true,
-				data: await response.json(),
-			};
+			return {success: true, message: data};
 		} catch (err) {
-			let message = "Unknown error";
-
-			if (err instanceof Error) {
-				message = err.message;
-			}
-
-			return {
-				ok: false,
-				error: message,
-			};
+			return { success: false, message: `${err}`} 
 		}
 	}
 }

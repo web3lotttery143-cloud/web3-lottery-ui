@@ -26,6 +26,11 @@ import {
 	IonItem,
 	IonSelect,
 	IonSelectOption,
+	IonProgressBar,
+	IonBadge,
+	IonSpinner,
+	IonChip,
+	IonFooter,
 } from "@ionic/react";
 
 import React, { useState, useEffect } from "react";
@@ -35,6 +40,7 @@ import xteriumService from "../services/xteriumService";
 import useAppStore from "../store/useAppStore";
 import lotteryService from "../services/lotteryService";
 import walletService from "../services/walletService";
+import { execute } from "graphql";
 
 interface DashboardPageProps {
 	data: any;
@@ -47,14 +53,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	loading,
 	refetch,
 }) => {
-	const { walletAddress } = useAppStore();
+	const { walletAddress, globalBetNumber, setGlobalBetNumber, referralUpline } = useAppStore();
 	const [betNumber, setBetNumber] = useState("");
 	const [presentLoading, dismissLoading] = useIonLoading();
 	const [presentToast] = useIonToast();
 	const [selectedSegment, setSelectedSegment] = useState<SegmentValue>("first");
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [confirmationModal, setConfirmationModal] = useState(false);
+	const [winnersModal, setWinnersModal] = useState(false)
 	const [draw, setDraw] = useState("1");
 	const [winnerNumber, setWinnerNumber] = useState("");
+	const [isWinnerNumberLoading, setIsWinnerNumberLoading] = useState(false);
+	const [signedHex, setSignedHex] = useState("");
+	const [progress, setProgress] = useState(0);
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
 		onCompleted: (data) => {
@@ -78,6 +89,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		},
 	});
 
+	const handleCancel = () => {
+		window.history.replaceState({}, document.title, window.location.pathname);
+		setConfirmationModal(false);
+		setGlobalBetNumber(0);
+	};
+
+
 	const handleOpen = () => {
 		if (betNumber.trim().length !== 3) {
 			presentToast({
@@ -89,6 +107,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		}
 		setIsModalOpen(true);
 	};
+
 	const handlePlaceBet = async () => {
 		if (!walletAddress) {
 			presentToast({
@@ -99,42 +118,45 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			return;
 		}
 
+		const persistedBetNumber = Number(betNumber);
+		setGlobalBetNumber(persistedBetNumber);
 		await presentLoading({ message: "Waiting for signature..." });
 
 		try {
 			const result = await lotteryService.addBet();
 
-			if (!result.ok) {
+			if (!result.success) {
 				presentToast({
-					message: `Add bet failed: ${result.error}`,
+					message: `Add bet failed: ${result.message}`,
 					color: "danger",
 					duration: 5000,
 				});
 				return;
 			}
-
-			const hex = result.data;
+			setBetNumber(betNumber);
+			const hex = result.message
 			const signed_hex = await walletService.signTransaction(
 				hex,
 				walletAddress
 			);
-
-			presentToast({
-				message: `${signed_hex}`,
-				color: "success",
-				duration: 5000,
-			});
 		} catch (e: any) {
-			console.error(e);
 			presentToast({
 				message: e.message || "An error occurred.",
 				duration: 3000,
 				color: "danger",
 			});
 		} finally {
-			dismissLoading;
+			dismissLoading();
 		}
 	};
+
+	const handleOpenWinnersModal = () => {
+		setWinnersModal(true)
+	}
+
+	const handleCloseWinnersModal = () => {
+		setWinnersModal(false)
+	}
 
 	const handleRefresh = (event: CustomEvent) => {
 		refetch().finally(() => event.detail.complete());
@@ -143,8 +165,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	useEffect(() => {
 		const getDraws = async () => {
 			try {
+				setIsWinnerNumberLoading(true);
 				const data = await lotteryService.getDraws();
 				const winningNumber = data.Ok?.[0]?.winningNumber;
+				setIsWinnerNumberLoading(false);
 				setWinnerNumber(winningNumber || "N/A"); // update state
 			} catch (error) {
 				presentToast({
@@ -158,46 +182,52 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		getDraws();
 	}, []);
 
-	const [signedHex, setSignedHex] = useState<string>("");
+	const handleSubmit = async () => {
+		presentLoading("Submitting transaction...");
+		window.history.replaceState({}, document.title, window.location.pathname);
+		const payload = {
+				signed_hex: signedHex,
+				draw_number: draw,
+				bet_number: globalBetNumber,
+				bettor: walletAddress!,
+				upline: referralUpline || import.meta.env.VITE_OPERATOR_ADDRESS,
+			};
+
+			const executeBet = await lotteryService.executeBet(payload);
+
+		try {
+			
+
+			if(!executeBet.success) {
+				throw new Error
+			}
+
+			presentToast({
+				message: `${executeBet.message}`,
+				duration: 10000,
+				color: "success",
+			});
+		} catch (error) {
+			presentToast({
+				message: `${executeBet.message}`,
+				duration: 10000,
+				color: "danger",
+			});
+		} finally {
+			dismissLoading();
+			setConfirmationModal(false);
+		}
+	};
 
 	useEffect(() => {
 		const run = async () => {
 			try {
-				const signed = await walletService.checkSignedTxFromUrl();
+				const response = await walletService.checkSignedTxFromUrl();
 
-				if (!signed) return; // no callback → do nothing
+				if (!response.success) return
+				setConfirmationModal(true);
 
-				//await presentLoading({ message: "Submitting transaction..." });
-
-
-				// Update state
-				// setSignedHex(signed);
-
-				// Test this, this is to cleanup the url
-				window.history.replaceState(
-					{},
-					document.title,
-					window.location.pathname
-				);
-				//Notify user
-
-				// Build payload (💥 you must use `signed`, NOT `signedHex`)
-				const payload = {
-					signed_hex: signed,
-					draw_number: draw,
-					bet_number: Number(betNumber),
-					bettor: walletAddress!,
-					upline: "XqDGJ69MXL1WhHZiQHsA8HJTu7auK3ZePQZJetMrq3GT5smso",
-				};
-
-				
-				const result = await lotteryService.executeBet(payload);
-
-				presentToast({
-					message: `Result: Transaction Successful!`, // pretty print
-					duration: 5000,
-					color: "success",
-				});
+				setSignedHex(response.signedTx);
 			} catch (err) {
 				presentToast({
 					message: `Error: ${String(err)}`,
@@ -212,7 +242,33 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		run();
 	}, []);
 
-	
+	useEffect(() => {
+		if (!confirmationModal) return;
+
+		setProgress(0);
+
+		const duration = 5000;
+		const interval = 50;
+		let current = 0;
+
+		const timer = setInterval(() => {
+			current += interval;
+			setProgress(current / duration);
+
+			if (current >= duration) {
+				clearInterval(timer);
+				setConfirmationModal(false);
+				setGlobalBetNumber(0);
+				window.history.replaceState(
+					{},
+					document.title,
+					window.location.pathname
+				);
+			}
+		}, interval);
+		return () => clearInterval(timer);
+	}, [confirmationModal]);
+
 	const cycle = data?.currentCycle;
 
 	return (
@@ -254,45 +310,390 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					</IonSegment>
 
 					{selectedSegment === "first" && (
-						<IonCard className="custom-card">
-							<IonCardContent className="ion-text-center">
-								<div
-									className="ion-text-center ion-padding fade-in"
-									style={{ marginTop: "20vh" }}
-								>
-									<IonText>
-										<h3
-											style={{ fontWeight: 600, color: "var(--lottery-gold)" }}
+						<div
+							className="fade-in"
+							style={{ padding: "8px" }}
+						>
+							<IonCard
+								className="custom-card"
+								style={{ margin: "0 0 0 0" }}
+							>
+								<IonCardHeader>
+									<IonCardTitle
+										className="custom-card-title"
+										style={{ display: "flex", alignItems: "center" }}
+									>
+										🎯 Draw # 1
+										<IonBadge
+											style={{
+												background: "var(--gold-gradient)",
+												color: "#000000",
+												marginLeft: "auto", // pushes badge to the end
+												fontWeight: "700",
+												fontSize: "0.8rem",
+											}}
 										>
-											Winning number:{" "}
-											{winnerNumber !== "N/A" ? winnerNumber : "No results yet"}
-										</h3>
-									</IonText>
-								</div>
-							</IonCardContent>
-						</IonCard>
+											JACKPOT ROLLED
+										</IonBadge>
+									</IonCardTitle>
+								</IonCardHeader>
+								<IonCardContent style={{ padding: "0" }}>
+									<IonList
+										lines="full"
+										style={{ background: "transparent", padding: "0" }}
+									>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Winning Number
+												</IonText>
+											</IonLabel>
+											<div style={{ display: "flex", gap: "8px" }}>
+												{isWinnerNumberLoading ? (
+													<div style={{ display: "flex", gap: "8px" }}>
+														{[1, 2, 3].map((_, i) => (
+															<div
+																key={i}
+																className="lottery-number"
+																style={{
+																	width: "45px",
+																	height: "45px",
+																	fontSize: "1.1rem",
+																	opacity: 0.5,
+																	display: "flex",
+																	alignItems: "center",
+																	justifyContent: "center",
+																}}
+															>
+																<IonSpinner name="crescent" />
+															</div>
+														))}
+													</div>
+												) : (
+													winnerNumber
+														.split("")
+														.map((digit: string, index: number) => (
+															<div
+																key={index}
+																className="lottery-number"
+																style={{
+																	width: "45px",
+																	height: "45px",
+																	fontSize: "1.1rem",
+																}}
+															>
+																{digit}
+															</div>
+														))
+												)}
+											</div>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Total Winners
+												</IonText>
+											</IonLabel>
+											<div style={{
+													display: "flex",
+													alignItems: "center",
+													gap: "8px", // 👈 adjust spacing here
+												}}>
+												<IonChip outline={true} color="success" onClick={handleOpenWinnersModal}>See winners 👉</IonChip>
+												<IonText
+													style={{
+														color:
+															2 > 1
+																? "var(--lottery-emerald)"
+																: "var(--text-color-secondary)",
+														fontWeight: "700",
+														fontSize: "1.1rem",
+													}}
+												>
+													10
+												</IonText>
+											</div>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Total Jackpot
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--lottery-gold)",
+													fontWeight: "700",
+													fontSize: "1.1rem",
+												}}
+											>
+												$ 1,000,000
+											</IonText>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Draw Date
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--text-color-secondary)",
+													fontSize: "0.9rem",
+												}}
+											>
+												Dec. 12, 2025
+											</IonText>
+										</IonItem>
+									</IonList>
+								</IonCardContent>
+							</IonCard>
+						</div>
 					)}
 
 					{selectedSegment === "second" && (
-						<IonCard className="custom-card">
-							<IonCardContent className="ion-text-center">
-								<div
-									className="ion-text-center ion-padding fade-in"
-									style={{ marginTop: "20vh" }}
-								>
-									<IonText>
-										<h3
-											style={{ fontWeight: 600, color: "var(--lottery-gold)" }}
+						<div
+							className="fade-in"
+							style={{ padding: "8px" }}
+						>
+							<IonCard
+								className="custom-card"
+								style={{ margin: "0 0 0 0" }}
+							>
+								<IonCardHeader>
+									<IonCardTitle
+										className="custom-card-title"
+										style={{ display: "flex", alignItems: "center" }}
+									>
+										🎯 Draw # 2
+										<IonBadge
+											style={{
+												background: "var(--gold-gradient)",
+												color: "#000000",
+												marginLeft: "auto", // pushes badge to the end
+												fontWeight: "700",
+												fontSize: "0.8rem",
+											}}
 										>
-											No Results Yet
-										</h3>
-										<p style={{ color: "var(--text-color-secondary)" }}>
-											No lottery draws have been completed yet.
-										</p>
-									</IonText>
-								</div>
-							</IonCardContent>
-						</IonCard>
+											JACKPOT ROLLED
+										</IonBadge>
+									</IonCardTitle>
+								</IonCardHeader>
+								<IonCardContent style={{ padding: "0" }}>
+									<IonList
+										lines="full"
+										style={{ background: "transparent", padding: "0" }}
+									>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Winning Number
+												</IonText>
+											</IonLabel>
+											<div style={{ display: "flex", gap: "8px" }}>
+												{isWinnerNumberLoading ? (
+													<div style={{ display: "flex", gap: "8px" }}>
+														{[1, 2, 3].map((_, i) => (
+															<div
+																key={i}
+																className="lottery-number"
+																style={{
+																	width: "45px",
+																	height: "45px",
+																	fontSize: "1.1rem",
+																	opacity: 0.5,
+																	display: "flex",
+																	alignItems: "center",
+																	justifyContent: "center",
+																}}
+															>
+																<IonSpinner name="crescent" />
+															</div>
+														))}
+													</div>
+												) : (
+													winnerNumber
+														.split("")
+														.map((digit: string, index: number) => (
+															<div
+																key={index}
+																className="lottery-number"
+																style={{
+																	width: "45px",
+																	height: "45px",
+																	fontSize: "1.1rem",
+																}}
+															>
+																{digit}
+															</div>
+														))
+												)}
+											</div>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Total Winners
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color:
+														0 > 1
+															? "var(--lottery-emerald)"
+															: "var(--text-color-secondary)",
+													fontWeight: "700",
+													fontSize: "1.1rem",
+												}}
+											>
+												10
+											</IonText>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Total Jackpot
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--lottery-gold)",
+													fontWeight: "700",
+													fontSize: "1.1rem",
+												}}
+											>
+												$ 1,000,000
+											</IonText>
+										</IonItem>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Draw Date
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--text-color-secondary)",
+													fontSize: "0.9rem",
+												}}
+											>
+												Dec. 12, 2025
+											</IonText>
+										</IonItem>
+									</IonList>
+								</IonCardContent>
+							</IonCard>
+						</div>
 					)}
 
 					<IonCard className="custom-card jackpot-card">
@@ -314,7 +715,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										textShadow: "0 4px 8px rgba(255, 215, 0, 0.3)",
 									}}
 								>
-									${cycle ? parseFloat(cycle.totalJackpot).toFixed(2) : "0.00"}
+									$
+									{cycle
+										? parseFloat(cycle.totalJackpot).toFixed(2)
+										: "1,000,000"}
 								</h1>
 							</IonText>
 							<IonText>
@@ -326,13 +730,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										fontWeight: "500",
 									}}
 								>
-									{cycle ? cycle.totalBets : 0} / 10,000 Tickets Sold
+									{cycle ? cycle.totalBets : 5000} / 10,000 Tickets Sold
 								</p>
 							</IonText>
 							<div className="progress-container">
 								<div
 									className="progress-bar"
-									style={{ width: `${(cycle?.totalBets || 0) / 100}%` }}
+									style={{ width: `${(cycle?.totalBets || 5000) / 100}%` }}
 								></div>
 							</div>
 							<IonText>
@@ -392,6 +796,61 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				</div>
 
 				<IonModal
+					isOpen={confirmationModal}
+					onDidDismiss={() => setConfirmationModal(false)}
+					initialBreakpoint={1}
+				>
+					<IonContent
+						className="ion-padding"
+						style={{
+							"--background": "var(--background-color)",
+						}}
+					>
+						<IonProgressBar value={progress}></IonProgressBar>
+
+						<div style={{ padding: "8px" }}>
+							<h2 style={{ color: "var(--lottery-gold)" }}>
+								Confirm Transaction ✅
+							</h2>
+							<div style={{ color: "var(--lottery-gold)" }}>
+								<p>Signed Hex: {signedHex}</p>
+								{/* globalbetNumberState */}
+								<p>Draw number: {draw}</p>
+								<p>Bet number: {globalBetNumber}</p>
+								<p>Referrer {referralUpline}</p>
+								<p>Ticket Price: $ 0.5</p>
+							</div>
+						</div>
+
+						<div style={{ display: "flex", gap: "12px" }}>
+							<IonButton
+								className="custom-button"
+								expand="block"
+								onClick={handleCancel}
+								style={{
+									flex: 1,
+									"--background": "var(--lottery-crimson)",
+								}}
+							>
+								Cancel
+							</IonButton>
+
+							<IonButton
+								className="custom-button"
+								expand="block"
+								onClick={handleSubmit}
+								style={{
+									flex: 1,
+									"--background": "var(--lottery-emerald)",
+								}}
+							>
+								Confirm
+							</IonButton>
+						</div>
+					</IonContent>
+				</IonModal>
+
+				<IonModal
 					isOpen={isModalOpen}
 					onDidDismiss={() => setIsModalOpen(false)}
 					initialBreakpoint={0.5}
@@ -430,6 +889,46 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							</IonButton>
 						</div>
 					</IonContent>
+				</IonModal>
+
+				<IonModal
+					isOpen={winnersModal}
+					onDidDismiss={() => setWinnersModal(false)}
+					initialBreakpoint={1}
+				>
+					<IonContent
+						className="ion-padding"
+						style={{
+							"--background": "var(--background-color)",
+						}}
+					>
+
+						<div style={{ padding: "8px"}}>
+							<div style={{ display: "flex", justifyContent: "center" }}>
+								<h2 style={{ color: "var(--lottery-gold)" }}>
+									🏆 Winners 🏆
+								</h2>
+							</div>
+							
+						</div>
+						</IonContent>
+
+						<IonFooter>
+							<div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)",}}>
+								<IonButton
+									className="custom-button"
+									expand="block"
+									onClick={handleCloseWinnersModal}
+									style={{
+										flex: 1,
+										"--background": "var(--lottery-crimson)",
+									}}
+								>
+									Close
+								</IonButton>
+							</div>
+						</IonFooter>
+					
 				</IonModal>
 			</IonContent>
 		</IonPage>

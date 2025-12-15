@@ -14,6 +14,7 @@ import {
   useIonLoading,
   useIonToast,
   useIonRouter,
+  IonFooter,
 } from '@ionic/react';
 import { clipboardOutline } from 'ionicons/icons';
 import React, { useState, useEffect } from 'react';
@@ -25,13 +26,44 @@ import { App, URLOpenListenerEvent } from '@capacitor/app';
 import walletService from '../services/walletService';
 
 const ADMIN_WALLET = import.meta.env.VITE_OPERATOR_WALLET_ADDRESS?.toLowerCase();
+declare global {
+  interface Window {
+    Telegram: any;
+  }
+}
 
 const RegistrationPage: React.FC = () => {
+
+  useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+    }
+  }, []);
+
+  const openXteriumApp = () => {
+    try {
+      const tg = window.Telegram.WebApp
+      const deepLink = `xterium://app/web3/approval?callback=${tg}&chainId=3417`;
+
+      tg.openLink(deepLink, {
+        try_instant_view: false,
+      });
+    } catch (error) {
+      presentToast({ message: `${error}`, duration: 2000, color: 'warning' });
+     
+    }
+    
+  };
+
   const router = useIonRouter();
-  const { connectWallet, setUserProfile, setIsAdmin } = useAppStore();
+  const { connectWallet, setUserProfile, setIsAdmin, loginState, setLoginState, setReferralUpline } = useAppStore();
   const [present, dismiss] = useIonLoading();
   const [presentToast] = useIonToast();
-  const [registerUser] = useMutation(REGISTER_USER);
+  const [registerUser] = useMutation(REGISTER_USER); 
+  const [confirmationModal, setConfirmationModal] = useState(false)
+  const [connectedWallet, setConnectedWallet] = useState('')
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [walletInput, setWalletInput] = useState('');
@@ -128,11 +160,50 @@ const RegistrationPage: React.FC = () => {
     }
   };
 
+  const handleSubmit = async () => { 
+    await present({message: 'Please wait...'})
+    try {
+      let response;
+      if(loginState)
+      {
+        response = await walletService.loginWallet(connectedWallet);
+      } else {
+        response = await walletService.registerWallet(connectedWallet)
+      }
+
+      if(!response.success) {
+        throw new Error(response.message)
+      }
+
+      if(response.data === 'Admin') {
+        setIsAdmin(true)
+        presentToast({ message: response.message, duration: 2000, color: 'success'})
+        connectWallet(connectedWallet)
+        router.push('/dashboard', 'root', 'replace');
+      } else {
+        setReferralUpline(response.data)
+        presentToast({ message: response.message, duration: 2000, color: 'success'})
+        connectWallet(connectedWallet)
+        router.push('/dashboard', 'root', 'replace');
+      }    
+    } catch (error) {
+      presentToast({ message: `${error}`, duration: 2000, color: 'danger' });                                     
+    } finally {
+      setConfirmationModal(false)
+      setDetectedWallet(null)
+      setLoginState(false)
+      await dismiss()
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    		
+  } 
+
   useEffect(() => {
     const fetchWallets = async () => {
       const wallets = await walletService.checkWalletsFromUrl();
 
       if (wallets) {
+        setConfirmationModal(true)
         let firstWallet = '';
         let walletList = '';
         if (Array.isArray(wallets)) {
@@ -148,44 +219,9 @@ const RegistrationPage: React.FC = () => {
           walletList = String(wallets);
         }
 
-        console.log('[RegistrationPage] First wallet detected:', firstWallet);
-
         if (firstWallet) {
              setDetectedWallet(firstWallet);
-             console.log('[RegistrationPage] Set detectedWallet state to:', firstWallet);
-             
-             // AUTO-REGISTER AND REDIRECT
-             try {
-                presentToast({
-                    message: `Wallet detected! Auto-registering...`,
-                    duration: 2000,
-                    color: 'primary',
-                });
-                
-                console.log('[RegistrationPage] Auto-registering wallet:', firstWallet);
-                const response = await walletService.registerWallet(firstWallet.trim());
-                console.log('[RegistrationPage] Auto-registration response:', response);
-
-                connectWallet(firstWallet);
-                
-                presentToast({
-                    message: 'Registration successful! Redirecting...',
-                    duration: 2000,
-                    color: 'success',
-                });
-                
-                setTimeout(() => {
-                    router.push('/dashboard', 'root', 'replace');
-                }, 1000);
-
-             } catch (err: any) {
-                 console.error('[RegistrationPage] Auto-registration failed:', err);
-                 presentToast({
-                    message: 'Auto-registration failed. Please try clicking Register manually.',
-                    duration: 3000,
-                    color: 'warning',
-                });
-             }
+             setConnectedWallet(firstWallet)     
         } else {
              presentToast({
                 message: `Connected wallets: ${walletList}`,
@@ -199,69 +235,20 @@ const RegistrationPage: React.FC = () => {
     fetchWallets();
   }, []);
 
-  function handleOpen() {
+ 
+
+  const handleOpenXterium = () => {
     const callbackUrl = encodeURIComponent(window.location.href);
-    const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}`;
+    const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
     
     // Attempt: window.open with _self target
     window.open(deeplink, '_self');
   }
 
-  const handleRegisterAndStart = async () => {
-    // Robust check: Use state or re-fetch from URL to be sure
-    let walletToRegister = detectedWallet;
-    
-    if (!walletToRegister) {
-        // Double check URL just in case state update was slow/missed
-        const walletsFromUrl = await walletService.checkWalletsFromUrl();
-        if (walletsFromUrl) {
-           if (Array.isArray(walletsFromUrl)) {
-             walletToRegister = typeof walletsFromUrl[0] === 'string' ? walletsFromUrl[0] : (walletsFromUrl[0]?.address ?? '');
-           } else if (typeof walletsFromUrl === 'object') {
-             walletToRegister = (walletsFromUrl as any).address ?? '';
-           } else {
-             walletToRegister = String(walletsFromUrl);
-           }
-        }
-    }
-
-    if (!walletToRegister) {
-        console.log('No wallet detected, opening modal');
-        setIsModalOpen(true);
-        return;
-    }
-    
-    try {
-        console.log('Registering wallet:', walletToRegister);
-        await present({ message: 'Registering via API...' });
-        
-        const response = await walletService.registerWallet(walletToRegister);
-        
-        console.log('API Response:', response);
-        
-        // Connect BEFORE dismissing loading to prevent UI flicker
-        connectWallet(walletToRegister); // Sets isConnected = true
-
-        dismiss();
-        presentToast({
-            message: 'Registration successful!',
-            duration: 2000,
-            color: 'success'
-        });
-
-        // Use replace to prevent back navigation loop
-        router.push('/dashboard', 'root', 'replace');
-        
-    } catch (err: any) {
-        dismiss();
-        console.error('Registration error:', err);
-        presentToast({
-            message: 'Registration failed: ' + (err.message || err),
-            duration: 3000,
-            color: 'danger'
-        });
-    }
-  };
+  const  handleLogin = async () => {
+    setLoginState(true)
+    openXteriumApp()
+  }
 
   return (
     <IonPage>
@@ -299,7 +286,7 @@ const RegistrationPage: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={handleRegisterAndStart}
+                onClick={openXteriumApp}
                 className="custom-button"
                 style={{
                   marginTop: '12px',
@@ -313,7 +300,7 @@ const RegistrationPage: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={() => handleConnect(true)}
+                onClick={openXteriumApp}
                 className="custom-button"
                 style={
                   {
@@ -329,6 +316,29 @@ const RegistrationPage: React.FC = () => {
                 🔒 Connect Operator Wallet
               </IonButton>
 
+              <IonItem lines="none" className="divider-item">
+                  <div className="divider">
+                    <span className="line"></span>
+                    <IonText color="medium" className="text">
+                      Or
+                    </IonText>
+                    <span className="line"></span>
+                  </div>
+              </IonItem>
+
+              <IonButton
+                expand="block"
+                onClick={handleLogin}
+                className="custom-button"
+                style={{
+                  marginTop: '12px',
+                  height: '50px',
+                  fontSize: '1.1rem',
+                  fontWeight: '700',
+                }}
+              >Login
+              </IonButton>
+              
               <div
                 style={{
                   background: 'var(--card-background-color)',
@@ -473,7 +483,7 @@ const RegistrationPage: React.FC = () => {
                 <IonButton
                   className="custom-button"
                   expand="block"
-                  onClick={handleOpen}
+                  onClick={openXteriumApp}
                   style={{ marginTop: '24px', '--background': 'var(--lottery-emerald)' }}
                 >
                   Register This Address
@@ -501,6 +511,44 @@ const RegistrationPage: React.FC = () => {
               )}
             </div>
           </IonContent>
+        </IonModal>
+
+        <IonModal
+                  isOpen={confirmationModal}
+                  onDidDismiss={() => setConfirmationModal(false)}
+                  initialBreakpoint={1}
+                >
+                  <IonContent
+                    className="ion-padding"
+                    style={{
+                      "--background": "var(--background-color)",
+                    }}
+                  >
+        
+                    <div style={{ padding: "8px" }}>
+                      <h2 style={{ color: "var(--lottery-gold)" }}>
+                       {loginState? ('Login') : ('Register')} 
+                      </h2>
+                    </div>
+                    <p style={{ color: "var(--lottery-gold)" }}>First wallet: {connectedWallet}</p> 
+                  </IonContent>
+                  <IonFooter>
+                        <div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)",}}>
+							
+                          <IonButton
+                            className="custom-button"
+                            expand="block"
+                            onClick={handleSubmit}
+                            style={{
+                              flex: 1,
+                              "--background": "var(--lottery-emerald)",
+                            }}
+                          >
+                          Confirm
+                          </IonButton>
+                        </div>
+                  </IonFooter>
+
         </IonModal>
       </IonContent>
     </IonPage>

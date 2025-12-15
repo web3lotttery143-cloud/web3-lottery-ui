@@ -3,29 +3,10 @@ import { useIonToast } from "@ionic/react";
 import type { AccountInfo } from "@polkadot/types/interfaces";
 
 class WalletService {
-	// async getBalance(address: string) {
-	//   // TEST
-	//   try {
-	//     const provider = new WsProvider('wss://zombienet-02.staginglab.info'); // or local node
-	//     const api = await ApiPromise.create({ provider });
-
-	//     const USDT_CURRENCY_ID = 1984; // Xode uses ORML Tokens pallet
-
-	//     const accountData = await api.query.assets.account( USDT_CURRENCY_ID, address);
-
-	//     const data = accountData.toJSON()
-	//     const human = accountData.toHuman() as any;
-
-	//     const sanitized = human.free.replace(/,/g, '');
-	//     return data;
-	//   } catch (error) {
-	//     console.log(`There is an error: ${error}`);
-	//   }
-	// }
-
+	apiUrl = import.meta.env.VITE_API_URL
 	async getBalance(address: string) {
 		try {
-			const provider = new WsProvider("wss://zombienet-02.staginglab.info");
+			const provider = new WsProvider(import.meta.env.VITE_WS_PROVIDER || "");
 			const api = await ApiPromise.create({ provider });
 
 			const USDT_CURRENCY_ID = 1984;
@@ -51,107 +32,130 @@ class WalletService {
 		}
 	}
 
-	openXterium() {
-		try {
-			const callbackUrl = decodeURIComponent(window.location.href);
-			const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}`;
-
-			return deeplink;
-		} catch (error) {
-			return error;
-		}
+	 openXterium() {
+		const callbackUrl = decodeURIComponent(window.location.href);
+		const deeplink = `xterium://app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417`;
+		window.open(deeplink, "_self");
 	}
 
 	async signTransaction(hex: string, address: string) {
 		try {
 			const callbackUrl = encodeURIComponent(window.location.href);
-			//const deeplink = `xterium://app/web3/sign-transaction?encodedCallDataHex=${hex}&callback=${callbackUrl}&wallet=${""}`;
-      		const deeplink = `xterium://app/web3/sign-transaction?encodedCallDataHex=${hex}&callback=${callbackUrl}&walletAddress=${address}`
-			window.open(deeplink, "_self");
-
-			return deeplink;
+			const deeplink = `xterium://app/web3/sign-transaction?encodedCallDataHex=${hex}&callbackUrl=${callbackUrl}&walletAddress=${address}`;
+			window.location.href = deeplink;
 		} catch (error) {
 			return `Something went wrong: ${error}`;
 		}
 	}
 
-	async registerWallet(address: string) {
+	async registerWallet(address: string, uplineAddress?: string): Promise<{success: boolean, message: string, data?: any}> {
 		try {
-			const apiUrl = import.meta.env.VITE_API_URL || "https://web3-lottery-api.blockspacecorp.com";
-			console.log(`Registering wallet: ${address} at ${apiUrl}/members`);
-			const response = await fetch(`${apiUrl}/members`, {
+			const response = await fetch(`${this.apiUrl}/members`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ member_address: address, upline_address: "" }),
+				body: JSON.stringify({ member_address: address, upline_address: uplineAddress || import.meta.env.VITE_OPERATOR_ADDRESS }),
 			});
 
-			if (!response.ok) {
-				throw new Error(`Registration failed: ${response.statusText}`);
-			}
-
 			const data = await response.json();
-			console.log("Registration success:", data);
-			return data;
+
+			if (!response.ok) {
+				return {success: false, message: data.message}
+			}
+			return {success: true, message: data.message, data: data.data.upline_address}
 		} catch (error) {
-			console.error("Error in registerWallet:", error);
-			throw error;
+			return {success: false, message: `${error}`}
 		}
 	}
 
-	async checkWalletsFromUrl() {
+	async loginWallet(address: string): Promise<{success: boolean, message: string, data?: any}> {
+    try {
+		if(address == import.meta.env.VITE_OPERATOR_ADDRESS) {
+			return {success: true, message: 'Operator Connected...', data: 'Admin'}
+		}
+        const response = await fetch(`${this.apiUrl}/members/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ member_address: address, upline_address: "" }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            return {success: false, message: data.error}
+        }
+
+        return {success: true, message: data.message, data: data.data.upline_address};
+    } catch (error) {
+        return {success: false, message: `${error}`}
+    	}
+	}	
+
+	async checkWalletsFromUrl(isNormalizeSearch?: boolean) {
 		try {
-			const params = new URLSearchParams(window.location.search);
+			let params
+			let ref
+			if (isNormalizeSearch) {
+				const rawSearch = window.location.search
+				const fixedSearch = this.normalizeSearch(rawSearch)
+				params = new URLSearchParams(fixedSearch)
+        		
+			} else {
+				params = new URLSearchParams(window.location.search);
+			}
+
 			let walletsParam = params.get("wallets");
+			
 
 			if (!walletsParam) return;
 
-			// Step 1: Try direct JSON parse
-			try {
-				const wallets = JSON.parse(walletsParam);
-
-				return wallets;
-			} catch {}
-
-			// Step 2: URL decode once
 			try {
 				const decodedOnce = decodeURIComponent(walletsParam);
 				const wallets = JSON.parse(decodedOnce);
-				console.log("Connected wallets:", wallets);
-				return wallets;
+
+				return wallets
+				
 			} catch {}
 
-			// Step 3: URL decode twice (some apps encode twice)
-			try {
-				const decodedTwice = decodeURIComponent(
-					decodeURIComponent(walletsParam)
-				);
-				const wallets = JSON.parse(decodedTwice);
-				console.log("Connected wallets:", wallets);
-				return wallets;
-			} catch {}
-
-			console.error("Wallet parsing failed");
 		} catch (err) {
 			console.error("Failed to parse wallets:", err);
 		}
 	}
 
-	checkSignedTxFromUrl = async (): Promise<string | null> => {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get("status");
-    const signedTx = params.get("signedTx");
+	normalizeSearch(search: string) {
+		const firstQ = search.indexOf("?");
+		if (firstQ === -1) return search;
 
-    if (!status || !signedTx) return null;
+		const secondQ = search.indexOf("?", firstQ + 1);
+		if (secondQ === -1) return search;
 
-    return signedTx;
-  } catch (err) {
-    console.error("checkSignedTxFromUrl error:", err);
-    return null;
-  }
-};
+		return (
+			search.slice(0, secondQ) +
+			"&" +
+			search.slice(secondQ + 1)
+		);
+	}
+
+	async checkSignedTxFromUrl(): Promise<{success: boolean, signedTx: string}> {
+		
+		try {
+			const params = new URLSearchParams(window.location.search);
+			const status = params.get("status");
+			if (!status) {
+				return { success: false, signedTx: "" };
+			}
+
+			const signedTx = params.get("signedTx") || "";
+			const betNumber = params.get("betNumber") || "";
+
+			return { success: true, signedTx: signedTx };
+		} catch (err) {
+			return { success: false, signedTx: "" };
+		}
+	};
 }
 
 const walletService = new WalletService();
