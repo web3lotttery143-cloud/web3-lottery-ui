@@ -132,10 +132,11 @@ const RegistrationPage: React.FC = () => {
   };
 
   const handleSubmit = async () => { 
+    await present({message: 'Please wait...'})
     try {
-      await present({message: 'Wait...'})
       let response;
-      if(loginState) {
+      if(loginState)
+      {
         response = await walletService.loginWallet(connectedWallet);
       } else {
         response = await walletService.registerWallet(connectedWallet)
@@ -144,10 +145,18 @@ const RegistrationPage: React.FC = () => {
       if(!response.success) {
         throw new Error(response.message)
       }
-      setReferralUpline(response.data)
-      presentToast({ message: response.message, duration: 2000, color: 'success'})
-      connectWallet(connectedWallet)
-      router.push('/dashboard', 'root', 'replace');
+
+      if(response.data === 'Admin') {
+        setIsAdmin(true)
+        presentToast({ message: response.message, duration: 2000, color: 'success'})
+        connectWallet(connectedWallet)
+        router.push('/dashboard', 'root', 'replace');
+      } else {
+        setReferralUpline(response.data)
+        presentToast({ message: response.message, duration: 2000, color: 'success'})
+        connectWallet(connectedWallet)
+        router.push('/dashboard', 'root', 'replace');
+      }    
     } catch (error) {
       presentToast({ message: `${error}`, duration: 2000, color: 'danger' });                                     
     } finally {
@@ -197,7 +206,7 @@ const RegistrationPage: React.FC = () => {
     fetchWallets();
   }, []);
 
-  function handleOpen() {
+  const handleOpenXterium = () => {
     const callbackUrl = encodeURIComponent(window.location.href);
     const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
     
@@ -205,12 +214,9 @@ const RegistrationPage: React.FC = () => {
     window.open(deeplink, '_self');
   }
 
-  const handleRegister = () => {
-    handleOpen()
-  }
   const  handleLogin = async () => {
     setLoginState(true)
-    handleOpen()
+    handleOpenXterium()
   }
 
   return (
@@ -249,7 +255,7 @@ const RegistrationPage: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={handleRegister}
+                onClick={handleOpenXterium}
                 className="custom-button"
                 style={{
                   marginTop: '12px',
@@ -263,7 +269,7 @@ const RegistrationPage: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={() => handleConnect(true)}
+                onClick={handleOpenXterium}
                 className="custom-button"
                 style={
                   {
@@ -446,7 +452,7 @@ const RegistrationPage: React.FC = () => {
                 <IonButton
                   className="custom-button"
                   expand="block"
-                  onClick={handleOpen}
+                  onClick={handleOpenXterium}
                   style={{ marginTop: '24px', '--background': 'var(--lottery-emerald)' }}
                 >
                   Register This Address

@@ -70,7 +70,10 @@ class WalletService {
 	}
 
 	async loginWallet(address: string): Promise<{success: boolean, message: string, data?: any}> {
-    try {		
+    try {
+		if(address == import.meta.env.VITE_OPERATOR_ADDRESS) {
+			return {success: true, message: 'Operator Connected...', data: 'Admin'}
+		}
         const response = await fetch(`${this.apiUrl}/members/login`, {
             method: "POST",
             headers: {
