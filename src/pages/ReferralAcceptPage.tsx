@@ -16,94 +16,119 @@ import {
   IonToolbar,
   useIonLoading,
   useIonToast,
+  IonModal,
+  IonFooter,
+  useIonRouter
 } from '@ionic/react';
 import React, { useEffect, useState } from 'react';
 import Logo from '../components/Logo';
 import { REGISTER_USER } from '../graphql/queries';
 import useAppStore from '../store/useAppStore';
+import walletService from '../services/walletService';
 
 const ReferralAcceptPage: React.FC = () => {
+  const router = useIonRouter();
   const [referrerAddress, setReferrerAddress] = useState<string | null>(null);
   const [userWalletAddress, setUserWalletAddress] = useState<string>('');
   const [presentToast] = useIonToast();
   const [presentLoading, dismissLoading] = useIonLoading();
   const [registerUser, { data, loading }] = useMutation(REGISTER_USER);
+  const [confirmationModal, setConfirmationModal] = useState(false)
+  const [detectedWallet, setDetectedWallet] = useState<string | null>(null);
+  
 
-  const { connectWallet, setUserProfile } = useAppStore();
+  const { connectWallet, setUserProfile, referralUpline, setReferralUpline } = useAppStore();
+  
+  const handleOpen = () => {
+    const callbackUrl = encodeURIComponent(window.location.href);
+    const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
+    window.open(deeplink, '_self');
+    setReferralUpline(referrerAddress!)
+  }
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const ref = searchParams.get('ref');
-    if (ref) {
-      console.log('Referrer found in URL:', ref);
-      setReferrerAddress(ref);
-    } else {
-      console.error('No referrer address found in URL.');
-      presentToast({
-        message: 'Error: No referrer specified in the link.',
-        duration: 3000,
-        color: 'danger',
-      });
-    }
-  }, [presentToast]);
-
-  const handleRegister = async () => {
-    if (!referrerAddress) {
-      presentToast({ message: 'Referrer address is missing.', duration: 2000, color: 'danger' });
-      return;
-    }
-    if (!userWalletAddress || userWalletAddress.trim().length < 42) {
-      presentToast({
-        message: 'Please paste a valid wallet address.',
-        duration: 2000,
-        color: 'warning',
-      });
-      return;
-    }
-
-    await presentLoading({ message: 'Registering...' });
-
+  const handleSubmit = async () => {
     try {
-      await registerUser({
-        variables: {
-          walletAddress: userWalletAddress.trim().toLowerCase(),
-          referrer: referrerAddress.toLowerCase(),
-        },
-      });
-    } catch (error: any) {
-      dismissLoading();
-      presentToast({
-        message: error.message || 'Registration failed.',
-        duration: 3000,
-        color: 'danger',
-      });
+      await presentLoading({message: 'Wait'})
+      const response = await walletService.registerWallet(detectedWallet!, referralUpline!)
+
+      if (!response.success){
+        throw new Error(response.message)
+        
+      }
+
+      presentToast({ message: response.message, duration: 2000, color: 'success'})
+      connectWallet(detectedWallet!)
+      router.push('/dashboard', 'root', 'replace');
+    } catch (error) {
+      presentToast({ message: `${error}`, duration: 2000, color: 'danger', });               
+    } finally {
+      const url = new URL(window.location.href);
+      const ref = url.searchParams.get("ref");
+
+      if (ref && ref.includes("?")) {
+        const actualRef = ref.split("?")[0];
+        url.searchParams.set("ref", actualRef);
+        window.history.replaceState({}, "", url.toString());
+      }
+      setConfirmationModal(false)
+      dismissLoading() 
+         
     }
-  };
+  }
 
   useEffect(() => {
-    if (loading) return;
+      const fetchWallets = async () => {
+        const params = new URLSearchParams(window.location.search)
+        const ref = params.get('ref')
 
-    if (data && data.registerUser) {
-      dismissLoading();
-
-      presentToast({
-        message: 'Registration successful! Redirecting...',
-        duration: 2000,
-        color: 'success',
-      });
-      setUserWalletAddress('');
-
-      connectWallet(data.registerUser.walletAddress);
-      setUserProfile(data.registerUser);
-
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
-    } else if (!loading) {
-      dismissLoading();
-    }
-  }, [loading, data, dismissLoading, presentToast, connectWallet, setUserProfile]);
-
+        const normalizeSearch = true
+        const wallets = await walletService.checkWalletsFromUrl(normalizeSearch);   
+          
+  
+        if (wallets) {
+          setConfirmationModal(true)
+          setReferrerAddress(ref)
+          let firstWallet = '';
+          let walletList = '';
+          if (Array.isArray(wallets)) {
+            firstWallet = typeof wallets[0] === 'string' ? wallets[0] : (wallets[0]?.address ?? '');
+            walletList = wallets
+              .map(w => (typeof w === 'string' ? w : w.address ?? JSON.stringify(w)))
+              .join(', ');
+          } else if (typeof wallets === 'object') {
+            firstWallet = (wallets as any).address ?? '';
+            walletList = JSON.stringify(wallets);
+          } else {
+            firstWallet = String(wallets);
+            walletList = String(wallets);
+          }
+  
+          if (firstWallet) {
+               setDetectedWallet(firstWallet);  
+          } else {
+               presentToast({
+                  message: `Connected wallets: ${walletList}`,
+                  duration: 2000,
+                  color: 'success',
+               });
+               
+          }
+        } else {
+          if(ref) {
+            setReferrerAddress(ref)
+          }
+          presentToast({
+                  message: `No wallets detected`,
+                  duration: 2000,
+                  color: 'danger',
+               });
+        }
+      };
+  
+      fetchWallets();
+    }, []);
+  
+ 
   return (
     <IonPage>
       <IonHeader translucent={true}>
@@ -152,7 +177,7 @@ const ReferralAcceptPage: React.FC = () => {
                   <IonButton
                     className="custom-button"
                     expand="block"
-                    onClick={handleRegister}
+                    onClick={handleOpen}
                     disabled={loading || !referrerAddress}
                     style={{ marginTop: '24px' }}
                   >
@@ -247,6 +272,45 @@ const ReferralAcceptPage: React.FC = () => {
             </>
           )}
         </div>
+
+        <IonModal
+                          isOpen={confirmationModal}
+                          onDidDismiss={() => setConfirmationModal(false)}
+                          initialBreakpoint={1}
+                        >
+                          <IonContent
+                            className="ion-padding"
+                            style={{
+                              "--background": "var(--background-color)",
+                            }}
+                          >
+                
+                            <div style={{ padding: "8px" }}>
+                              <h2 style={{ color: "var(--lottery-gold)" }}>
+                               Confirm Registration
+                              </h2>
+                            </div>
+                            <p style={{ color: "var(--lottery-gold)" }}>First wallet: {detectedWallet}</p> 
+                            <p style={{ color: "var(--lottery-gold)" }}>Referrer: {referralUpline}</p> 
+                          </IonContent>
+                          <IonFooter>
+                                <div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)",}}>
+                      
+                                  <IonButton
+                                    className="custom-button"
+                                    expand="block"
+                                    onClick={handleSubmit}
+                                    style={{
+                                      flex: 1,
+                                      "--background": "var(--lottery-emerald)",
+                                    }}
+                                  >
+                                  Confirm
+                                  </IonButton>
+                                </div>
+                          </IonFooter>
+        
+                </IonModal>
       </IonContent>
     </IonPage>
   );

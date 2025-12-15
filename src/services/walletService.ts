@@ -91,42 +91,49 @@ class WalletService {
     	}
 	}	
 
-	async checkWalletsFromUrl() {
+	async checkWalletsFromUrl(isNormalizeSearch?: boolean) {
 		try {
-			const params = new URLSearchParams(window.location.search);
+			let params
+			let ref
+			if (isNormalizeSearch) {
+				const rawSearch = window.location.search
+				const fixedSearch = this.normalizeSearch(rawSearch)
+				params = new URLSearchParams(fixedSearch)
+        		
+			} else {
+				params = new URLSearchParams(window.location.search);
+			}
+
 			let walletsParam = params.get("wallets");
+			
 
 			if (!walletsParam) return;
 
-			// Step 1: Try direct JSON parse
-			try {
-				const wallets = JSON.parse(walletsParam);
-
-				return wallets;
-			} catch {}
-
-			// Step 2: URL decode once
 			try {
 				const decodedOnce = decodeURIComponent(walletsParam);
 				const wallets = JSON.parse(decodedOnce);
-				console.log("Connected wallets:", wallets);
-				return wallets;
+
+				return wallets
+				
 			} catch {}
 
-			// Step 3: URL decode twice (some apps encode twice)
-			try {
-				const decodedTwice = decodeURIComponent(
-					decodeURIComponent(walletsParam)
-				);
-				const wallets = JSON.parse(decodedTwice);
-				console.log("Connected wallets:", wallets);
-				return wallets;
-			} catch {}
-
-			console.error("Wallet parsing failed");
 		} catch (err) {
 			console.error("Failed to parse wallets:", err);
 		}
+	}
+
+	normalizeSearch(search: string) {
+		const firstQ = search.indexOf("?");
+		if (firstQ === -1) return search;
+
+		const secondQ = search.indexOf("?", firstQ + 1);
+		if (secondQ === -1) return search;
+
+		return (
+			search.slice(0, secondQ) +
+			"&" +
+			search.slice(secondQ + 1)
+		);
 	}
 
 	async checkSignedTxFromUrl(): Promise<{success: boolean, signedTx: string}> {
