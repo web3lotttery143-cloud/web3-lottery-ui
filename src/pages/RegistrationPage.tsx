@@ -79,7 +79,7 @@ const RegistrationPage: React.FC = () => {
     try {
       // CORRECT: Use Telegram Mini App URL format
       // Replace with your actual bot username and app short name
-      const callbackUrl = encodeURIComponent('https://t.me/Loters12345_bot/http://web3-lottery-ui.blockspacecorp.com/');
+      const callbackUrl = encodeURIComponent('https://t.me/Loters12345_bot/httpsweb3lotteryuiblockspa'); //replace to testing
       const currentUrl = window.location.href;
       presentToast({ message: `${currentUrl}`, duration: 2000, color: 'success' });
       
