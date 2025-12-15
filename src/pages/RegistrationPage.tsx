@@ -119,15 +119,12 @@ const RegistrationPage: React.FC = () => {
     
     console.log('Opening Xterium with:', xteriumDeepLink);
     
-    // Use MainButton with openLink - this can open external apps
-    tg.MainButton.setText('Opening Xterium...');
-    tg.MainButton.show();
-    
-    // Small delay to ensure UI updates
-    setTimeout(() => {
-      tg.openLink(xteriumDeepLink, { try_instant_view: false });
-      tg.MainButton.hide();
-    }, 100);
+    if(window.Telegram && window.Telegram.WebApp){
+      tg.openLink(xteriumDeepLink)
+    } else {
+      presentToast({ message: 'window is not telegram and window.telegram.webApp. using direct link instead', duration: 5000, color: 'warning' });
+      window.location.href = xteriumDeepLink
+    }
     
     tg.HapticFeedback?.impactOccurred('medium');
     
