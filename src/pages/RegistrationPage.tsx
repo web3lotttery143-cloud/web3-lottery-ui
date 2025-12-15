@@ -66,73 +66,65 @@ const RegistrationPage: React.FC = () => {
 //     }
 //   };
 
-  // const openXteriumApp = () => {
-  //   const tg = window.Telegram?.WebApp;
-    
-  //   if (!tg) {
-  //     const errorMsg = 'Telegram WebApp API is not available';
-  //     console.error(errorMsg);
-  //     presentToast({ message: `Not TG error: ${errorMsg}`, duration: 2000, color: 'warning' });
-  //     return;
-  //   }
-
-  //   try {
-  //     // CORRECT: Use Telegram Mini App URL format
-  //     // Replace with your actual bot username and app short name
-  //     const callbackUrl = encodeURIComponent('https://t.me/Loters12345_bot/httpsweb3lotteryuiblockspa'); //replace to testing
-  //     const currentUrl = window.location.href;
-  //     //presentToast({ message: `${currentUrl}`, duration: 2000, color: 'success' });
-      
-  //     // Or if you want to pass parameters back:
-  //     // const callbackUrl = encodeURIComponent('https://t.me/YOUR_BOT_USERNAME/YOUR_APP_SHORT_NAME?startapp=callback');
-      
-  //     const xteriumDeepLink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
-      
-  //     console.log('Opening Xterium with:', xteriumDeepLink);
-      
-  //     tg.HapticFeedback?.impactOccurred('medium');
-  //     tg.openLink(xteriumDeepLink, { try_instant_view: false });
-      
-       
-  //     //presentToast({ message: `Opening Xterium`, duration: 2000, color: 'success' });
-
-      
-  //   } catch (error) {
-  //     const errorMsg = `Error opening Xterium app: ${error}`;
-  //     console.error(errorMsg);
-      
-  //     //presentToast({ message: `${errorMsg}`, duration: 2000, color: 'warning' });
-  //   }
-  // };
-
   const openXteriumApp = () => {
   const tg = window.Telegram?.WebApp;
   
-  if (!tg) {
-    presentToast({ message: 'Telegram WebApp API is not available', duration: 2000, color: 'warning' });
-    return;
-  }
+  // (Omitted the initial tg check and error handling for brevity)
+  // ...
 
   try {
     const callbackUrl = encodeURIComponent('https://t.me/Loters12345_bot/httpsweb3lotteryuiblockspa');
     const xteriumDeepLink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
+    if (!tg) {
+
+    presentToast({ message: 'Telegram WebApp API is not available', duration: 2000, color: 'warning' });
+
+    return;
+
+}
     
-    console.log('Opening Xterium with:', xteriumDeepLink);
-    
-    if(window.Telegram && window.Telegram.WebApp){
-      tg.openLink(xteriumDeepLink)
-    } else {
-      presentToast({ message: 'window is not telegram and window.telegram.webApp. using direct link instead', duration: 5000, color: 'warning' });
-      window.location.href = xteriumDeepLink
-    }
-    
-    tg.HapticFeedback?.impactOccurred('medium');
+    // 1. (Optional) Run Haptic Feedback before navigating away
+    tg.HapticFeedback?.impactOccurred('medium'); 
+
+    // 2. **CRITICAL CHANGE:** Use direct browser navigation for the deep link.
+    // This correctly triggers the external app without triggering the 
+    // "webapptgurl invalid" error from tg.openLink().
+    window.location.href = xteriumDeepLink;
     
   } catch (error) {
     console.error('Error opening Xterium app:', error);
     presentToast({ message: `Error: ${error}`, duration: 2000, color: 'danger' });
   }
 };
+
+//   const openXteriumApp = () => {
+//   const tg = window.Telegram?.WebApp;
+  
+//   if (!tg) {
+//     presentToast({ message: 'Telegram WebApp API is not available', duration: 2000, color: 'warning' });
+//     return;
+//   }
+
+//   try {
+//     const callbackUrl = encodeURIComponent('https://t.me/Loters12345_bot/httpsweb3lotteryuiblockspa');
+//     const xteriumDeepLink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
+    
+//     console.log('Opening Xterium with:', xteriumDeepLink);
+    
+//     if(window.Telegram && window.Telegram.WebApp){
+//       tg.openLink(xteriumDeepLink)
+//     } else {
+//       presentToast({ message: 'window is not telegram and window.telegram.webApp. using direct link instead', duration: 5000, color: 'warning' });
+//       window.location.href = xteriumDeepLink
+//     }
+    
+//     tg.HapticFeedback?.impactOccurred('medium');
+    
+//   } catch (error) {
+//     console.error('Error opening Xterium app:', error);
+//     presentToast({ message: `Error: ${error}`, duration: 2000, color: 'danger' });
+//   }
+// };
 
   const router = useIonRouter();
   const { connectWallet, setUserProfile, setIsAdmin, loginState, setLoginState, setReferralUpline } = useAppStore();
