@@ -33,39 +33,75 @@ interface XteriumConnectButtonProps {
 
 const RegistrationPage: React.FC = () => {
 
-const openXteriumApp = () => {
+// const openXteriumApp = () => {
+//     const tg = window.Telegram?.WebApp;
+    
+//     if (!tg) {
+//       const errorMsg = 'Telegram WebApp API is not available';
+//       presentToast({ message: `${errorMsg}`, duration: 2000, color: 'warning' });
+     
+//       return;
+//     }
+
+//     try {
+//       // Replace with actual Xterium deep link
+//       const callbackUrl = encodeURIComponent(window.location.href);
+//       const xteriumDeepLink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
+      
+//       // Trigger haptic feedback for better UX
+//       tg.HapticFeedback?.impactOccurred('medium');
+      
+//       // Open the app
+//       tg.openLink(xteriumDeepLink, { try_instant_view: false });
+      
+//       console.log('Attempted to open Xterium app');
+//       presentToast({ message: `Attempted to open Xterium app`, duration: 2000, color: 'warning' });
+      
+//       // Handle success - optional
+//       // You can show a toast or perform other actions
+      
+//     } catch (error) {
+//       const errorMsg = `Error opening Xterium app: ${error}`;
+//       presentToast({ message: `${errorMsg}`, duration: 2000, color: 'danger' });
+//     }
+//   };
+
+  const openXteriumApp = () => {
     const tg = window.Telegram?.WebApp;
     
     if (!tg) {
       const errorMsg = 'Telegram WebApp API is not available';
+      console.error(errorMsg);
       presentToast({ message: `${errorMsg}`, duration: 2000, color: 'warning' });
-     
       return;
     }
 
     try {
-      // Replace with actual Xterium deep link
-      const callbackUrl = encodeURIComponent(window.location.href);
+      // CORRECT: Use Telegram Mini App URL format
+      // Replace with your actual bot username and app short name
+      const callbackUrl = encodeURIComponent('https://t.me/Loters12345_bot/http://web3-lottery-ui.blockspacecorp.com/');
+      
+      // Or if you want to pass parameters back:
+      // const callbackUrl = encodeURIComponent('https://t.me/YOUR_BOT_USERNAME/YOUR_APP_SHORT_NAME?startapp=callback');
+      
       const xteriumDeepLink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
       
-      // Trigger haptic feedback for better UX
-      tg.HapticFeedback?.impactOccurred('medium');
+      console.log('Opening Xterium with:', xteriumDeepLink);
       
-      // Open the app
+      tg.HapticFeedback?.impactOccurred('medium');
       tg.openLink(xteriumDeepLink, { try_instant_view: false });
       
-      console.log('Attempted to open Xterium app');
-      presentToast({ message: `Attempted to open Xterium app`, duration: 2000, color: 'warning' });
-      
-      // Handle success - optional
-      // You can show a toast or perform other actions
+       
+      presentToast({ message: `Opening Xterium`, duration: 2000, color: 'success' });
+
       
     } catch (error) {
       const errorMsg = `Error opening Xterium app: ${error}`;
-      presentToast({ message: `${errorMsg}`, duration: 2000, color: 'danger' });
+      console.error(errorMsg);
+      
+      presentToast({ message: `${errorMsg}`, duration: 2000, color: 'warning' });
     }
   };
-
   const router = useIonRouter();
   const { connectWallet, setUserProfile, setIsAdmin, loginState, setLoginState, setReferralUpline } = useAppStore();
   const [present, dismiss] = useIonLoading();
