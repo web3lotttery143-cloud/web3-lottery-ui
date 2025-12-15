@@ -26,8 +26,37 @@ import { App, URLOpenListenerEvent } from '@capacitor/app';
 import walletService from '../services/walletService';
 
 const ADMIN_WALLET = import.meta.env.VITE_OPERATOR_WALLET_ADDRESS?.toLowerCase();
+declare global {
+  interface Window {
+    Telegram: any;
+  }
+}
 
 const RegistrationPage: React.FC = () => {
+
+  useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+    }
+  }, []);
+
+  const openXteriumApp = () => {
+    try {
+      const tg = window.Telegram.WebApp
+      const deepLink = `xterium://app/web3/approval?callback=${tg}&chainId=3417`;
+
+      tg.openLink(deepLink, {
+        try_instant_view: false,
+      });
+    } catch (error) {
+      presentToast({ message: `${error}`, duration: 2000, color: 'warning' });
+     
+    }
+    
+  };
+
   const router = useIonRouter();
   const { connectWallet, setUserProfile, setIsAdmin, loginState, setLoginState, setReferralUpline } = useAppStore();
   const [present, dismiss] = useIonLoading();
@@ -206,6 +235,8 @@ const RegistrationPage: React.FC = () => {
     fetchWallets();
   }, []);
 
+ 
+
   const handleOpenXterium = () => {
     const callbackUrl = encodeURIComponent(window.location.href);
     const deeplink = `xterium://app/web3/approval?callback=${callbackUrl}&chainId=3417`;
@@ -216,7 +247,7 @@ const RegistrationPage: React.FC = () => {
 
   const  handleLogin = async () => {
     setLoginState(true)
-    handleOpenXterium()
+    openXteriumApp()
   }
 
   return (
@@ -255,7 +286,7 @@ const RegistrationPage: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={handleOpenXterium}
+                onClick={openXteriumApp}
                 className="custom-button"
                 style={{
                   marginTop: '12px',
@@ -269,7 +300,7 @@ const RegistrationPage: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={handleOpenXterium}
+                onClick={openXteriumApp}
                 className="custom-button"
                 style={
                   {
@@ -452,7 +483,7 @@ const RegistrationPage: React.FC = () => {
                 <IonButton
                   className="custom-button"
                   expand="block"
-                  onClick={handleOpenXterium}
+                  onClick={openXteriumApp}
                   style={{ marginTop: '24px', '--background': 'var(--lottery-emerald)' }}
                 >
                   Register This Address
