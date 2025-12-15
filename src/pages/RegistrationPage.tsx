@@ -72,7 +72,7 @@ const RegistrationPage: React.FC = () => {
     if (!tg) {
       const errorMsg = 'Telegram WebApp API is not available';
       console.error(errorMsg);
-      presentToast({ message: `${errorMsg}`, duration: 2000, color: 'warning' });
+      presentToast({ message: `Not TG error: ${errorMsg}`, duration: 2000, color: 'warning' });
       return;
     }
 
@@ -80,6 +80,8 @@ const RegistrationPage: React.FC = () => {
       // CORRECT: Use Telegram Mini App URL format
       // Replace with your actual bot username and app short name
       const callbackUrl = encodeURIComponent('https://t.me/Loters12345_bot/http://web3-lottery-ui.blockspacecorp.com/');
+      const currentUrl = window.location.href;
+      presentToast({ message: `${currentUrl}`, duration: 2000, color: 'success' });
       
       // Or if you want to pass parameters back:
       // const callbackUrl = encodeURIComponent('https://t.me/YOUR_BOT_USERNAME/YOUR_APP_SHORT_NAME?startapp=callback');
@@ -92,14 +94,14 @@ const RegistrationPage: React.FC = () => {
       tg.openLink(xteriumDeepLink, { try_instant_view: false });
       
        
-      presentToast({ message: `Opening Xterium`, duration: 2000, color: 'success' });
+      //presentToast({ message: `Opening Xterium`, duration: 2000, color: 'success' });
 
       
     } catch (error) {
       const errorMsg = `Error opening Xterium app: ${error}`;
       console.error(errorMsg);
       
-      presentToast({ message: `${errorMsg}`, duration: 2000, color: 'warning' });
+      //presentToast({ message: `${errorMsg}`, duration: 2000, color: 'warning' });
     }
   };
   const router = useIonRouter();
