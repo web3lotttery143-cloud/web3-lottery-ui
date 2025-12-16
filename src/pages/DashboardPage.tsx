@@ -66,6 +66,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [isWinnerNumberLoading, setIsWinnerNumberLoading] = useState(false);
 	const [signedHex, setSignedHex] = useState("");
 	const [progress, setProgress] = useState(0);
+	const [jackpot, setJackpot] = useState("")
+	const [isJackpotLoading, setIsJackpotLoading] = useState(false)
+	const [numberOfTicketsSold, setNumberOfTicketsSold] = useState(0)
+	const [maximumBets, setMaximumBets] = useState('')
+
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
 		onCompleted: (data) => {
@@ -162,25 +167,48 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		refetch().finally(() => event.detail.complete());
 	};
 
+	// IF EVER YOU CHANGE UR MIND, FETCH getDraws and getLotterySetup after registration and ask bro how we could handle things for better efficiency
 	useEffect(() => {
 		const getDraws = async () => {
 			try {
 				setIsWinnerNumberLoading(true);
+				setIsJackpotLoading(true)
 				const data = await lotteryService.getDraws();
-				const winningNumber = data.Ok?.[0]?.winningNumber;
+
+				if(!data.success) {
+					presentToast({ message: `${data.message}`, duration: 3000, color: "warning", });
+				}
+
+				const winningNumber = data.winningNumber;
 				setIsWinnerNumberLoading(false);
-				setWinnerNumber(winningNumber || "N/A"); // update state
+				setIsJackpotLoading(false)
+				setJackpot(data.jackpot || '0')
+				setNumberOfTicketsSold(data.bets)
+				setWinnerNumber(winningNumber || 'N/A'); // update state
 			} catch (error) {
-				presentToast({
-					message: `${error}`,
-					duration: 3000,
-					color: "danger",
-				});
+				presentToast({ message: `${error}`, duration: 3000, color: "danger", });
+				setWinnerNumber('N/A')
+				setIsWinnerNumberLoading(false)
+				setIsJackpotLoading(false)
 			}
 		};
-
 		getDraws();
 	}, []);
+
+	useEffect(() => {
+		const getLotterySetup = async () => {
+			try {
+				const data = await lotteryService.getLotterySetup()
+				if(!data.success) {
+					throw new Error('Failed to fetch')
+				}
+				setMaximumBets(data.maximumBets || '0')
+			} catch (error) {
+				presentToast({ message: `${error}`, duration: 3000, color: "danger", });
+			}
+		}
+		getLotterySetup()
+	}, [])
 
 	const handleSubmit = async () => {
 		presentLoading("Submitting transaction...");
@@ -427,19 +455,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													alignItems: "center",
 													gap: "8px", // 👈 adjust spacing here
 												}}>
-												<IonChip outline={true} color="success" onClick={handleOpenWinnersModal}>See winners 👉</IonChip>
-												<IonText
-													style={{
-														color:
-															2 > 1
-																? "var(--lottery-emerald)"
-																: "var(--text-color-secondary)",
-														fontWeight: "700",
-														fontSize: "1.1rem",
-													}}
-												>
-													10
-												</IonText>
+												<IonChip outline={true} color="success" onClick={handleOpenWinnersModal}>See winners</IonChip>
 											</div>
 										</IonItem>
 										<IonItem
@@ -469,7 +485,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													fontSize: "1.1rem",
 												}}
 											>
-												$ 1,000,000
+												{isJackpotLoading ? (
+													<IonSpinner name="dots" />
+												): (
+													 `$ ${jackpot || "0"}`
+												)}
 											</IonText>
 										</IonItem>
 										<IonItem
@@ -659,7 +679,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													fontSize: "1.1rem",
 												}}
 											>
-												$ 1,000,000
+												{jackpot || '0'}
 											</IonText>
 										</IonItem>
 										<IonItem
@@ -715,10 +735,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										textShadow: "0 4px 8px rgba(255, 215, 0, 0.3)",
 									}}
 								>
-									$
-									{cycle
-										? parseFloat(cycle.totalJackpot).toFixed(2)
-										: "1,000,000"}
+									{isJackpotLoading ? (
+										<>
+										 <IonSpinner name="crescent" />
+										</>
+									) : (
+										`$ ${jackpot || "0"}`
+									)}
 								</h1>
 							</IonText>
 							<IonText>
@@ -729,14 +752,21 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										fontSize: "1.1rem",
 										fontWeight: "500",
 									}}
-								>
-									{cycle ? cycle.totalBets : 5000} / 10,000 Tickets Sold
+								>{isJackpotLoading ? (
+									<>
+										<IonSpinner name="dots" />
+									</>
+								): (<>
+									{numberOfTicketsSold || 0} / {maximumBets} Tickets Sold
+									</>	
+								)}
+									
 								</p>
 							</IonText>
 							<div className="progress-container">
 								<div
 									className="progress-bar"
-									style={{ width: `${(cycle?.totalBets || 5000) / 100}%` }}
+									style={{ width: `${(numberOfTicketsSold || 0) / Number(maximumBets)}%` }}
 								></div>
 							</div>
 							<IonText>
@@ -909,7 +939,67 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 									🏆 Winners 🏆
 								</h2>
 							</div>
-							
+						</div>
+
+						<div
+							className="fade-in"
+							style={{ padding: "8px" }}
+						>
+							<IonCard
+								className="custom-card"
+								style={{ margin: "0 0 0 0" }}
+							>
+								<IonCardHeader>
+									<IonCardTitle
+										className="custom-card-title"
+										style={{ display: "flex", alignItems: "center" }}
+									>
+										🎯 Draw # 1
+										<IonBadge
+											style={{
+												background: "var(--gold-gradient)",
+												color: "#000000",
+												marginLeft: "auto", // pushes badge to the end
+												fontWeight: "700",
+												fontSize: "0.8rem",
+											}}
+										>
+											JACKPOT ROLLED
+										</IonBadge>
+									</IonCardTitle>
+								</IonCardHeader>
+								<IonCardContent style={{ padding: "0" }}>
+									<IonList
+										lines="full"
+										style={{ background: "transparent", padding: "0" }}
+									>
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													//Addresses here
+												</IonText>
+											</IonLabel>
+										
+										</IonItem>
+									
+						
+									</IonList>
+								</IonCardContent>
+							</IonCard>
 						</div>
 						</IonContent>
 
