@@ -316,7 +316,7 @@ const RegistrationPage: React.FC = () => {
 
   const  handleLogin = async () => {
     setLoginState(true)
-    openXteriumApp()
+    handleOpenXterium()
   }
 
   return (
@@ -355,7 +355,7 @@ const RegistrationPage: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={openXteriumApp}
+                onClick={handleOpenXterium}
                 className="custom-button"
                 style={{
                   marginTop: '12px',
@@ -369,7 +369,7 @@ const RegistrationPage: React.FC = () => {
 
               <IonButton
                 expand="block"
-                onClick={openXteriumApp}
+                onClick={handleOpenXterium}
                 className="custom-button"
                 style={
                   {
