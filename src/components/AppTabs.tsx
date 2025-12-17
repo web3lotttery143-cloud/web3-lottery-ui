@@ -6,6 +6,8 @@ import {
   personCircleOutline,
   pieChartOutline,
   shieldCheckmarkOutline,
+  terminal,
+  terminalOutline,
 } from 'ionicons/icons';
 import { useEffect, useState } from 'react';
 import { GET_ME_AND_CURRENT_CYCLE } from '../graphql/queries';
@@ -17,8 +19,9 @@ import BetsPage from '../pages/BetsPage';
 import DashboardPage from '../pages/DashboardPage';
 import ProfilePage from '../pages/ProfilePage';
 import ResultsPage from '../pages/ResultsPage';
+import TerminalPage from '../pages/TerminalPage';
 
-type Tab = 'dashboard' | 'bets' | 'results' | 'profile' | 'admin';
+type Tab = 'dashboard' | 'bets' | 'results' | 'profile' | 'terminal' | 'admin';
 
 const AppTabs: React.FC = () => {
   const {
@@ -74,6 +77,8 @@ const AppTabs: React.FC = () => {
         return <ResultsPage />;
       case 'profile':
         return <ProfilePage />;
+      case 'terminal':
+        return <TerminalPage/>
       case 'admin':
         return isAdmin ? (
           <AdminPage />
@@ -165,11 +170,17 @@ const AppTabs: React.FC = () => {
           isSelected={activeTab === 'profile'}
         />
         <TabButton
+          tab="terminal"
+          icon={terminalOutline}
+          label="Terminal"
+          isSelected={activeTab === 'terminal'}
+        />
+        {/* <TabButton
           tab="bets"
           icon={cashOutline}
           label="My Bets"
           isSelected={activeTab === 'bets'}
-        />
+        /> */}
         <TabButton
           tab="results"
           icon={listCircleOutline}
