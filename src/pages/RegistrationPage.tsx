@@ -367,24 +367,6 @@ const RegistrationPage: React.FC = () => {
                 🚀 Register & Start Playing
               </IonButton>
 
-              <IonButton
-                expand="block"
-                onClick={handleOpenXterium}
-                className="custom-button"
-                style={
-                  {
-                    marginTop: '12px',
-                    height: '50px',
-                    fontSize: '1.1rem',
-                    fontWeight: '700',
-                    '--background': 'var(--lottery-purple)',
-                    '--color': '#ffffff',
-                  } as any
-                }
-              >
-                🔒 Connect Operator Wallet
-              </IonButton>
-
               <IonItem lines="none" className="divider-item">
                   <div className="divider">
                     <span className="line"></span>
