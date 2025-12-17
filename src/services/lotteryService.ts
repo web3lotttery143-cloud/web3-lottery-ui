@@ -27,6 +27,7 @@ class LotteryService {
         }
         const data = await res.json()
         const values = data.Ok?.[0] // Capital O, get first item from array
+		const winners = values?.winners ?? []
 		const betsArray = data.Ok[0].bets;
         const betsCount = betsArray.length;
 
@@ -38,7 +39,7 @@ class LotteryService {
             success: true, 
             jackpot: values.jackpot, 
             winningNumber: values.winningNumber, 
-            winners: values.winners, 
+            winners: winners, 
 			bets: betsCount,
             message: 'Success'
         }

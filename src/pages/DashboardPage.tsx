@@ -70,6 +70,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [isJackpotLoading, setIsJackpotLoading] = useState(false)
 	const [numberOfTicketsSold, setNumberOfTicketsSold] = useState(0)
 	const [maximumBets, setMaximumBets] = useState('')
+	const [winners, setWinners] = useState<any[]>([]);
 
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
@@ -176,7 +177,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				const data = await lotteryService.getDraws();
 
 				if(!data.success) {
-					presentToast({ message: `${data.message}`, duration: 3000, color: "warning", });
+					presentToast({ message: `${data.message}`, duration: 3000, color: "danger", });
 				}
 
 				const winningNumber = data.winningNumber;
@@ -185,11 +186,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				setJackpot(data.jackpot || '0')
 				setNumberOfTicketsSold(data.bets)
 				setWinnerNumber(winningNumber || 'N/A'); // update state
+				setWinners(data.winners || []); // Add this line
 			} catch (error) {
 				presentToast({ message: `${error}`, duration: 3000, color: "danger", });
 				setWinnerNumber('N/A')
 				setIsWinnerNumberLoading(false)
 				setIsJackpotLoading(false)
+				setWinners([]); 
 			}
 		};
 		getDraws();
@@ -413,6 +416,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													</div>
 												) : (
 													winnerNumber
+														.toString()
+  														.padEnd(3, "0")		
 														.split("")
 														.map((digit: string, index: number) => (
 															<div
@@ -490,34 +495,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 												): (
 													 `$ ${jackpot || "0"}`
 												)}
-											</IonText>
-										</IonItem>
-										<IonItem
-											style={
-												{
-													"--background": "transparent",
-													"--padding-start": "16px",
-													"--inner-padding-end": "16px",
-												} as any
-											}
-										>
-											<IonLabel>
-												<IonText
-													style={{
-														color: "var(--text-color-secondary)",
-														fontSize: "0.9rem",
-													}}
-												>
-													Draw Date
-												</IonText>
-											</IonLabel>
-											<IonText
-												style={{
-													color: "var(--text-color-secondary)",
-													fontSize: "0.9rem",
-												}}
-											>
-												Dec. 12, 2025
 											</IonText>
 										</IonItem>
 									</IonList>
@@ -682,34 +659,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 												{jackpot || '0'}
 											</IonText>
 										</IonItem>
-										<IonItem
-											style={
-												{
-													"--background": "transparent",
-													"--padding-start": "16px",
-													"--inner-padding-end": "16px",
-												} as any
-											}
-										>
-											<IonLabel>
-												<IonText
-													style={{
-														color: "var(--text-color-secondary)",
-														fontSize: "0.9rem",
-													}}
-												>
-													Draw Date
-												</IonText>
-											</IonLabel>
-											<IonText
-												style={{
-													color: "var(--text-color-secondary)",
-													fontSize: "0.9rem",
-												}}
-											>
-												Dec. 12, 2025
-											</IonText>
-										</IonItem>
 									</IonList>
 								</IonCardContent>
 							</IonCard>
@@ -778,7 +727,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										marginTop: "8px",
 									}}
 								>
-									Next Draw: When 10,000 tickets are sold!
+									Next Draw: 10 PM
 								</p>
 							</IonText>
 						</IonCardContent>
@@ -883,7 +832,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				<IonModal
 					isOpen={isModalOpen}
 					onDidDismiss={() => setIsModalOpen(false)}
-					initialBreakpoint={0.5}
+					initialBreakpoint={0.4}
 					breakpoints={[0, 0.5]}
 					backdropBreakpoint={0.25}
 				>
@@ -891,27 +840,28 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 						className="ion-padding"
 						style={{ "--background": "var(--background-color)" }}
 					>
-						<div style={{ padding: "8px" }}>
+						<div style={{ padding: "8px",  }}>
 							<h2 style={{ color: "var(--lottery-gold)" }}>Place Bet</h2>
-
-							<IonSelect
-								value={draw}
-								onIonChange={(e) => setDraw(e.detail.value)}
-								label="Draw number"
-								labelPlacement="floating"
-								fill="solid"
-								className="dark-select"
-							>
-								<IonSelectOption value="1">10 AM Draw</IonSelectOption>
-								<IonSelectOption value="2">10 PM Draw</IonSelectOption>
-							</IonSelect>
+							<div style={{ color: "var(--lottery-gold)" }}>
+								<IonSelect
+									value={draw}
+									onIonChange={(e) => setDraw(e.detail.value)}
+									label="Draw number"
+									labelPlacement="floating"
+									fill="solid"
+									className="dark-select"
+								>
+									<IonSelectOption value="1">10 AM Draw</IonSelectOption>
+									<IonSelectOption value="2">10 PM Draw</IonSelectOption>
+								</IonSelect>
+							</div>
 
 							<IonButton
 								className="custom-button"
 								expand="block"
 								onClick={handlePlaceBet}
 								style={{
-									marginTop: "24px",
+									marginTop: "80px",
 									"--background": "var(--lottery-emerald)",
 								}}
 							>
@@ -973,36 +923,64 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										lines="full"
 										style={{ background: "transparent", padding: "0" }}
 									>
-										<IonItem
-											style={
-												{
-													"--background": "transparent",
-													"--border-color": "rgba(255, 215, 0, 0.2)",
-													"--padding-start": "16px",
-													"--inner-padding-end": "16px",
-												} as any
-											}
-										>
-											<IonLabel>
-												<IonText
-													style={{
-														color: "var(--text-color-secondary)",
-														fontSize: "0.9rem",
-													}}
+										{winners.length > 0 ? (
+											winners.map((winner, index) => (
+												<IonItem
+													key={index}
+													style={
+														{
+															"--background": "transparent",
+															"--border-color": "rgba(255, 215, 0, 0.2)",
+															"--padding-start": "16px",
+															"--inner-padding-end": "16px",
+														} as any
+													}
 												>
-													//Addresses here
-												</IonText>
-											</IonLabel>
-										
-										</IonItem>
-									
-						
+													<IonLabel>
+														<IonText
+															style={{
+																color: "var(--text-color-secondary)",
+																fontSize: "0.9rem",
+															}}
+														>
+															<a href={`https://node.xode.net/polkadot/account/${winner.bettor}`}>
+																{winner.bettor}
+															</a>
+														</IonText>
+													</IonLabel>
+												</IonItem>
+											))
+										) : (
+											<IonItem
+												style={
+													{
+														"--background": "transparent",
+														"--border-color": "rgba(255, 215, 0, 0.2)",
+														"--padding-start": "16px",
+														"--inner-padding-end": "16px",
+													} as any
+												}
+											>
+												<IonLabel>
+													<IonText
+														style={{
+															color: "var(--text-color-secondary)",
+															fontSize: "0.9rem",
+															fontStyle: "italic",
+															textAlign: "center",
+															display: "block",
+														}}
+													>
+														No winners yet
+													</IonText>
+												</IonLabel>
+											</IonItem>
+										)}
 									</IonList>
 								</IonCardContent>
 							</IonCard>
 						</div>
-						</IonContent>
-
+					</IonContent>
 						<IonFooter>
 							<div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)",}}>
 								<IonButton
