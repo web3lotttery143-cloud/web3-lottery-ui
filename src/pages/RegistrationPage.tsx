@@ -381,12 +381,16 @@ const RegistrationPage: React.FC = () => {
                 expand="block"
                 onClick={handleLogin}
                 className="custom-button"
-                style={{
-                  marginTop: '12px',
-                  height: '50px',
-                  fontSize: '1.1rem',
-                  fontWeight: '700',
-                }}
+                style={
+                  {
+                    marginTop: '12px',
+                    height: '50px',
+                    fontSize: '1.1rem',
+                    fontWeight: '700',
+                    '--background': 'var(--lottery-purple)',
+                    '--color': '#ffffff',
+                  } as any
+                }
               >Login
               </IonButton>
               

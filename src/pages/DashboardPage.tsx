@@ -776,32 +776,68 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 				<IonModal
 					isOpen={confirmationModal}
-					onDidDismiss={() => setConfirmationModal(false)}
+					onDidDismiss={handleCancel}
 					initialBreakpoint={1}
 				>
 					<IonContent
 						className="ion-padding"
-						style={{
-							"--background": "var(--background-color)",
-						}}
+						style={{ "--background": "var(--background-color)" }}
 					>
-						<IonProgressBar value={progress}></IonProgressBar>
+						<IonProgressBar value={progress} color="warning" style={{ marginBottom: 16 }} />
 
 						<div style={{ padding: "8px" }}>
-							<h2 style={{ color: "var(--lottery-gold)" }}>
-								Confirm Transaction ✅
+							<h2 style={{ color: "var(--lottery-gold)", marginBottom: 8 }}>
+								Confirm Transaction
+								<span role="img" aria-label="check"> ✅</span>
 							</h2>
-							<div style={{ color: "var(--lottery-gold)" }}>
-								<p>Signed Hex: {signedHex}</p>
-								{/* globalbetNumberState */}
-								<p>Draw number: {draw}</p>
-								<p>Bet number: {globalBetNumber}</p>
-								<p>Referrer {referralUpline}</p>
-								<p>Ticket Price: $ 0.5</p>
-							</div>
+							<IonList lines="none" style={{ background: "transparent" }}>
+								<IonItem style={{ "--background": "transparent" }}>
+									<IonLabel>
+										<IonText color="medium" style={{ fontWeight: 500 }}>Draw Number:</IonText>
+									</IonLabel>
+									<IonText color="primary">{draw}</IonText>
+								</IonItem>
+								<IonItem style={{ "--background": "transparent" }}>
+									<IonLabel>
+										<IonText color="medium" style={{ fontWeight: 500 }}>Bet Number:</IonText>
+									</IonLabel>
+									<IonText color="primary">{globalBetNumber}</IonText>
+								</IonItem>
+								<IonItem style={{ "--background": "transparent" }}>
+									<IonLabel>
+										<IonText color="medium" style={{ fontWeight: 500 }}>Referrer:</IonText>
+									</IonLabel>
+									<IonText color="primary">
+										{referralUpline
+											? `${referralUpline.substring(0, 6)}...${referralUpline.substring(referralUpline.length - 4)}`
+											: "N/A"}
+									</IonText>
+								</IonItem>
+								<IonItem style={{ "--background": "transparent" }}>
+									<IonLabel>
+										<IonText color="medium" style={{ fontWeight: 500 }}>Ticket Price:</IonText>
+									</IonLabel>
+									<IonText color="success">$0.50</IonText>
+								</IonItem>
+								<IonItem style={{ "--background": "transparent" }}>
+									<IonLabel>
+										<IonText color="medium" style={{ fontWeight: 500 }}>Signed Hex:</IonText>
+									</IonLabel>
+									<IonText
+										style={{
+											wordBreak: "break-all",
+											fontSize: "0.85rem",
+											opacity: 0.8,
+										}}
+									>
+										{signedHex ? signedHex.slice(0, 16) + "..." : "N/A"}
+									</IonText>
+								</IonItem>
+							</IonList>
 						</div>
-
-						<div style={{ display: "flex", gap: "12px" }}>
+					</IonContent>
+					<IonFooter>
+						<div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)", padding: "16px" }}>
 							<IonButton
 								className="custom-button"
 								expand="block"
@@ -826,47 +862,65 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 								Confirm
 							</IonButton>
 						</div>
-					</IonContent>
+					</IonFooter>
 				</IonModal>
 
 				<IonModal
 					isOpen={isModalOpen}
 					onDidDismiss={() => setIsModalOpen(false)}
-					initialBreakpoint={0.4}
-					breakpoints={[0, 0.5]}
-					backdropBreakpoint={0.25}
+					initialBreakpoint={0.5}
 				>
 					<IonContent
 						className="ion-padding"
 						style={{ "--background": "var(--background-color)" }}
 					>
-						<div style={{ padding: "8px",  }}>
-							<h2 style={{ color: "var(--lottery-gold)" }}>Place Bet</h2>
-							<div style={{ color: "var(--lottery-gold)" }}>
-								<IonSelect
-									value={draw}
-									onIonChange={(e) => setDraw(e.detail.value)}
-									label="Draw number"
-									labelPlacement="floating"
-									fill="solid"
-									className="dark-select"
-								>
-									<IonSelectOption value="1">10 AM Draw</IonSelectOption>
-									<IonSelectOption value="2">10 PM Draw</IonSelectOption>
-								</IonSelect>
-							</div>
-
+						<div style={{ padding: "8px" }}>
+							<h2 style={{ color: "var(--lottery-gold)", marginBottom: 16, textAlign: "center" }}>
+								Place Your Bet
+							</h2>
+							<IonList lines="none" style={{ background: "transparent" }}>
+								<IonItem style={{ "--background": "transparent" }}>
+									<IonLabel position="stacked" style={{ color: "var(--lottery-gold)", fontWeight: 600 }}>
+										Select Draw
+									</IonLabel>
+									<IonSelect
+										value={draw}
+										onIonChange={(e) => setDraw(e.detail.value)}
+										placeholder="Choose draw"
+										fill="solid"
+										className="dark-select"
+										style={{ width: "100%" }}
+									>
+										<IonSelectOption value="1">10 AM Draw</IonSelectOption>
+										<IonSelectOption value="2">10 PM Draw</IonSelectOption>
+									</IonSelect>
+								</IonItem>
+								<IonItem style={{ "--background": "transparent", marginTop: 16 }}>
+									<IonLabel position="stacked" style={{ color: "var(--lottery-gold)", fontWeight: 600 }}>
+										Your Bet Number
+									</IonLabel>
+									<IonText style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--ion-color-primary)" }}>
+										{betNumber || <span style={{ opacity: 0.5 }}>---</span>}
+									</IonText>
+								</IonItem>
+							</IonList>
 							<IonButton
 								className="custom-button"
 								expand="block"
 								onClick={handlePlaceBet}
+								disabled={!betNumber || betNumber.length !== 3}
 								style={{
-									marginTop: "80px",
+									marginTop: "48px",
 									"--background": "var(--lottery-emerald)",
+									fontWeight: 700,
+									fontSize: "1.1rem",
 								}}
 							>
-								Place Bet
+								{placingBet ? <IonSpinner name="crescent" /> : "Place Bet"}
 							</IonButton>
+							<IonText style={{ display: "block", marginTop: 16, color: "var(--text-color-secondary)", fontSize: "0.95rem", textAlign: "center" }}>
+								Each ticket costs <b>$0.50</b>. Good luck!
+							</IonText>
 						</div>
 					</IonContent>
 				</IonModal>
@@ -944,7 +998,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 															}}
 														>
 															<a href={`https://node.xode.net/polkadot/account/${winner.bettor}`}>
-																{winner.bettor}
+																{winner.bettor
+																	? `${winner.bettor.substring(0, 6)}...${winner.bettor.substring(winner.bettor.length - 4)}`
+																	: ""}
 															</a>
 														</IonText>
 													</IonLabel>
