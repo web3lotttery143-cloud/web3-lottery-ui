@@ -63,14 +63,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [winnersModal, setWinnersModal] = useState(false)
 	const [draw, setDraw] = useState("1");
 	const [winnerNumber, setWinnerNumber] = useState("");
+	const [winnerNumber2, setWinnerNumber2] = useState("");
 	const [isWinnerNumberLoading, setIsWinnerNumberLoading] = useState(false);
 	const [signedHex, setSignedHex] = useState("");
 	const [progress, setProgress] = useState(0);
 	const [jackpot, setJackpot] = useState("")
+	const [jackpot2, setJackpot2] = useState("")
 	const [isJackpotLoading, setIsJackpotLoading] = useState(false)
 	const [numberOfTicketsSold, setNumberOfTicketsSold] = useState(0)
 	const [maximumBets, setMaximumBets] = useState('')
 	const [winners, setWinners] = useState<any[]>([]);
+	const [winners2, setWinners2] = useState<any[]>([]);
+	const [selectedDrawForModal, setSelectedDrawForModal] = useState<1 | 2>(1);
+	const [bettorShare, setBettorShare] = useState("0")
 
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
@@ -156,7 +161,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		}
 	};
 
-	const handleOpenWinnersModal = () => {
+	const handleOpenWinnersModal = (drawIndex: 1 | 2) => {
+		setSelectedDrawForModal(drawIndex)
 		setWinnersModal(true)
 	}
 
@@ -174,25 +180,41 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			try {
 				setIsWinnerNumberLoading(true);
 				setIsJackpotLoading(true)
-				const data = await lotteryService.getDraws();
+				const result = await lotteryService.getDraws();
 
-				if(!data.success) {
-					presentToast({ message: `${data.message}`, duration: 3000, color: "danger", });
+				if(!result.success || !result.draws) {
+					presentToast({ message: `${result.message}`, duration: 3000, color: "danger", });
+					return;
 				}
 
-				const winningNumber = data.winningNumber;
+				const draws = result.draws;
+				const draw1 = draws[0];
+				const draw2 = draws[1];
+
 				setIsWinnerNumberLoading(false);
 				setIsJackpotLoading(false)
-				setJackpot(data.jackpot || '0')
-				setNumberOfTicketsSold(data.bets)
-				setWinnerNumber(winningNumber || 'N/A'); // update state
-				setWinners(data.winners || []); // Add this line
+
+				if (draw1) {
+					setJackpot(draw1.jackpot || '0')
+					setNumberOfTicketsSold(draw1.bets?.length || 0)
+					setWinnerNumber(draw1.winningNumber || 'N/A'); 
+					setWinners(draw1.winners || []); 
+				}
+
+				if (draw2) {
+					setJackpot2(draw2.jackpot || '0')
+					setWinnerNumber2(draw2.winningNumber || 'N/A');
+					setWinners2(draw2.winners || []);
+				}
+
 			} catch (error) {
 				presentToast({ message: `${error}`, duration: 3000, color: "danger", });
 				setWinnerNumber('N/A')
+				setWinnerNumber2('N/A')
 				setIsWinnerNumberLoading(false)
 				setIsJackpotLoading(false)
 				setWinners([]); 
+				setWinners2([]);
 			}
 		};
 		getDraws();
@@ -460,7 +482,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													alignItems: "center",
 													gap: "8px", // 👈 adjust spacing here
 												}}>
-												<IonChip outline={true} color="success" onClick={handleOpenWinnersModal}>See winners</IonChip>
+												<IonChip outline={true} color="success" onClick={() => handleOpenWinnersModal(1)}>See winners</IonChip>
 											</div>
 										</IonItem>
 										<IonItem
@@ -493,7 +515,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 												{isJackpotLoading ? (
 													<IonSpinner name="dots" />
 												): (
-													 `$ ${jackpot || "0"}`
+													 `$ ${jackpot|| "0"}`
 												)}
 											</IonText>
 										</IonItem>
@@ -578,7 +600,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 														))}
 													</div>
 												) : (
-													winnerNumber
+													winnerNumber2
+														.toString()
+  														.padEnd(3, "0")		
 														.split("")
 														.map((digit: string, index: number) => (
 															<div
@@ -616,18 +640,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													Total Winners
 												</IonText>
 											</IonLabel>
-											<IonText
-												style={{
-													color:
-														0 > 1
-															? "var(--lottery-emerald)"
-															: "var(--text-color-secondary)",
-													fontWeight: "700",
-													fontSize: "1.1rem",
-												}}
-											>
-												10
-											</IonText>
+											<div style={{
+													display: "flex",
+													alignItems: "center",
+													gap: "8px", // 👈 adjust spacing here
+												}}>
+												<IonChip outline={true} color="success" onClick={() => handleOpenWinnersModal(2)}>See winners</IonChip>
+											</div>
 										</IonItem>
 										<IonItem
 											style={
@@ -656,7 +675,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 													fontSize: "1.1rem",
 												}}
 											>
-												{jackpot || '0'}
+												{isJackpotLoading ? (
+													<IonSpinner name="dots" />
+												): (
+													 `$ ${jackpot2 || "0"}`
+												)}
 											</IonText>
 										</IonItem>
 									</IonList>
@@ -958,7 +981,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										className="custom-card-title"
 										style={{ display: "flex", alignItems: "center" }}
 									>
-										🎯 Draw # 1
+										🎯 Draw # {selectedDrawForModal}
 										<IonBadge
 											style={{
 												background: "var(--gold-gradient)",
@@ -977,8 +1000,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										lines="full"
 										style={{ background: "transparent", padding: "0" }}
 									>
-										{winners.length > 0 ? (
-											winners.map((winner, index) => (
+										{(selectedDrawForModal === 1 ? winners : winners2).length > 0 ? (
+											(selectedDrawForModal === 1 ? winners : winners2).map((winner, index) => (
 												<IonItem
 													key={index}
 													style={
@@ -1004,6 +1027,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 															</a>
 														</IonText>
 													</IonLabel>
+													<IonText
+														style={{
+															color: "var(--lottery-gold)",
+															fontWeight: "600",
+															fontSize: "0.9rem",
+														}}
+													>
+														${winner.bettorShare || "0"}
+													</IonText>
 												</IonItem>
 											))
 										) : (
