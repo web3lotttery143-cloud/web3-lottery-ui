@@ -64,16 +64,34 @@ const ReferralAcceptPage: React.FC = () => {
     } finally {
       const url = new URL(window.location.href);
       const ref = url.searchParams.get("ref");
-
+      
+      let cleanedRef = ref;
       if (ref && ref.includes("?")) {
-        const actualRef = ref.split("?")[0];
-        url.searchParams.set("ref", actualRef);
+        cleanedRef = ref.split("?")[0];
+        url.searchParams.set("ref", cleanedRef);
         window.history.replaceState({}, "", url.toString());
       }
-      setConfirmationModal(false)
+      
+      setConfirmationModal(false);
+      setReferrerAddress(cleanedRef);
       dismissLoading() 
          
     }
+  }
+
+  const handleCancel = () => {
+    const url = new URL(window.location.href);
+    const ref = url.searchParams.get("ref");
+    
+    let cleanedRef = ref;
+    if (ref && ref.includes("?")) {
+      cleanedRef = ref.split("?")[0];
+      url.searchParams.set("ref", cleanedRef);
+      window.history.replaceState({}, "", url.toString());
+    }
+    
+    setConfirmationModal(false);
+    setReferrerAddress(cleanedRef);
   }
 
   useEffect(() => {
@@ -117,11 +135,6 @@ const ReferralAcceptPage: React.FC = () => {
           if(ref) {
             setReferrerAddress(ref)
           }
-          presentToast({
-                  message: `No wallets detected`,
-                  duration: 2000,
-                  color: 'danger',
-               });
         }
       };
   
@@ -274,43 +287,131 @@ const ReferralAcceptPage: React.FC = () => {
         </div>
 
         <IonModal
-                          isOpen={confirmationModal}
-                          onDidDismiss={() => setConfirmationModal(false)}
-                          initialBreakpoint={1}
-                        >
-                          <IonContent
-                            className="ion-padding"
-                            style={{
-                              "--background": "var(--background-color)",
-                            }}
-                          >
-                
-                            <div style={{ padding: "8px" }}>
-                              <h2 style={{ color: "var(--lottery-gold)" }}>
-                               Confirm Registration
-                              </h2>
-                            </div>
-                            <p style={{ color: "var(--lottery-gold)" }}>First wallet: {detectedWallet}</p> 
-                            <p style={{ color: "var(--lottery-gold)" }}>Referrer: {referralUpline}</p> 
-                          </IonContent>
-                          <IonFooter>
-                                <div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)",}}>
-                      
-                                  <IonButton
-                                    className="custom-button"
-                                    expand="block"
-                                    onClick={handleSubmit}
-                                    style={{
-                                      flex: 1,
-                                      "--background": "var(--lottery-emerald)",
-                                    }}
-                                  >
-                                  Confirm
-                                  </IonButton>
-                                </div>
-                          </IonFooter>
-        
-                </IonModal>
+          isOpen={confirmationModal}
+          onDidDismiss={() => setConfirmationModal(false)}
+          initialBreakpoint={1}
+        >
+          <IonContent
+            className="ion-padding"
+            style={{
+              "--background": "var(--background-color)",
+            }}
+          >
+            <div style={{ 
+              padding: "24px", 
+              textAlign: "center",
+              maxWidth: "500px",
+              margin: "0 auto"
+            }}>
+              <div style={{ 
+          fontSize: "3rem", 
+          marginBottom: "16px",
+          animation: "pulse 2s ease-in-out infinite"
+              }}>
+          🎉
+              </div>
+              <h2 style={{ 
+          color: "var(--lottery-gold)", 
+          fontWeight: 800,
+          fontSize: "1.5rem",
+          marginBottom: "8px"
+              }}>
+          Confirm Registration
+              </h2>
+              <p style={{ 
+          color: "var(--text-color-secondary)",
+          fontSize: "0.9rem",
+          marginBottom: "24px"
+              }}>
+          Review your details before joining
+              </p>
+
+              <IonCard className="custom-card" style={{ marginBottom: "16px" }}>
+          <IonCardContent>
+            <div style={{ marginBottom: "16px" }}>
+              <div style={{ 
+                color: "var(--lottery-gold)", 
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                marginBottom: "4px",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px"
+              }}>
+                Your Wallet
+              </div>
+              <div style={{ 
+                color: "var(--text-color-secondary)",
+                fontFamily: "monospace",
+                fontSize: "0.9rem",
+                wordBreak: "break-all",
+                padding: "8px",
+                background: "rgba(0, 0, 0, 0.2)",
+                borderRadius: "4px"
+              }}>
+                {detectedWallet}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ 
+                color: "var(--lottery-gold)", 
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                marginBottom: "4px",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px"
+              }}>
+                Referred By
+              </div>
+              <div style={{ 
+                color: "var(--text-color-secondary)",
+                fontFamily: "monospace",
+                fontSize: "0.9rem",
+                wordBreak: "break-all",
+                padding: "8px",
+                background: "rgba(0, 0, 0, 0.2)",
+                borderRadius: "4px"
+              }}>
+                {referralUpline}
+              </div>
+            </div>
+          </IonCardContent>
+              </IonCard>
+            </div>
+          </IonContent>
+          <IonFooter style={{ background: "var(--background-color)" }}>
+            <div style={{ 
+              display: "flex", 
+              gap: "12px", 
+              padding: "16px"
+            }}>
+              <IonButton
+          fill="outline"
+          expand="block"
+          onClick={handleCancel}
+          style={{
+          flex: 1,
+          "--background": "var(--lottery-crimson)",
+          "--color": "#000000",
+          "--border-color": "transparent",
+              } as any}
+              >
+          Cancel
+              </IonButton>
+              <IonButton
+          className="custom-button"
+          expand="block"
+          onClick={handleSubmit}
+          style={{
+            flex: 1,
+            "--background": "var(--lottery-emerald)",
+          }}
+              >
+          ✓ Confirm & Register
+              </IonButton>
+            </div>
+          </IonFooter>
+        </IonModal>
       </IonContent>
     </IonPage>
   );
