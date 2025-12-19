@@ -41,6 +41,7 @@ import useAppStore from "../store/useAppStore";
 import lotteryService from "../services/lotteryService";
 import walletService from "../services/walletService";
 import { execute } from "graphql";
+import { chevronDownCircleOutline } from "ionicons/icons";
 
 interface DashboardPageProps {
 	data: any;
@@ -53,30 +54,44 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	loading,
 	refetch,
 }) => {
-	const { walletAddress, globalBetNumber, setGlobalBetNumber, referralUpline } = useAppStore();
-	const [betNumber, setBetNumber] = useState("");
+
+	const { 
+		walletAddress, 
+		globalBetNumber, 
+		setGlobalBetNumber, 
+		referralUpline, 
+		numberOfTicketsSold, 
+		setNumberOfTicketsSold, 
+		maximumBets, 
+		setMaximumBets,
+		draw,
+		setDraw,
+		winningNumber,
+		setWinningNumber,
+		winningNumber2,
+		setWinningNumber2,
+		jackpot,
+		setJackpot,
+		jackpot2,
+		setJackpot2,
+		winners,
+		setWinners,
+		winners2,
+		setWinners2
+	} = useAppStore(); // Global states
+
 	const [presentLoading, dismissLoading] = useIonLoading();
 	const [presentToast] = useIonToast();
+	const [isWinnerNumberLoading, setIsWinnerNumberLoading] = useState(false);
+	const [progress, setProgress] = useState(0);
+	const [isJackpotLoading, setIsJackpotLoading] = useState(false)
+	const [selectedDrawForModal, setSelectedDrawForModal] = useState<1 | 2>(1);
+	const [betNumber, setBetNumber] = useState("");
 	const [selectedSegment, setSelectedSegment] = useState<SegmentValue>("first");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [confirmationModal, setConfirmationModal] = useState(false);
 	const [winnersModal, setWinnersModal] = useState(false)
-	const [draw, setDraw] = useState("1");
-	const [winnerNumber, setWinnerNumber] = useState("");
-	const [winnerNumber2, setWinnerNumber2] = useState("");
-	const [isWinnerNumberLoading, setIsWinnerNumberLoading] = useState(false);
-	const [signedHex, setSignedHex] = useState("");
-	const [progress, setProgress] = useState(0);
-	const [jackpot, setJackpot] = useState("")
-	const [jackpot2, setJackpot2] = useState("")
-	const [isJackpotLoading, setIsJackpotLoading] = useState(false)
-	const [numberOfTicketsSold, setNumberOfTicketsSold] = useState(0)
-	const [maximumBets, setMaximumBets] = useState('')
-	const [winners, setWinners] = useState<any[]>([]);
-	const [winners2, setWinners2] = useState<any[]>([]);
-	const [selectedDrawForModal, setSelectedDrawForModal] = useState<1 | 2>(1);
-	const [bettorShare, setBettorShare] = useState("0")
-
+	const [signedHex, setSignedHex] = useState(""); // not global
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
 		onCompleted: (data) => {
@@ -167,80 +182,99 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	}
 
 	const handleCloseWinnersModal = () => {
-		setWinnersModal(false)
-	}
+        setWinnersModal(false)
+    }
 
-	const handleRefresh = (event: CustomEvent) => {
-		refetch().finally(() => event.detail.complete());
+    const fetchDraws = async () => {
+        try {
+            setIsWinnerNumberLoading(true);
+            setIsJackpotLoading(true)
+            const result = await lotteryService.getDraws();
+
+            if(!result.success || !result.draws) {
+                presentToast({ message: `${result.message}`, duration: 3000, color: "danger", });
+                return;
+            }
+
+            const draws = result.draws;
+            const draw1 = draws[0];
+            const draw2 = draws[1];
+
+            setIsWinnerNumberLoading(false);
+            setIsJackpotLoading(false)
+
+            if (draw1) {
+                setJackpot(draw1.jackpot || '0')
+                setNumberOfTicketsSold(draw1.bets?.length || 0)
+                setWinningNumber(draw1.winningNumber || 'N/A'); 
+                setWinners(draw1.winners || []); 
+            }
+
+            if (draw2) {
+                setJackpot2(draw2.jackpot || '0')
+                setWinningNumber2(draw2.winningNumber || 'N/A');
+                setWinners2(draw2.winners || []);
+            }
+
+        } catch (error) {
+            presentToast({ message: `${error}`, duration: 3000, color: "danger", });
+            setWinningNumber('N/A')
+            setWinningNumber2('N/A')
+            setIsWinnerNumberLoading(false)
+            setIsJackpotLoading(false)
+            setWinners([]); 
+            setWinners2([]);
+        }
+    };
+
+    const fetchLotterySetup = async () => {
+        try {
+            const data = await lotteryService.getLotterySetup()
+            if(!data.success) {
+                throw new Error('Failed to fetch')
+            }
+            setMaximumBets(data.maximumBets || '0')
+        } catch (error) {
+            presentToast({ message: `${error}`, duration: 3000, color: "danger", });
+        }
+    }
+
+	const handleRefresh = async (event: CustomEvent) => {
+		// Force refresh all data when user pulls down
+		try {
+			await Promise.all([
+				refetch(),
+				fetchDraws(),
+				fetchLotterySetup()
+			]);
+		} catch (error) {
+			console.error('Refresh failed:', error);
+		} finally {
+			event.detail.complete();
+		}
 	};
 
-	// IF EVER YOU CHANGE UR MIND, FETCH getDraws and getLotterySetup after registration and ask bro how we could handle things for better efficiency
-	useEffect(() => {
-		const getDraws = async () => {
-			try {
-				setIsWinnerNumberLoading(true);
-				setIsJackpotLoading(true)
-				const result = await lotteryService.getDraws();
+    // IF EVER YOU CHANGE UR MIND, FETCH getDraws and getLotterySetup after registration and ask bro how we could handle things for better efficiency
+    useEffect(() => {
+        // Only fetch if we don't have data in the store
+        if (!jackpot) {
+            fetchDraws();
+        }
+    }, []);
 
-				if(!result.success || !result.draws) {
-					presentToast({ message: `${result.message}`, duration: 3000, color: "danger", });
-					return;
-				}
-
-				const draws = result.draws;
-				const draw1 = draws[0];
-				const draw2 = draws[1];
-
-				setIsWinnerNumberLoading(false);
-				setIsJackpotLoading(false)
-
-				if (draw1) {
-					setJackpot(draw1.jackpot || '0')
-					setNumberOfTicketsSold(draw1.bets?.length || 0)
-					setWinnerNumber(draw1.winningNumber || 'N/A'); 
-					setWinners(draw1.winners || []); 
-				}
-
-				if (draw2) {
-					setJackpot2(draw2.jackpot || '0')
-					setWinnerNumber2(draw2.winningNumber || 'N/A');
-					setWinners2(draw2.winners || []);
-				}
-
-			} catch (error) {
-				presentToast({ message: `${error}`, duration: 3000, color: "danger", });
-				setWinnerNumber('N/A')
-				setWinnerNumber2('N/A')
-				setIsWinnerNumberLoading(false)
-				setIsJackpotLoading(false)
-				setWinners([]); 
-				setWinners2([]);
-			}
-		};
-		getDraws();
-	}, []);
-
-	useEffect(() => {
-		const getLotterySetup = async () => {
-			try {
-				const data = await lotteryService.getLotterySetup()
-				if(!data.success) {
-					throw new Error('Failed to fetch')
-				}
-				setMaximumBets(data.maximumBets || '0')
-			} catch (error) {
-				presentToast({ message: `${error}`, duration: 3000, color: "danger", });
-			}
-		}
-		getLotterySetup()
-	}, [])
+    useEffect(() => {
+        // Only fetch if we don't have data in the store
+        if (!maximumBets) {
+            fetchLotterySetup()
+        }
+    }, [])
 
 	const handleSubmit = async () => {
 		presentLoading("Submitting transaction...");
 		window.history.replaceState({}, document.title, window.location.pathname);
 		const payload = {
 				signed_hex: signedHex,
-				draw_number: draw,
+				draw_number: draw || '1',
 				bet_number: globalBetNumber,
 				bettor: walletAddress!,
 				upline: referralUpline || import.meta.env.VITE_OPERATOR_ADDRESS,
@@ -260,6 +294,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				duration: 10000,
 				color: "success",
 			});
+			
 		} catch (error) {
 			presentToast({
 				message: `${executeBet.message}`,
@@ -347,7 +382,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					onIonRefresh={handleRefresh}
 				>
 					<IonRefresherContent></IonRefresherContent>
-				</IonRefresher>
+        		</IonRefresher>
 
 				<div className="fade-in">
 					<IonSegment
@@ -437,9 +472,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 														))}
 													</div>
 												) : (
-													winnerNumber
+													(winningNumber || '0')
 														.toString()
-  														.padEnd(3, "0")		
+														.padEnd(3, "0")		
 														.split("")
 														.map((digit: string, index: number) => (
 															<div
@@ -600,7 +635,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 														))}
 													</div>
 												) : (
-													winnerNumber2
+													(winningNumber2 || '0')
 														.toString()
   														.padEnd(3, "0")		
 														.split("")
@@ -1020,7 +1055,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 																fontSize: "0.9rem",
 															}}
 														>
-															<a href={`https://node.xode.net/polkadot/account/${winner.bettor}`}>
+															<a href={`https://node.xode.net/polkadot/account/${winner.bettor}`} target="_blank" rel="noopener noreferrer">
 																{winner.bettor
 																	? `${winner.bettor.substring(0, 6)}...${winner.bettor.substring(winner.bettor.length - 4)}`
 																	: ""}

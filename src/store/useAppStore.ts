@@ -20,6 +20,15 @@ export interface AppState {
   globalBetNumber: number;
   loginState: boolean;
   referralUpline: string | null;
+  numberOfTicketsSold: number;
+  maximumBets: string | null;
+  draw: string | null
+  winningNumber: string | null;
+  winningNumber2: string | null;
+  jackpot: string | null;
+  jackpot2: string | null;
+  winners: any[];
+  winners2: any[];
   connectWallet: (address: string) => void;
   disconnectWallet: () => void;
   setUserProfile: (profile: UserProfile) => void;
@@ -28,6 +37,15 @@ export interface AppState {
   setGlobalBetNumber: (betNumber: number) => void;
   setLoginState: (login: boolean) => void;
   setReferralUpline: (referral: string) => void
+  setNumberOfTicketsSold: (ticketsSold: number) => void
+  setMaximumBets: (maximumBets: string) => void
+  setDraw: (draw: string) => void
+  setWinningNumber: (winningNumber: string) => void
+  setWinningNumber2: (winningNumber2: string) => void
+  setJackpot: (jackpot: string) => void
+  setJackpot2: (jackpot2: string) => void
+  setWinners: (winners: any[]) => void;
+  setWinners2: (winners2: any[]) => void;
 }
 
 const useAppStore = create<AppState>()(
@@ -41,22 +59,51 @@ const useAppStore = create<AppState>()(
       globalBetNumber: 0,
       loginState: false,
       referralUpline: null,
+      numberOfTicketsSold: 0,
+      maximumBets: null,
+      draw: '1',
+      winningNumber: null,
+      winningNumber2: null,
+      jackpot: null,
+      jackpot2: null,
+      winners: [],     
+      winners2: [],
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
         set({
           isConnected: false,
+          isAdmin: false,
           walletAddress: null,
           userProfile: null,
-          isAdmin: false,
           lastSeenCompletedCycle: 0,
-          referralUpline: null
+          globalBetNumber: 0,
+          loginState: false,
+          referralUpline: null,
+          numberOfTicketsSold: 0,
+          maximumBets: null,
+          draw: '1',
+          winningNumber: null,
+          winningNumber2: null,
+          jackpot: null,
+          jackpot2: null,
+          winners: [],
+          winners2: [],
         }),
       setUserProfile: profile => set({ userProfile: profile }),
       setIsAdmin: isAdmin => set({ isAdmin }),
       setLastSeenCompletedCycle: cycleNumber => set({ lastSeenCompletedCycle: cycleNumber }),
       setGlobalBetNumber: betNumber => set({ globalBetNumber: betNumber }),
       setLoginState: login => set({loginState: login}),
-      setReferralUpline: referral => set({referralUpline: referral})
+      setReferralUpline: referral => set({referralUpline: referral}),
+      setNumberOfTicketsSold: ticketsSold => set({numberOfTicketsSold: ticketsSold}),
+      setMaximumBets: maximumBets => set({maximumBets: maximumBets}),
+      setDraw: draw => set({draw: draw}),
+      setWinningNumber: winningNumber => set({winningNumber: winningNumber}),
+      setWinningNumber2: winningNumber2 => set({winningNumber2: winningNumber2}),
+      setJackpot: jackpot => set({jackpot: jackpot}),
+      setJackpot2: jackpot2 => set({jackpot2: jackpot2}),
+      setWinners: winners => set({ winners }),
+      setWinners2: winners2 => set({ winners2 }),
     }),
     {
       name: 'web3-lottery-app-storage',

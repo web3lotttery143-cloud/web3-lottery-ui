@@ -30,13 +30,15 @@ body.dark {
   --card-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
 }
 
-body {
+html, body {
   font-family: var(--font-family-base);
   background: var(--background-color);
   color: var(--text-color);
   transition: all var(--transition-speed);
   margin: 0;
   padding: 0;
+  overscroll-behavior-y: contain; 
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Lottery Animations */
