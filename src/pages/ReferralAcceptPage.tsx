@@ -298,7 +298,6 @@ const ReferralAcceptPage: React.FC = () => {
             }}
           >
             <div style={{ 
-              padding: "24px", 
               textAlign: "center",
               maxWidth: "500px",
               margin: "0 auto"
@@ -326,56 +325,56 @@ const ReferralAcceptPage: React.FC = () => {
           Review your details before joining
               </p>
 
-              <IonCard className="custom-card" style={{ marginBottom: "16px" }}>
-          <IonCardContent>
-            <div style={{ marginBottom: "16px" }}>
-              <div style={{ 
-                color: "var(--lottery-gold)", 
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                marginBottom: "4px",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px"
-              }}>
-                Your Wallet
-              </div>
-              <div style={{ 
-                color: "var(--text-color-secondary)",
-                fontFamily: "monospace",
-                fontSize: "0.9rem",
-                wordBreak: "break-all",
-                padding: "8px",
-                background: "rgba(0, 0, 0, 0.2)",
-                borderRadius: "4px"
-              }}>
-                {detectedWallet}
-              </div>
-            </div>
+              <IonCard className="custom-card">
+                <IonCardContent>
+                  <div style={{ marginBottom: "16px" }}>
+                    <div style={{ 
+                      color: "var(--lottery-gold)", 
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      marginBottom: "4px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}>
+                      Your Wallet
+                    </div>
+                    <div style={{ 
+                      color: "var(--text-color-secondary)",
+                      fontFamily: "monospace",
+                      fontSize: "0.9rem",
+                      wordBreak: "break-all",
+                      padding: "8px",
+                      background: "rgba(0, 0, 0, 0.2)",
+                      borderRadius: "4px"
+                    }}>
+                      {detectedWallet}
+                    </div>
+                  </div>
 
-            <div>
-              <div style={{ 
-                color: "var(--lottery-gold)", 
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                marginBottom: "4px",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px"
-              }}>
-                Referred By
-              </div>
-              <div style={{ 
-                color: "var(--text-color-secondary)",
-                fontFamily: "monospace",
-                fontSize: "0.9rem",
-                wordBreak: "break-all",
-                padding: "8px",
-                background: "rgba(0, 0, 0, 0.2)",
-                borderRadius: "4px"
-              }}>
-                {referralUpline}
-              </div>
-            </div>
-          </IonCardContent>
+                  <div>
+                    <div style={{ 
+                      color: "var(--lottery-gold)", 
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      marginBottom: "4px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}>
+                      Referred By
+                    </div>
+                    <div style={{ 
+                      color: "var(--text-color-secondary)",
+                      fontFamily: "monospace",
+                      fontSize: "0.9rem",
+                      wordBreak: "break-all",
+                      padding: "8px",
+                      background: "rgba(0, 0, 0, 0.2)",
+                      borderRadius: "4px"
+                    }}>
+                      {referralUpline}
+                    </div>
+                  </div>
+                </IonCardContent>
               </IonCard>
             </div>
           </IonContent>
