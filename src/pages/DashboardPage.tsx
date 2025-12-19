@@ -254,8 +254,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		}
 	};
 
-    // IF EVER YOU CHANGE UR MIND, FETCH getDraws and getLotterySetup after registration and ask bro how we could handle things for better efficiency
-    useEffect(() => {
+   useEffect(() => {
         // Only fetch if we don't have data in the store
         if (!jackpot) {
             fetchDraws();
