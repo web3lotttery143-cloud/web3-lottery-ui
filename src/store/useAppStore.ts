@@ -30,6 +30,8 @@ export interface AppState {
   winners: any[];
   winners2: any[];
   walletBalance: string | null
+  drawStatus: string | null;
+  drawStatus2: string | null;
   connectWallet: (address: string) => void;
   disconnectWallet: () => void;
   setUserProfile: (profile: UserProfile) => void;
@@ -48,6 +50,8 @@ export interface AppState {
   setWinners: (winners: any[]) => void;
   setWinners2: (winners2: any[]) => void;
   setWalletBalance: (balance: string) => void;
+  setDrawStatus: (status: string) => void;
+  setDrawStatus2: (status2: string) => void;
 }
 
 const useAppStore = create<AppState>()(
@@ -71,6 +75,8 @@ const useAppStore = create<AppState>()(
       winners: [],     
       winners2: [],
       walletBalance: null,
+      drawStatus: null,
+      drawStatus2: null,
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
         set({
@@ -109,6 +115,8 @@ const useAppStore = create<AppState>()(
       setWinners: winners => set({ winners }),
       setWinners2: winners2 => set({ winners2 }),
       setWalletBalance: balance => set({ walletBalance: balance }),
+      setDrawStatus: status => set({ drawStatus: status }),
+      setDrawStatus2: status2 => set({ drawStatus2: status2 }),
     }),
     {
       name: 'web3-lottery-app-storage',

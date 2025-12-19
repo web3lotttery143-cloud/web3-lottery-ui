@@ -77,7 +77,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		winners,
 		setWinners,
 		winners2,
-		setWinners2
+		setWinners2,
+		drawStatus,
+		setDrawStatus,
+		drawStatus2,
+		setDrawStatus2
 	} = useAppStore(); // Global states
 
 	const [presentLoading, dismissLoading] = useIonLoading();
@@ -122,16 +126,38 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	};
 
 
-	const handleOpen = () => {
-		if (betNumber.trim().length !== 3) {
+	const handleOpen = async () => {
+		try {
+			if (betNumber.trim().length !== 3) {
+				presentToast({
+					message: "Please enter a 3-digit number.",
+					duration: 2000,
+					color: "warning",
+				});
+				return;
+			}
+			await presentLoading({ message: "Checking draw status..." });
+			await handleRefreshDraws({ detail: { complete: () => {} } } as CustomEvent);
+
+			if(drawStatus !== 'Open') {
+				presentToast({
+					message: "The draw is not open for betting.",
+					duration: 2000,
+					color: "danger",
+				});
+				return;
+			}
+			
+			setIsModalOpen(true);
+		} catch (error) {
 			presentToast({
-				message: "Please enter a 3-digit number.",
-				duration: 2000,
-				color: "warning",
+				message: `Error: ${error instanceof Error ? error.message : String(error)}`,
+				duration: 3000,
+				color: "danger",
 			});
-			return;
+		} finally {
+			dismissLoading();
 		}
-		setIsModalOpen(true);
 	};
 
 	const handlePlaceBet = async () => {
@@ -208,12 +234,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 setNumberOfTicketsSold(draw1.bets?.length || 0)
                 setWinningNumber(draw1.winningNumber || 'N/A'); 
                 setWinners(draw1.winners || []); 
+				setDrawStatus(draw1.status || 'Close');
             }
 
             if (draw2) {
                 setJackpot2(draw2.jackpot || '0')
                 setWinningNumber2(draw2.winningNumber || 'N/A');
                 setWinners2(draw2.winners || []);
+				setDrawStatus2(draw2.status || 'Close');
             }
 
         } catch (error) {
@@ -249,6 +277,23 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			]);
 		} catch (error) {
 			console.error('Refresh failed:', error);
+		} finally {
+			event.detail.complete();
+		}
+	};
+
+	const handleRefreshDraws = async (event: CustomEvent) => {
+		// Force refresh all data when user pulls down
+		try {
+			await Promise.all([
+				fetchDraws(),
+			]);
+		} catch (error) {
+			presentToast({
+				message: `Refresh failed: ${error}`,
+				duration: 3000,
+				color: "danger",
+			});
 		} finally {
 			event.detail.complete();
 		}
@@ -382,7 +427,62 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				>
 					<IonRefresherContent></IonRefresherContent>
         		</IonRefresher>
-
+				<div className="fade-in" style={{ 
+					padding: "16px 8px", 
+					display: "flex", 
+					alignItems: "center", 
+					justifyContent: "center",
+					gap: "12px",
+					background: drawStatus === 'Open' 
+						? "rgba(255, 215, 0, 0.05)" 
+						: drawStatus === 'Processing'
+						? "rgba(255, 165, 0, 0.05)"
+						: "rgba(220, 20, 60, 0.05)",
+					borderTop: drawStatus === 'Open'
+						? "1px solid rgba(255, 215, 0, 0.2)"
+						: drawStatus === 'Processing'
+						? "1px solid rgba(255, 165, 0, 0.2)"
+						: "1px solid rgba(220, 20, 60, 0.2)",
+					borderBottom: drawStatus === 'Open'
+						? "1px solid rgba(255, 215, 0, 0.2)"
+						: drawStatus === 'Processing'
+						? "1px solid rgba(255, 165, 0, 0.2)"
+						: "1px solid rgba(220, 20, 60, 0.2)"
+				}}>
+					<div style={{ 
+						width: "10px", 
+						height: "10px", 
+						borderRadius: "50%", 
+						background: drawStatus === 'Open'
+							? "var(--lottery-emerald)"
+							: drawStatus === 'Processing'
+							? "var(--ion-color-warning)"
+							: "var(--lottery-crimson)",
+						boxShadow: drawStatus === 'Open'
+							? "0 0 12px var(--lottery-emerald)"
+							: drawStatus === 'Processing'
+							? "0 0 12px var(--ion-color-warning)"
+							: "0 0 12px var(--lottery-crimson)",
+						animation: drawStatus === 'Processing' ? "pulse 2s infinite" : "pulse 2s infinite"
+					}} />
+					<IonText style={{ 
+						color: drawStatus === 'Open'
+							? "var(--lottery-emerald)"
+							: drawStatus === 'Processing'
+							? "var(--ion-color-warning)"
+							: "var(--lottery-crimson)", 
+						fontWeight: "700", 
+						fontSize: "0.95rem",
+						letterSpacing: "0.5px"
+					}}>
+						{drawStatus === 'Open' 
+							? "DRAW ACTIVE • BETS OPEN"
+							: drawStatus === 'Processing'
+							? "DRAW PROCESSING • PLEASE WAIT"
+							: "DRAW CLOSED • BETS CLOSED"}
+					</IonText>
+				</div>
+				
 				<div className="fade-in">
 					<IonSegment
 						value={selectedSegment}
