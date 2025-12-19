@@ -18,6 +18,8 @@ import {
   IonToolbar,
   IonSpinner,
   useIonToast,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ionic/react';
 import {
   cardOutline,
@@ -32,15 +34,29 @@ import useAppStore from '../store/useAppStore';
 import walletService from '../services/walletService';
 
 const ProfilePage: React.FC = () => {
-  const { walletAddress, userProfile, disconnectWallet } = useAppStore();
+  const { walletAddress, userProfile, disconnectWallet, walletBalance, setWalletBalance } = useAppStore();
   const [presentToast] = useIonToast();
-  const [walletBalance, setWalletBalance] = useState('0')
   const [isWalletBalanceLoading, setIsWalletBalanceLoading] = useState(false)
   const affiliateLink = `${window.location.origin}/accept-referral?ref=${walletAddress}`;
 
   useEffect(() => {
-    fetchBalance();
+    if(walletBalance === null) {
+      fetchBalance();
+    }
   }, []); 
+
+  const handleRefresh = async (event: CustomEvent) => {
+		// Force refresh all data when user pulls down
+		try {
+			await Promise.all([
+				fetchBalance(),
+			]);
+		} catch (error) {
+			console.error('Refresh failed:', error);
+		} finally {
+			event.detail.complete();
+    }
+  };
 
   const fetchBalance = async () => {
     try {
@@ -91,7 +107,15 @@ const ProfilePage: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
+        <IonRefresher
+                  slot="fixed"
+                  onIonRefresh={handleRefresh}
+                >
+                  <IonRefresherContent></IonRefresherContent>
+                    </IonRefresher>
+        
         <div className="fade-in">
+
           <IonCard className="custom-card">
             <IonCardContent
               className="ion-text-center"
