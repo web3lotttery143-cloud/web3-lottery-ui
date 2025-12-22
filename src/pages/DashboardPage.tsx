@@ -62,6 +62,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		referralUpline, 
 		numberOfTicketsSold, 
 		setNumberOfTicketsSold, 
+		numberOfTicketsSold2,
+		setNumberOfTicketsSold2,
 		maximumBets, 
 		setMaximumBets,
 		draw,
@@ -81,7 +83,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		drawStatus,
 		setDrawStatus,
 		drawStatus2,
-		setDrawStatus2
+		setDrawStatus2,
+		isAfter10Am,
+		setIsAfter10Am,
 	} = useAppStore(); // Global states
 
 	const [presentLoading, dismissLoading] = useIonLoading();
@@ -95,7 +99,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [confirmationModal, setConfirmationModal] = useState(false);
 	const [winnersModal, setWinnersModal] = useState(false)
-	const [signedHex, setSignedHex] = useState(""); // not global
+	const [signedHex, setSignedHex] = useState("");
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
 		onCompleted: (data) => {
@@ -119,6 +123,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		},
 	});
 
+	const checkTime = () => {
+		const now = new Date();
+		const hours = now.getHours();
+		const minutes = now.getMinutes();
+
+		// Check if current time is >= 10:00 AM
+		const isAfterTenAM = hours > 10 || (hours === 10 && minutes >= 0);
+		setIsAfter10Am(isAfterTenAM);
+	};
+
 	const handleCancel = () => {
 		window.history.replaceState({}, document.title, window.location.pathname);
 		setConfirmationModal(false);
@@ -139,7 +153,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			await presentLoading({ message: "Checking draw status..." });
 			await handleRefreshDraws({ detail: { complete: () => {} } } as CustomEvent);
 
-			if(drawStatus !== 'Open') {
+			const currentDrawStatus = isAfter10Am ? drawStatus2 : drawStatus;
+
+			if(currentDrawStatus !== 'Open') {
 				presentToast({
 					message: "The draw is not open for betting.",
 					duration: 2000,
@@ -239,6 +255,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
             if (draw2) {
                 setJackpot2(draw2.jackpot || '0')
+				setNumberOfTicketsSold2(draw2.bets?.length || 0)
                 setWinningNumber2(draw2.winningNumber || 'N/A');
                 setWinners2(draw2.winners || []);
 				setDrawStatus2(draw2.status || 'Close');
@@ -312,6 +329,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             fetchLotterySetup()
         }
     }, [])
+
+	useEffect(() => {
+		// Check time once on mount
+		checkTime();
+	}, []);
 
 	const handleSubmit = async () => {
 		presentLoading("Submitting transaction...");
@@ -433,19 +455,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					alignItems: "center", 
 					justifyContent: "center",
 					gap: "12px",
-					background: drawStatus === 'Open' 
+					background: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open' 
 						? "rgba(255, 215, 0, 0.05)" 
-						: drawStatus === 'Processing'
+						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 						? "rgba(255, 165, 0, 0.05)"
 						: "rgba(220, 20, 60, 0.05)",
-					borderTop: drawStatus === 'Open'
+					borderTop: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
 						? "1px solid rgba(255, 215, 0, 0.2)"
-						: drawStatus === 'Processing'
+						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 						? "1px solid rgba(255, 165, 0, 0.2)"
 						: "1px solid rgba(220, 20, 60, 0.2)",
-					borderBottom: drawStatus === 'Open'
+					borderBottom: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
 						? "1px solid rgba(255, 215, 0, 0.2)"
-						: drawStatus === 'Processing'
+						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 						? "1px solid rgba(255, 165, 0, 0.2)"
 						: "1px solid rgba(220, 20, 60, 0.2)"
 				}}>
@@ -453,33 +475,33 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 						width: "10px", 
 						height: "10px", 
 						borderRadius: "50%", 
-						background: drawStatus === 'Open'
+						background: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
 							? "var(--lottery-emerald)"
-							: drawStatus === 'Processing'
+							: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 							? "var(--ion-color-warning)"
 							: "var(--lottery-crimson)",
-						boxShadow: drawStatus === 'Open'
+						boxShadow: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
 							? "0 0 12px var(--lottery-emerald)"
-							: drawStatus === 'Processing'
+							: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 							? "0 0 12px var(--ion-color-warning)"
 							: "0 0 12px var(--lottery-crimson)",
-						animation: drawStatus === 'Processing' ? "pulse 2s infinite" : "pulse 2s infinite"
+						animation: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing' ? "pulse 2s infinite" : "pulse 2s infinite"
 					}} />
 					<IonText style={{ 
-						color: drawStatus === 'Open'
+						color: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
 							? "var(--lottery-emerald)"
-							: drawStatus === 'Processing'
+							: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 							? "var(--ion-color-warning)"
 							: "var(--lottery-crimson)", 
 						fontWeight: "700", 
 						fontSize: "0.95rem",
 						letterSpacing: "0.5px"
 					}}>
-						{drawStatus === 'Open' 
-							? "DRAW ACTIVE • BETS OPEN"
-							: drawStatus === 'Processing'
-							? "DRAW PROCESSING • PLEASE WAIT"
-							: "DRAW CLOSED • BETS CLOSED"}
+						{(isAfter10Am ? drawStatus2 : drawStatus) === 'Open' 
+							? `${isAfter10Am ? '10 PM' : '10 AM'} DRAW ACTIVE • BETS OPEN`
+							: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
+							? `${isAfter10Am ? '10 PM' : '10 AM'} DRAW PROCESSING • PLEASE WAIT`
+							: `${isAfter10Am ? '10 PM' : '10 AM'} DRAW CLOSED • BETS CLOSED`}
 					</IonText>
 				</div>
 				
@@ -846,7 +868,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										 <IonSpinner name="crescent" />
 										</>
 									) : (
-										`$ ${jackpot || "0"}`
+										`$ ${isAfter10Am ? jackpot2 : jackpot || "0"}`
 									)}
 								</h1>
 							</IonText>
@@ -863,7 +885,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										<IonSpinner name="dots" />
 									</>
 								): (<>
-									{numberOfTicketsSold || 0} / {maximumBets} Tickets Sold
+									{isAfter10Am ? numberOfTicketsSold2 : numberOfTicketsSold || 0} / {maximumBets} Tickets Sold
 									</>	
 								)}
 									
@@ -872,7 +894,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							<div className="progress-container">
 								<div
 									className="progress-bar"
-									style={{ width: `${(numberOfTicketsSold || 0) / Number(maximumBets)}%` }}
+									style={{ width: `${((isAfter10Am ? numberOfTicketsSold2 : numberOfTicketsSold) || 0) / Number(maximumBets)}%` }}
 								></div>
 							</div>
 							<IonText>
@@ -884,7 +906,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										marginTop: "8px",
 									}}
 								>
-									Next Draw: 10 PM
+									{isAfter10Am ? 'Next Draw: 10 PM' : 'Next Draw: 10 AM'} - Hurry up and buy your tickets!	
 								</p>
 							</IonText>
 						</IonCardContent>
