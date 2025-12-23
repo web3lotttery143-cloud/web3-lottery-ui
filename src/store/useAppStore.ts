@@ -34,6 +34,10 @@ export interface AppState {
   drawStatus2: string | null;
   isAfter10Am: boolean;
   numberOfTicketsSold2: number;
+  rebate: string | null;
+  rebate2: string | null;
+  affiliateEarnings: string | null
+  affiliateEarnings2: string | null
   connectWallet: (address: string) => void;
   disconnectWallet: () => void;
   setUserProfile: (profile: UserProfile) => void;
@@ -56,6 +60,10 @@ export interface AppState {
   setDrawStatus2: (status2: string) => void;
   setIsAfter10Am: (isAfter10Am: boolean) => void;
   setNumberOfTicketsSold2: (ticketsSold2: number) => void;
+  setRebate: (rebate: string) => void;
+  setRebate2: (rebate2: string) => void;
+  setAffiliateEarnings: (affiliateEarnings: string) => void;
+  setAffiliateEarnings2: (affiliateEarnings2: string) => void;
 }
 
 const useAppStore = create<AppState>()(
@@ -83,6 +91,10 @@ const useAppStore = create<AppState>()(
       drawStatus2: null,
       isAfter10Am: false,
       numberOfTicketsSold2: 0,
+      rebate: null,
+      rebate2: null,
+      affiliateEarnings: null,
+      affiliateEarnings2: null,
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
         set({
@@ -104,6 +116,14 @@ const useAppStore = create<AppState>()(
           winners: [],
           winners2: [],
           walletBalance: null,
+          drawStatus: null,
+          drawStatus2: null,
+          isAfter10Am: false,
+          numberOfTicketsSold2: 0,
+          rebate: null,
+          rebate2: null,
+          affiliateEarnings: null,
+          affiliateEarnings2: null,
         }),
       setUserProfile: profile => set({ userProfile: profile }),
       setIsAdmin: isAdmin => set({ isAdmin }),
@@ -125,6 +145,10 @@ const useAppStore = create<AppState>()(
       setDrawStatus2: status2 => set({ drawStatus2: status2 }),
       setIsAfter10Am: isAfter10Am => set({ isAfter10Am: isAfter10Am }),
       setNumberOfTicketsSold2: ticketsSold2 => set({numberOfTicketsSold2: ticketsSold2}),
+      setRebate: rebate => set({ rebate: rebate }),
+      setRebate2: rebate2 => set({ rebate2: rebate2 }),
+      setAffiliateEarnings: affiliateEarnings => set({ affiliateEarnings: affiliateEarnings }),
+      setAffiliateEarnings2: affiliateEarnings2 => set({ affiliateEarnings2: affiliateEarnings2 }),
     }),
     {
       name: 'web3-lottery-app-storage',

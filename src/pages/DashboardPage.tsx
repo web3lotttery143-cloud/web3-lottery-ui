@@ -32,7 +32,7 @@ import {
 	IonChip,
 	IonFooter,
 } from "@ionic/react";
-
+import { SaveBetDto } from "../models/saveBet.model";
 import React, { useState, useEffect } from "react";
 import DigitInput from "../components/DigitInput";
 import { PLACE_BET } from "../graphql/queries";
@@ -86,6 +86,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		setDrawStatus2,
 		isAfter10Am,
 		setIsAfter10Am,
+		setRebate,
+		setRebate2,
+		setAffiliateEarnings,
+		setAffiliateEarnings2,
 	} = useAppStore(); // Global states
 
 	const [presentLoading, dismissLoading] = useIonLoading();
@@ -129,8 +133,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		const minutes = now.getMinutes();
 
 		// Check if current time is >= 10:00 AM
-		const isAfterTenAM = hours > 10 || (hours === 10 && minutes >= 0);
-		setIsAfter10Am(isAfterTenAM);
+		const isAfterTenAM = hours > 13 || (hours === 13 && minutes >= 0);
+		setIsAfter10Am(false); //testingDrawNumber
 	};
 
 	const handleCancel = () => {
@@ -246,19 +250,43 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             setIsJackpotLoading(false)
 
             if (draw1) {
-                setJackpot(draw1.jackpot || '0')
+				const numberJackpot = Number(draw1.jackpot)
+				const finalNumberJackpot = (numberJackpot / 1000000).toFixed(4)
+                setJackpot(finalNumberJackpot.toString() || '0.0000')
                 setNumberOfTicketsSold(draw1.bets?.length || 0)
                 setWinningNumber(draw1.winningNumber || 'N/A'); 
                 setWinners(draw1.winners || []); 
 				setDrawStatus(draw1.status || 'Close');
+				const numberRebate = Number(draw1.rebate)
+				const finalNumberRebate = numberRebate / 10
+				setRebate(finalNumberRebate.toString() || '0');
+				const matchingWinner = draw1.winners?.find(
+					(winner: any) => winner.bettor === walletAddress
+				);
+				if (matchingWinner) {
+					setAffiliateEarnings(matchingWinner.bettorShare || '0');
+				} else {
+					setAffiliateEarnings('0');
+				}
             }
 
             if (draw2) {
-                setJackpot2(draw2.jackpot || '0')
+                const numberJackpot = Number(draw2.jackpot)
+				const finalNumberJackpot = (numberJackpot / 1000000).toFixed(4)
+                setJackpot(finalNumberJackpot.toString() || '0.0000')
 				setNumberOfTicketsSold2(draw2.bets?.length || 0)
                 setWinningNumber2(draw2.winningNumber || 'N/A');
                 setWinners2(draw2.winners || []);
 				setDrawStatus2(draw2.status || 'Close');
+				setRebate2(draw2.rebate || '0');
+				const matchingWinner = draw2.winners?.find(
+					(winner: any) => winner.bettor === walletAddress
+				);
+				if (matchingWinner) {
+					setAffiliateEarnings2(matchingWinner.bettorShare || '0');
+				} else {
+					setAffiliateEarnings2('0');
+				}
             }
 
         } catch (error) {
@@ -290,7 +318,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			await Promise.all([
 				refetch(),
 				fetchDraws(),
-				fetchLotterySetup()
+				fetchLotterySetup(),
+				checkTime()
 			]);
 		} catch (error) {
 			console.error('Refresh failed:', error);
@@ -304,6 +333,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		try {
 			await Promise.all([
 				fetchDraws(),
+				checkTime()
 			]);
 		} catch (error) {
 			presentToast({
@@ -349,15 +379,23 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			const executeBet = await lotteryService.executeBet(payload);
 
 		try {
-			
-
 			if(!executeBet.success) {
 				throw new Error
 			}
 
+			const betPayload: SaveBetDto = {
+				member_address: walletAddress!,
+				bet: {
+					bet_number: globalBetNumber.toString(),
+					bet_amount: import.meta.env.VITE_BET_AMOUNT || '1',
+					transaction_hash: (executeBet as any).transactionHash || '',
+					draw_number: draw || '1',
+				}
+			}
+			const saveBet = await walletService.saveBets(betPayload)
 			presentToast({
-				message: `${executeBet.message}`,
-				duration: 10000,
+				message: `Transaction completed: ${executeBet.message}`,
+				duration: 5000,
 				color: "success",
 			});
 			
@@ -370,6 +408,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		} finally {
 			dismissLoading();
 			setConfirmationModal(false);
+			fetchDraws(),
+			fetchLotterySetup()
 		}
 	};
 
@@ -450,26 +490,30 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					<IonRefresherContent></IonRefresherContent>
         		</IonRefresher>
 				<div className="fade-in" style={{ 
+					position: "sticky",
+					top: 0,
+					zIndex: 10,
 					padding: "16px 8px", 
 					display: "flex", 
 					alignItems: "center", 
 					justifyContent: "center",
 					gap: "12px",
 					background: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open' 
-						? "rgba(255, 215, 0, 0.05)" 
+						? "rgba(46, 213, 115, 0.15)" 
 						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
-						? "rgba(255, 165, 0, 0.05)"
-						: "rgba(220, 20, 60, 0.05)",
+						? "rgba(255, 165, 0, 0.15)"
+						: "rgba(220, 20, 60, 0.15)",
 					borderTop: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
-						? "1px solid rgba(255, 215, 0, 0.2)"
+						? "1px solid rgba(46, 213, 115, 0.3)"
 						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 						? "1px solid rgba(255, 165, 0, 0.2)"
 						: "1px solid rgba(220, 20, 60, 0.2)",
 					borderBottom: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
-						? "1px solid rgba(255, 215, 0, 0.2)"
+						? "1px solid rgba(46, 213, 115, 0.3)"
 						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 						? "1px solid rgba(255, 165, 0, 0.2)"
-						: "1px solid rgba(220, 20, 60, 0.2)"
+						: "1px solid rgba(220, 20, 60, 0.2)",
+					backdropFilter: "blur(10px)"
 				}}>
 					<div style={{ 
 						width: "10px", 
@@ -498,10 +542,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 						letterSpacing: "0.5px"
 					}}>
 						{(isAfter10Am ? drawStatus2 : drawStatus) === 'Open' 
-							? `${isAfter10Am ? '10 PM' : '10 AM'} DRAW ACTIVE • BETS OPEN`
+							? `${isAfter10Am ? '9 PM' : '1 PM'} DRAW ACTIVE • BETS OPEN`
 							: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
-							? `${isAfter10Am ? '10 PM' : '10 AM'} DRAW PROCESSING • PLEASE WAIT`
-							: `${isAfter10Am ? '10 PM' : '10 AM'} DRAW CLOSED • BETS CLOSED`}
+							? `${isAfter10Am ? '9 PM' : '1 PM'} DRAW PROCESSING • PLEASE WAIT`
+							: `${isAfter10Am ? '9 PM' : '1 PM'} DRAW CLOSED • BETS CLOSED`}
 					</IonText>
 				</div>
 				
@@ -511,10 +555,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 						onIonChange={(e) => setSelectedSegment(e.detail.value!)}
 					>
 						<IonSegmentButton value="first">
-							<IonLabel color="primary">10 AM Draw</IonLabel>
+							<IonLabel color="primary">1 PM Draw</IonLabel>
 						</IonSegmentButton>
 						<IonSegmentButton value="second">
-							<IonLabel color="primary">10 PM Draw</IonLabel>
+							<IonLabel color="primary">9 PM Draw</IonLabel>
 						</IonSegmentButton>
 					</IonSegment>
 

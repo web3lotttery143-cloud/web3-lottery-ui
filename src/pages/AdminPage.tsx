@@ -188,7 +188,7 @@ const AdminPage: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen>
         <div className="fade-in">
-          <IonCard className="custom-card">
+          {/* <IonCard className="custom-card">
             <IonCardHeader>
               <IonCardTitle className="custom-card-title">⚙️ Test Utilities</IonCardTitle>
             </IonCardHeader>
@@ -223,7 +223,7 @@ const AdminPage: React.FC = () => {
                 {loadingClose ? 'Closing...' : '🛑 CLOSE CYCLE FOR DRAW (TEST)'}
               </IonButton>
             </IonCardContent>
-          </IonCard>
+          </IonCard> */}
 
           <IonCard className="custom-card">
             <IonCardHeader>
@@ -254,7 +254,7 @@ const AdminPage: React.FC = () => {
                 }}
               >
                 <IonText style={{ color: 'var(--lottery-gold)', fontSize: '0.9rem' }}>
-                  ⚠️ This requires the cycle status to be 'CLOSED'.
+                  ⚠️ This requires the cycle status to be 'PROCESSING'.
                 </IonText>
               </div>
               <IonButton
@@ -277,7 +277,7 @@ const AdminPage: React.FC = () => {
             </IonCardContent>
           </IonCard>
 
-          <IonCard className="custom-card">
+          {/* <IonCard className="custom-card">
             <IonCardHeader>
               <IonCardTitle className="custom-card-title">
                 📊 Quick Stats (Current Cycle)
@@ -362,7 +362,7 @@ const AdminPage: React.FC = () => {
                 </IonList>
               )}
             </IonCardContent>
-          </IonCard>
+          </IonCard> */}
         </div>
       </IonContent>
     </IonPage>

@@ -23,97 +23,97 @@ import React, { useEffect } from 'react';
 import { GET_MY_BETS } from '../graphql/queries';
 import useAppStore from '../store/useAppStore';
 
-const BetResult: React.FC<{ bet: any }> = ({ bet }) => {
-  if (!bet.cycle || bet.cycle.status !== 'COMPLETED') {
-    return (
-      <IonText style={{ color: 'var(--text-color-secondary)', fontWeight: '500' }}>Pending</IonText>
-    );
-  }
+// const BetResult: React.FC<{ bet: any }> = ({ bet }) => {
+//   if (!bet.cycle || bet.cycle.status !== 'COMPLETED') {
+//     return (
+//       <IonText style={{ color: 'var(--text-color-secondary)', fontWeight: '500' }}>Pending</IonText>
+//     );
+//   }
 
-  const isWinner = bet.selectedNumber === bet.cycle.winningNumber;
+//   const isWinner = bet.selectedNumber === bet.cycle.winningNumber;
 
-  return isWinner ? (
-    <IonText style={{ color: 'var(--lottery-emerald)', fontWeight: '700' }}>🎉 Winner!</IonText>
-  ) : (
-    <IonText style={{ color: 'var(--lottery-crimson)', opacity: 0.8, fontWeight: '500' }}>
-      Lost ({bet.cycle.winningNumber ?? 'N/A'})
-    </IonText>
-  );
-};
+//   return isWinner ? (
+//     <IonText style={{ color: 'var(--lottery-emerald)', fontWeight: '700' }}>🎉 Winner!</IonText>
+//   ) : (
+//     <IonText style={{ color: 'var(--lottery-crimson)', opacity: 0.8, fontWeight: '500' }}>
+//       Lost ({bet.cycle.winningNumber ?? 'N/A'})
+//     </IonText>
+//   );
+// };
 
-const UserInfoHeader: React.FC = () => {
-  const { walletAddress, userProfile } = useAppStore();
-  const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || '0x...Error';
-  const totalRewards =
-    (userProfile?.totalAffiliateEarnings || 0) + (userProfile?.totalRebates || 0);
+// const UserInfoHeader: React.FC = () => {
+//   const { walletAddress, userProfile } = useAppStore();
+//   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || '0x...Error';
+//   const totalRewards =
+//     (userProfile?.totalAffiliateEarnings || 0) + (userProfile?.totalRebates || 0);
 
-  const truncatedWallet = walletAddress
-    ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
-    : '...';
-  const truncatedContract = contractAddress
-    ? `${contractAddress.substring(0, 6)}...${contractAddress.substring(
-        contractAddress.length - 4
-      )}`
-    : '...';
+//   const truncatedWallet = walletAddress
+//     ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
+//     : '...';
+//   const truncatedContract = contractAddress
+//     ? `${contractAddress.substring(0, 6)}...${contractAddress.substring(
+//         contractAddress.length - 4
+//       )}`
+//     : '...';
 
-  return (
-    <div
-      style={{
-        padding: '16px 20px 12px 20px',
-        background: 'var(--card-background-color)',
-        marginBottom: '16px',
-        borderBottom: '1px solid var(--lottery-gold)',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '8px',
-        }}
-      >
-        <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
-          Wallet
-        </IonText>
-        <IonText style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-color)' }}>
-          {truncatedWallet}
-        </IonText>
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '12px',
-        }}
-      >
-        <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
-          Contract
-        </IonText>
-        <IonText style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-color)' }}>
-          {truncatedContract}
-        </IonText>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
-          Pending Rewards
-        </IonText>
-        <IonBadge
-          style={{
-            background: 'var(--lottery-emerald)',
-            color: '#ffffff',
-            fontWeight: '700',
-            fontSize: '0.9rem',
-            padding: '6px 10px',
-          }}
-        >
-          ${totalRewards.toFixed(2)}
-        </IonBadge>
-      </div>
-    </div>
-  );
-};
+//   return (
+//     <div
+//       style={{
+//         padding: '16px 20px 12px 20px',
+//         background: 'var(--card-background-color)',
+//         marginBottom: '16px',
+//         borderBottom: '1px solid var(--lottery-gold)',
+//       }}
+//     >
+//       <div
+//         style={{
+//           display: 'flex',
+//           justifyContent: 'space-between',
+//           alignItems: 'center',
+//           marginBottom: '8px',
+//         }}
+//       >
+//         <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
+//           Wallet
+//         </IonText>
+//         <IonText style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-color)' }}>
+//           {truncatedWallet}
+//         </IonText>
+//       </div>
+//       <div
+//         style={{
+//           display: 'flex',
+//           justifyContent: 'space-between',
+//           alignItems: 'center',
+//           marginBottom: '12px',
+//         }}
+//       >
+//         <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
+//           Contract
+//         </IonText>
+//         <IonText style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-color)' }}>
+//           {truncatedContract}
+//         </IonText>
+//       </div>
+//       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+//         <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
+//           Pending Rewards
+//         </IonText>
+//         <IonBadge
+//           style={{
+//             background: 'var(--lottery-emerald)',
+//             color: '#ffffff',
+//             fontWeight: '700',
+//             fontSize: '0.9rem',
+//             padding: '6px 10px',
+//           }}
+//         >
+//           ${totalRewards.toFixed(2)}
+//         </IonBadge>
+//       </div>
+//     </div>
+//   );
+// };
 
 const BetsPage: React.FC = () => {
   const walletAddress = useAppStore(state => state.walletAddress);
@@ -169,7 +169,7 @@ const BetsPage: React.FC = () => {
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
 
-        <UserInfoHeader />
+        {/* <UserInfoHeader /> */}
 
         {loading && (
           <div className="ion-text-center ion-padding" style={{ marginTop: '10vh' }}>
@@ -244,22 +244,8 @@ const BetsPage: React.FC = () => {
                     <IonItem style={{ '--background': 'transparent' }}>
                       <IonLabel>Status</IonLabel>
                       <div slot="end">
-                        <BetResult bet={bet} />
+                        {/* <BetResult bet={bet} /> */}
                       </div>
-                    </IonItem>
-                    <IonItem style={{ '--background': 'transparent' }}>
-                      <IonLabel>Rebate</IonLabel>
-                      <IonText
-                        slot="end"
-                        style={{
-                          color: 'var(--lottery-emerald)',
-                          fontWeight: '600',
-                          fontSize: '1rem',
-                        }}
-                      >
-                        {/* Add safety check for rebateCredited */}+ $
-                        {bet.rebateCredited?.toFixed(2) ?? '0.00'}
-                      </IonText>
                     </IonItem>
                     <IonItem style={{ '--background': 'transparent' }} lines="none">
                       <IonLabel

@@ -34,7 +34,7 @@ import useAppStore from '../store/useAppStore';
 import walletService from '../services/walletService';
 
 const ProfilePage: React.FC = () => {
-  const { walletAddress, userProfile, disconnectWallet, walletBalance, setWalletBalance } = useAppStore();
+  const { walletAddress, userProfile, disconnectWallet, walletBalance, setWalletBalance, rebate, rebate2, isAfter10Am, affiliateEarnings, affiliateEarnings2 } = useAppStore();
   const [presentToast] = useIonToast();
   const [isWalletBalanceLoading, setIsWalletBalanceLoading] = useState(false)
   const affiliateLink = `${window.location.origin}/accept-referral?ref=${walletAddress}`;
@@ -236,9 +236,9 @@ const ProfilePage: React.FC = () => {
                       fontSize: '0.9rem',
                       padding: '6px 10px',
                     }}
-                  >
-                    ${(userProfile?.totalRebates || 0).toFixed(2)}
-                  </IonBadge>
+                    >
+                    ${isAfter10Am ? (rebate2 || '0') : (rebate || '0')}
+                    </IonBadge>
                 </IonItem>
                 <IonItem
                   style={
@@ -270,7 +270,7 @@ const ProfilePage: React.FC = () => {
                       padding: '6px 10px',
                     }}
                   >
-                    ${(userProfile?.totalAffiliateEarnings || 0).toFixed(2)}
+                    ${}{isAfter10Am ? (affiliateEarnings2 || '0') : (affiliateEarnings || '0')}
                   </IonBadge>
                 </IonItem>
                 <IonItem

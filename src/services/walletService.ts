@@ -1,4 +1,5 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
+import { SaveBetDto } from "../models/saveBet.model";
 import { useIonToast } from "@ionic/react";
 import type { AccountInfo } from "@polkadot/types/interfaces";
 
@@ -156,6 +157,37 @@ class WalletService {
 			return { success: false, signedTx: "" };
 		}
 	};
+
+	async saveBets(betData: SaveBetDto): Promise<{success: boolean, message: string}> {
+		try {
+			const response = await fetch(`${this.apiUrl}/member/bets`, {
+				method: "POST",			
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(betData)
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				return {success: false, message: data.message}
+			}
+			return {success: true, message: data.message}
+		} catch (error) {
+			return {success: false, message: `${error}`};
+		}
+	}
+
+	async getBets(walletAddress: string): Promise<{success: boolean, message: string, data?: any}> {
+		try {
+			const response = await fetch(`${this.apiUrl}/bets/${walletAddress}`);
+
+			return {success: true, message: "Bets fetched successfully", data: await response.json()}
+		} catch (error) {
+			return {success: false, message: `${error}`};
+		}
+	}
 }
 
 const walletService = new WalletService();

@@ -18,7 +18,7 @@ class LotteryService {
 		}
 	}
 	// DRAWS
-	async getDraws(): Promise<{success: boolean, jackpot?: string, winningNumber?: string, winners?: string[], bets?: any, message?: string, draws?: any[], bettorShare?: string}> {
+	async getDraws(): Promise<{success: boolean, jackpot?: string, winningNumber?: string, winners?: string[], bets?: any, message?: string, draws?: any[], bettorShare?: string, rebate?: string}> {
     try {
         const res = await fetch(`${LIVE_API}/api/draws/get-draws`)
 
@@ -30,6 +30,7 @@ class LotteryService {
 		const winners = values?.winners ?? []
 		const betsArray = data.Ok[0].bets;
         const betsCount = betsArray.length;
+		const rebate = values?.rebate ?? '0';
 
         if (!values) {
             return {success: false, message: 'No draw data available'}
@@ -43,7 +44,8 @@ class LotteryService {
 			bets: betsCount,
             message: 'Success',
 			draws: data.Ok,
-			bettorShare: winners.bettorShare
+			bettorShare: winners.bettorShare,
+			rebate: rebate
         }
     } catch (error) {
         return {success: false, message: `${error}`};

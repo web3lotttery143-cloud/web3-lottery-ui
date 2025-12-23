@@ -170,23 +170,23 @@ const AppTabs: React.FC = () => {
           isSelected={activeTab === 'profile'}
         />
         <TabButton
+          tab="bets"
+          icon={cashOutline}
+          label="My Bets"
+          isSelected={activeTab === 'bets'}
+        />
+        <TabButton
           tab="terminal"
           icon={terminalOutline}
           label="Terminal"
           isSelected={activeTab === 'terminal'}
         />
         {/* <TabButton
-          tab="bets"
-          icon={cashOutline}
-          label="My Bets"
-          isSelected={activeTab === 'bets'}
-        /> */}
-        <TabButton
           tab="results"
           icon={listCircleOutline}
           label="Results"
           isSelected={activeTab === 'results'}
-        />
+        /> */}
         {isAdmin && (
           <TabButton
             tab="admin"
