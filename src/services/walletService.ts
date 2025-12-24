@@ -2,12 +2,13 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 import { SaveBetDto } from "../models/saveBet.model";
 import { useIonToast } from "@ionic/react";
 import type { AccountInfo } from "@polkadot/types/interfaces";
+import { VITE_API_URL, VITE_WS_PROVIDER, VITE_OPERATOR_ADDRESS } from "./constants";
 
 class WalletService {
-	apiUrl = import.meta.env.VITE_API_URL
+	apiUrl = VITE_API_URL
 	async getBalance(address: string) {
 		try {
-			const provider = new WsProvider(import.meta.env.VITE_WS_PROVIDER || "");
+			const provider = new WsProvider(VITE_WS_PROVIDER|| "");
 			const api = await ApiPromise.create({ provider });
 
 			const USDT_CURRENCY_ID = 1984;
@@ -56,7 +57,7 @@ class WalletService {
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ member_address: address, upline_address: uplineAddress || import.meta.env.VITE_OPERATOR_ADDRESS }),
+				body: JSON.stringify({ member_address: address, upline_address: uplineAddress || VITE_OPERATOR_ADDRESS}),
 			});
 
 			const data = await response.json();
@@ -72,7 +73,7 @@ class WalletService {
 
 	async loginWallet(address: string): Promise<{success: boolean, message: string, data?: any}> {
     try {
-		if(address == import.meta.env.VITE_OPERATOR_ADDRESS) {
+		if(address == VITE_OPERATOR_ADDRESS) {
 			return {success: true, message: 'Operator Connected...', data: 'Admin'}
 		}
         const response = await fetch(`${this.apiUrl}/members/login`, {
@@ -160,7 +161,7 @@ class WalletService {
 
 	async saveBets(betData: SaveBetDto): Promise<{success: boolean, message: string}> {
 		try {
-			const response = await fetch(`${this.apiUrl}/member/bets`, {
+			const response = await fetch(`${this.apiUrl}/members/bets`, {
 				method: "POST",			
 				headers: {
 					"Content-Type": "application/json",

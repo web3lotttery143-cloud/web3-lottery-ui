@@ -1,0 +1,3 @@
+export const VITE_API_URL = "http://192.168.1.27:3000"
+export const VITE_WS_PROVIDER = "wss://devnet02.xode.net"
+export const VITE_OPERATOR_ADDRESS = "XqAx4iTUDeWkhVtTGbkBTLpCp7F1BX7ptZpPXNzF4oRs3dsrC"
