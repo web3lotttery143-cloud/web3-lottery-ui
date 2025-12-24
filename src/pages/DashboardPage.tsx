@@ -104,6 +104,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [confirmationModal, setConfirmationModal] = useState(false);
 	const [winnersModal, setWinnersModal] = useState(false)
 	const [signedHex, setSignedHex] = useState("");
+	const [drawStatusLoading, setDrawStatusLoading] = useState(false);
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
 		onCompleted: (data) => {
@@ -128,13 +129,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	});
 
 	const checkTime = () => {
-		const now = new Date();
-		const hours = now.getHours();
-		const minutes = now.getMinutes();
+		try {
+			setDrawStatusLoading(true);
+			const now = new Date();
+			const hours = now.getHours();
+			const minutes = now.getMinutes();
 
-		// Check if current time is >= 10:00 AM
-		const isAfterTenAM = hours > 13 || (hours === 13 && minutes >= 0);
-		setIsAfter10Am(false); //testingDrawNumber
+			// Check if current time is >= 1:00 PM
+			const isAfterTenAM = hours > 13 || (hours === 13 && minutes >= 0);
+			setIsAfter10Am(isAfterTenAM); //testingDrawNumber
+		} catch (error) {
+			console.error('Error checking time:', error);
+						presentToast({
+							message: 'Failed to check time',
+							duration: 2000,
+							color: 'danger',
+						});
+		} finally {
+			setDrawStatusLoading(false);
+		}
+		
 	};
 
 	const handleCancel = () => {
@@ -159,7 +173,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 			const currentDrawStatus = isAfter10Am ? drawStatus2 : drawStatus;
 
-			if(currentDrawStatus !== 'Open') {
+			if(currentDrawStatus !== 'Open') { 
 				presentToast({
 					message: "The draw is not open for betting.",
 					duration: 2000,
@@ -498,55 +512,77 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					alignItems: "center", 
 					justifyContent: "center",
 					gap: "12px",
-					background: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open' 
+					background: drawStatusLoading
+						? "rgba(128, 128, 128, 0.15)"
+						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open' 
 						? "rgba(46, 213, 115, 0.15)" 
 						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 						? "rgba(255, 165, 0, 0.15)"
 						: "rgba(220, 20, 60, 0.15)",
-					borderTop: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
+					borderTop: drawStatusLoading
+						? "1px solid rgba(128, 128, 128, 0.2)"
+						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
 						? "1px solid rgba(46, 213, 115, 0.3)"
 						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 						? "1px solid rgba(255, 165, 0, 0.2)"
 						: "1px solid rgba(220, 20, 60, 0.2)",
-					borderBottom: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
+					borderBottom: drawStatusLoading
+						? "1px solid rgba(128, 128, 128, 0.2)"
+						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
 						? "1px solid rgba(46, 213, 115, 0.3)"
 						: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
 						? "1px solid rgba(255, 165, 0, 0.2)"
 						: "1px solid rgba(220, 20, 60, 0.2)",
 					backdropFilter: "blur(10px)"
 				}}>
-					<div style={{ 
-						width: "10px", 
-						height: "10px", 
-						borderRadius: "50%", 
-						background: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
-							? "var(--lottery-emerald)"
-							: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
-							? "var(--ion-color-warning)"
-							: "var(--lottery-crimson)",
-						boxShadow: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
-							? "0 0 12px var(--lottery-emerald)"
-							: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
-							? "0 0 12px var(--ion-color-warning)"
-							: "0 0 12px var(--lottery-crimson)",
-						animation: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing' ? "pulse 2s infinite" : "pulse 2s infinite"
-					}} />
-					<IonText style={{ 
-						color: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
-							? "var(--lottery-emerald)"
-							: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
-							? "var(--ion-color-warning)"
-							: "var(--lottery-crimson)", 
-						fontWeight: "700", 
-						fontSize: "0.95rem",
-						letterSpacing: "0.5px"
-					}}>
-						{(isAfter10Am ? drawStatus2 : drawStatus) === 'Open' 
-							? `${isAfter10Am ? '9 PM' : '1 PM'} DRAW ACTIVE • BETS OPEN`
-							: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
-							? `${isAfter10Am ? '9 PM' : '1 PM'} DRAW PROCESSING • PLEASE WAIT`
-							: `${isAfter10Am ? '9 PM' : '1 PM'} DRAW CLOSED • BETS CLOSED`}
-					</IonText>
+					{drawStatusLoading ? (
+						<>
+							<IonSpinner name="crescent" />
+							<IonText style={{ 
+								color: "var(--text-color-secondary)", 
+								fontWeight: "700", 
+								fontSize: "0.95rem",
+								letterSpacing: "0.5px"
+							}}>
+								LOADING DRAW STATUS...
+							</IonText>
+						</>
+					) : (
+						<>
+							<div style={{ 
+								width: "10px", 
+								height: "10px", 
+								borderRadius: "50%", 
+								background: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
+									? "var(--lottery-emerald)"
+									: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
+									? "var(--ion-color-warning)"
+									: "var(--lottery-crimson)",
+								boxShadow: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
+									? "0 0 12px var(--lottery-emerald)"
+									: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
+									? "0 0 12px var(--ion-color-warning)"
+									: "0 0 12px var(--lottery-crimson)",
+								animation: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing' ? "pulse 2s infinite" : "pulse 2s infinite"
+							}} />
+							<IonText style={{ 
+								color: (isAfter10Am ? drawStatus2 : drawStatus) === 'Open'
+									? "var(--lottery-emerald)"
+									: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
+									? "var(--ion-color-warning)"
+									: "var(--lottery-crimson)", 
+								fontWeight: "700", 
+								fontSize: "0.95rem",
+								letterSpacing: "0.5px"
+							}}>
+								{(isAfter10Am ? drawStatus2 : drawStatus) === 'Open' 
+									? `${isAfter10Am ? '9 PM' : '1 PM'} DRAW ACTIVE • BETS OPEN`
+									: (isAfter10Am ? drawStatus2 : drawStatus) === 'Processing'
+									? `${isAfter10Am ? '9 PM' : '1 PM'} DRAW PROCESSING • PLEASE WAIT`
+									: `${isAfter10Am ? '9 PM' : '1 PM'} DRAW CLOSED • BETS CLOSED`}
+							</IonText>
+						</>
+					)}
 				</div>
 				
 				<div className="fade-in">
@@ -636,6 +672,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 															</div>
 														))}
 													</div>
+												) : drawStatus === "Processing" ? (
+													<IonText
+														style={{
+															color: "var(--ion-color-warning)",
+															fontSize: "0.9rem",
+															fontStyle: "italic",
+														}}
+													>
+														Processing...
+													</IonText>
 												) : (
 													(winningNumber || '0')
 														.toString()
