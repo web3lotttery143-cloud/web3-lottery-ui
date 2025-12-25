@@ -1,4 +1,3 @@
-import { useQuery } from '@apollo/client';
 import {
   IonBadge,
   IonButton,
@@ -19,123 +18,46 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import React, { useEffect } from 'react';
-import { GET_MY_BETS } from '../graphql/queries';
+import React, { useEffect, useState } from 'react';
 import useAppStore from '../store/useAppStore';
-
-// const BetResult: React.FC<{ bet: any }> = ({ bet }) => {
-//   if (!bet.cycle || bet.cycle.status !== 'COMPLETED') {
-//     return (
-//       <IonText style={{ color: 'var(--text-color-secondary)', fontWeight: '500' }}>Pending</IonText>
-//     );
-//   }
-
-//   const isWinner = bet.selectedNumber === bet.cycle.winningNumber;
-
-//   return isWinner ? (
-//     <IonText style={{ color: 'var(--lottery-emerald)', fontWeight: '700' }}>🎉 Winner!</IonText>
-//   ) : (
-//     <IonText style={{ color: 'var(--lottery-crimson)', opacity: 0.8, fontWeight: '500' }}>
-//       Lost ({bet.cycle.winningNumber ?? 'N/A'})
-//     </IonText>
-//   );
-// };
-
-// const UserInfoHeader: React.FC = () => {
-//   const { walletAddress, userProfile } = useAppStore();
-//   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || '0x...Error';
-//   const totalRewards =
-//     (userProfile?.totalAffiliateEarnings || 0) + (userProfile?.totalRebates || 0);
-
-//   const truncatedWallet = walletAddress
-//     ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
-//     : '...';
-//   const truncatedContract = contractAddress
-//     ? `${contractAddress.substring(0, 6)}...${contractAddress.substring(
-//         contractAddress.length - 4
-//       )}`
-//     : '...';
-
-//   return (
-//     <div
-//       style={{
-//         padding: '16px 20px 12px 20px',
-//         background: 'var(--card-background-color)',
-//         marginBottom: '16px',
-//         borderBottom: '1px solid var(--lottery-gold)',
-//       }}
-//     >
-//       <div
-//         style={{
-//           display: 'flex',
-//           justifyContent: 'space-between',
-//           alignItems: 'center',
-//           marginBottom: '8px',
-//         }}
-//       >
-//         <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
-//           Wallet
-//         </IonText>
-//         <IonText style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-color)' }}>
-//           {truncatedWallet}
-//         </IonText>
-//       </div>
-//       <div
-//         style={{
-//           display: 'flex',
-//           justifyContent: 'space-between',
-//           alignItems: 'center',
-//           marginBottom: '12px',
-//         }}
-//       >
-//         <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
-//           Contract
-//         </IonText>
-//         <IonText style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-color)' }}>
-//           {truncatedContract}
-//         </IonText>
-//       </div>
-//       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-//         <IonText style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem' }}>
-//           Pending Rewards
-//         </IonText>
-//         <IonBadge
-//           style={{
-//             background: 'var(--lottery-emerald)',
-//             color: '#ffffff',
-//             fontWeight: '700',
-//             fontSize: '0.9rem',
-//             padding: '6px 10px',
-//           }}
-//         >
-//           ${totalRewards.toFixed(2)}
-//         </IonBadge>
-//       </div>
-//     </div>
-//   );
-// };
+import walletService from '../services/walletService';
 
 const BetsPage: React.FC = () => {
   const walletAddress = useAppStore(state => state.walletAddress);
-  const { data, loading, error, refetch } = useQuery(GET_MY_BETS, {
-    variables: { walletAddress, page: 1, limit: 100 },
-    skip: !walletAddress,
-    fetchPolicy: 'cache-and-network',
-  });
+  const [bets, setBets] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchBets = async () => {
+    if (!walletAddress) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await walletService.getMemberBets(walletAddress);
+      if (response.success && response.data) {
+        // The API returns { ..., bets: [...] }
+        setBets(response.data.bets || []);
+      } else {
+        // If success is false, or data is missing
+        if (!response.success) {
+             setError(response.message || 'Failed to fetch bets');
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while fetching bets');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    console.log('[BetsPage] Wallet Address:', walletAddress);
-    console.log('[BetsPage] Loading:', loading);
-    console.log('[BetsPage] Error:', error);
-    console.log('[BetsPage] Data:', data);
-    if (data) {
-      console.log('[BetsPage] myBets array:', data.myBets);
-      console.log('[BetsPage] Number of bets received:', data.myBets?.length);
-    }
-  }, [walletAddress, loading, error, data]);
+    fetchBets();
+  }, [walletAddress]);
 
   const handleRefresh = (event: CustomEvent) => {
-    refetch().finally(() => event.detail.complete());
+    fetchBets().finally(() => event.detail.complete());
   };
 
   if (error) {
@@ -147,9 +69,9 @@ const BetsPage: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
-          <IonText color="danger">Failed to load bets: {error.message}</IonText>
+          <IonText color="danger">Failed to load bets: {error}</IonText>
 
-          <IonButton onClick={() => refetch()} expand="block">
+          <IonButton onClick={() => fetchBets()} expand="block">
             Retry
           </IonButton>
         </IonContent>
@@ -159,108 +81,156 @@ const BetsPage: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader translucent={true}>
-        <IonToolbar>
-          <IonTitle>🎫 My Tickets</IonTitle>
-        </IonToolbar>
+      <IonHeader translucent={true} className="ion-no-border">
+      <IonToolbar style={{ '--background': 'transparent' }}>
+      <IonTitle style={{ fontWeight: 800, fontSize: '1.5rem' }}>
+      <span style={{ color: 'var(--lottery-gold)' }}>My</span> Tickets 🎫
+      </IonTitle>
+      </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
-        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-          <IonRefresherContent></IonRefresherContent>
-        </IonRefresher>
+      <IonContent fullscreen className="ion-padding">
+      <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+      <IonRefresherContent></IonRefresherContent>
+      </IonRefresher>
 
-        {/* <UserInfoHeader /> */}
+      {loading && (
+      <div className="ion-text-center ion-padding" style={{ marginTop: '20vh' }}>
+      <IonSpinner name="crescent" color="warning" style={{ transform: 'scale(1.5)' }} />
+      <p style={{ marginTop: '1rem', color: 'var(--text-color-secondary)' }}>Loading your tickets...</p>
+      </div>
+      )}
 
-        {loading && (
-          <div className="ion-text-center ion-padding" style={{ marginTop: '10vh' }}>
-            <IonSpinner name="crescent" className="loading-spinner" />
+      {!loading && bets.length === 0 && (
+      <div className="ion-text-center ion-padding fade-in" style={{ marginTop: '15vh' }}>
+      <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎟️</div>
+      <IonText>
+        <h2 style={{ fontWeight: 700, color: 'var(--lottery-gold)', marginBottom: '0.5rem' }}>No Tickets Yet</h2>
+        <p style={{ color: 'var(--text-color-secondary)', maxWidth: '300px', margin: '0 auto', lineHeight: '1.5' }}>
+        You haven't purchased any tickets yet. Head over to the dashboard and try your luck!
+        </p>
+      </IonText>
+      <IonButton routerLink="/dashboard" fill="outline" color="warning" style={{ marginTop: '2rem' }} shape="round">
+        Play Now
+      </IonButton>
+      </div>
+      )}
+
+      <div className="fade-in" style={{ paddingBottom: '20px' }}>
+      {bets.map((bet: any) => {
+      const betDate = bet.date ? new Date(bet.date) : null;
+      return (
+        <IonCard 
+        key={bet._id} 
+        className="custom-card ticket-card" 
+        style={{ 
+        margin: '0 0 20px 0', 
+        background: 'var(--card-background)',
+        borderRadius: '16px',
+        boxShadow: '0 8px 20px rgba(0,0,0,0.2)',
+        border: '1px solid rgba(255, 215, 0, 0.1)'
+        }}
+        >
+        <div style={{ 
+        background: 'linear-gradient(90deg, rgba(255,215,0,0.1) 0%, rgba(0,0,0,0) 100%)',
+        padding: '16px',
+        borderBottom: '1px dashed rgba(255,255,255,0.1)'
+        }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <IonText color="medium" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          Draw Number
+          </IonText>
+          <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--ion-text-color)' }}>
+          #{bet.draw_number}
           </div>
-        )}
-
-        {!loading && data && data.myBets && data.myBets.length === 0 && (
-          <div className="ion-text-center ion-padding fade-in" style={{ marginTop: '10vh' }}>
-            <IonText>
-              <h3 style={{ fontWeight: 600, color: 'var(--lottery-gold)' }}>No Tickets Yet</h3>
-              <p style={{ color: 'var(--text-color-secondary)' }}>
-                You haven't purchased any tickets yet. Go to the dashboard to play!
-              </p>
-            </IonText>
-          </div>
-        )}
-
-        <div className="fade-in" style={{ padding: '0 16px' }}>
-          {data?.myBets?.map((bet: any) => {
-            console.log(
-              '[BetsPage] Attempting to render bet object:',
-              JSON.stringify(bet, null, 2)
-            );
-
-            if (!bet || !bet.cycle || !bet.id) {
-              console.warn('[BetsPage] Skipping render for bet with missing data:', bet?.id);
-              return null;
-            }
-            return (
-              <IonCard key={bet.id} className="custom-card" style={{ margin: '0 0 16px 0' }}>
-                <IonCardHeader
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    paddingBottom: '12px',
-                  }}
-                >
-                  <IonCardTitle className="custom-card-title" style={{ padding: 0, margin: 0 }}>
-                    Draw #{bet.cycle.cycleNumber}
-                  </IonCardTitle>
-                  <IonBadge
-                    style={{
-                      background: 'var(--gold-gradient)',
-                      color: '#000000',
-                      fontWeight: '700',
-                      fontSize: '0.9rem',
-                      padding: '6px 10px',
-                    }}
-                  >
-                    $0.50
-                  </IonBadge>
-                </IonCardHeader>
-
-                <IonCardContent>
-                  <IonList style={{ background: 'transparent' }}>
-                    <IonItem style={{ '--background': 'transparent' }}>
-                      <IonLabel>Your Numbers</IonLabel>
-                      <div style={{ display: 'flex', gap: '8px' }} slot="end">
-                        {bet.selectedNumber?.split('').map((digit: string, index: number) => (
-                          <div
-                            key={index}
-                            className="lottery-number"
-                            style={{ width: '40px', height: '40px', fontSize: '1.1rem' }}
-                          >
-                            {digit}
-                          </div>
-                        ))}
-                      </div>
-                    </IonItem>
-                    <IonItem style={{ '--background': 'transparent' }}>
-                      <IonLabel>Status</IonLabel>
-                      <div slot="end">
-                        {/* <BetResult bet={bet} /> */}
-                      </div>
-                    </IonItem>
-                    <IonItem style={{ '--background': 'transparent' }} lines="none">
-                      <IonLabel
-                        style={{ fontSize: '0.85em', color: 'var(--text-color-secondary)' }}
-                      >
-                        🕒 Purchased:{' '}
-                        {bet.createdAt ? new Date(bet.createdAt).toLocaleString() : 'N/A'}
-                      </IonLabel>
-                    </IonItem>
-                  </IonList>
-                </IonCardContent>
-              </IonCard>
-            );
-          })}
         </div>
+        <IonBadge
+          style={{
+          background: 'var(--gold-gradient)',
+          color: '#000',
+          fontWeight: '800',
+          fontSize: '1rem',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 10px rgba(255, 215, 0, 0.3)'
+          }}
+        >
+          ${bet.bet_amount}
+        </IonBadge>
+        </div>
+        </div>
+
+        <IonCardContent style={{ padding: '20px 16px' }}>
+        <div style={{ marginBottom: '16px' }}>
+        <IonLabel style={{ fontSize: '0.9rem', color: 'var(--text-color-secondary)', marginBottom: '8px', display: 'block' }}>
+          Your Lucky Numbers
+        </IonLabel>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {bet.bet_number?.split('').map((digit: string, index: number) => (
+          <div
+          key={index}
+          className="lottery-number"
+          style={{ 
+          width: '45px', 
+          height: '45px', 
+          fontSize: '1.3rem',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid var(--lottery-gold)',
+          borderRadius: '50%',
+          color: 'var(--lottery-gold)',
+          boxShadow: '0 0 10px rgba(255, 215, 0, 0.1)'
+          }}
+          >
+          {digit}
+          </div>
+          ))}
+        </div>
+        </div>
+        
+        <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        paddingTop: '12px',
+        borderTop: '1px solid rgba(255,255,255,0.05)'
+        }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-color-secondary)', fontSize: '0.85rem' }}>
+          <span>📅</span>
+          <span>{betDate ? betDate.toLocaleDateString() : 'N/A'}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-color-secondary)', fontSize: '0.85rem' }}>
+          <span>🕒</span>
+            <span>{betDate ? betDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}) : 'N/A'}</span>
+        </div>
+        </div>
+
+        {bet.transaction_hash && (
+        <div style={{ 
+          marginTop: '12px', 
+          paddingTop: '12px', 
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+          fontSize: '0.75rem',
+          color: 'var(--text-color-secondary)'
+        }}>
+          <div style={{ marginBottom: '4px' }}>Transaction Hash:</div>
+          <div style={{ 
+          fontFamily: 'monospace', 
+          color: 'var(--lottery-gold)',
+          wordBreak: 'break-all'
+          }}>
+          {bet.transaction_hash}
+          </div>
+        </div>
+        )}
+        </IonCardContent>
+        </IonCard>
+      );
+      })}
+      </div>
       </IonContent>
     </IonPage>
   );
