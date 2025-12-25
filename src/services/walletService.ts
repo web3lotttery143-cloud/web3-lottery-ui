@@ -189,6 +189,21 @@ class WalletService {
 			return {success: false, message: `${error}`};
 		}
 	}
+
+	async getMemberBets(walletAddress: string): Promise<{success: boolean, message: string, data?: any}> {
+		try {
+			const response = await fetch(`${this.apiUrl}/members/bets/${walletAddress}`);
+			if(!response.ok) {
+				return {success: false, message: "Failed to fetch member bets"};
+			}
+
+			const data = await response.json();
+			
+			return {success: true, message: "Member bets fetched successfully", data: data}
+		} catch (error) {
+			return {success: false, message: `${error}`};
+		}
+	}
 }
 
 const walletService = new WalletService();
