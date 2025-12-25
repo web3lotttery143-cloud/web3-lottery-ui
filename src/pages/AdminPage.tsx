@@ -24,9 +24,10 @@ import DigitInput from '../components/DigitInput';
 import { CLOSE_CYCLE_FOR_DRAW, GET_ADMIN_STATS, TRIGGER_DRAW } from '../graphql/queries';
 import xteriumService from '../services/xteriumService';
 import useAppStore from '../store/useAppStore';
+import lotteryService from '../services/lotteryService';
 
 const AdminPage: React.FC = () => {
-  const { walletAddress, isAdmin } = useAppStore();
+  const { walletAddress, isAdmin, isAfter10Am, drawStatus, drawStatus2 } = useAppStore();
   const [presentToast] = useIonToast();
   const [presentLoading, dismissLoading] = useIonLoading();
   const [forcedWinningNumber, setForcedWinningNumber] = useState('');
@@ -139,6 +140,51 @@ const AdminPage: React.FC = () => {
       'I am the operator and I authorize closing the current cycle for testing.',
       {}
     );
+  };
+
+  const handleOverrideWinningNumber = async () => {
+    try {
+      const currentDrawStatus = isAfter10Am ? drawStatus2 : drawStatus;
+      const currentDrawNumber = isAfter10Am ? 2 : 1;
+
+      if (currentDrawStatus !== 'Processing') {
+        presentToast({
+          message: 'Cycle status must be PROCESSING to override winning number.',
+          duration: 3000,
+          color: 'danger',
+        });
+        return;
+      }
+      await presentLoading({ message: 'Overriding winning number...' });
+
+      const res = await lotteryService.overrideWinningNumber({
+        draw_number: currentDrawNumber,
+        winning_number: Number(forcedWinningNumber),
+      });
+
+      if (!res.success) {
+        presentToast({
+          message: `Error: ${res.message}`,
+          duration: 3000,
+          color: 'danger',
+        });
+        return;
+      }
+
+      presentToast({
+        message: 'Winning number overridden successfully.',
+        duration: 3000,
+        color: 'success',
+      });
+    } catch (error: any) {
+      presentToast({
+        message: error.message || 'An error occurred while overriding winning number.',
+        duration: 3000,
+        color: 'danger',
+      });
+    } finally {
+      dismissLoading();
+    }
   };
 
   if (!isAdmin) {
@@ -260,7 +306,7 @@ const AdminPage: React.FC = () => {
               <IonButton
                 className="custom-button"
                 expand="block"
-                onClick={handleTriggerDraw}
+                onClick={handleOverrideWinningNumber}
                 disabled={loadingDraw}
                 style={{
                   background: 'var(--lottery-emerald)',

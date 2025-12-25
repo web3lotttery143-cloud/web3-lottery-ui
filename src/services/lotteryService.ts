@@ -1,4 +1,5 @@
 import { ExecuteBetDto } from "../models/executeBet.model";
+import { OverrideWinningNumberDto } from "../models/overrideWinningNumber.model";
 
 const LIVE_API = import.meta.env.VITE_API_URL || "";
 	
@@ -105,6 +106,28 @@ class LotteryService {
 		} catch (err) {
 			return { success: false, message: `${err}`} 
 		}
+	}
+
+	async overrideWinningNumber(data: OverrideWinningNumberDto): Promise<{success: boolean, message: string}> {
+		try {
+			const response = await fetch(`${LIVE_API}/api/draws/override`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(data),
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				return {success: false, message: errorData.message || 'Failed to override winning number'};
+			}
+
+			return {success: true, message: "Winning number overridden successfully"};
+		} catch (error) {
+			return {success: false, message: `${error}`};
+		}
+
 	}
 }
 
