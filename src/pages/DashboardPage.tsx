@@ -42,6 +42,7 @@ import lotteryService from "../services/lotteryService";
 import walletService from "../services/walletService";
 import { execute } from "graphql";
 import { chevronDownCircleOutline } from "ionicons/icons";
+import { VITE_BET_AMOUNT } from "../services/constants";
 
 interface DashboardPageProps {
 	data: any;
@@ -272,15 +273,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					isNaN(rawJackpot)
 						? '0.0000'
 						: (rawJackpot / 1_000_000).toFixed(4)
-					);
-
-                setNumberOfTicketsSold(draw1.bets?.length || 0)
+					);   
+				setNumberOfTicketsSold(draw1.bets?.length || 0)
                 setWinningNumber(draw1.winningNumber || 'N/A'); 
                 setWinners(draw1.winners || []); 
 				setDrawStatus(draw1.status || 'Close');
-				const numberRebate = Number(draw1.rebate)
-				const finalNumberRebate = numberRebate / 10
-				setRebate(finalNumberRebate.toString() || '0');
+				
+				const rawRebate = Number(
+					String(draw1.rebate).replace(/,/g, '')
+					);
+				setRebate(
+					isNaN(rawRebate)
+						? '0.0000'
+						: (rawRebate / 1_000_000).toFixed(4)
+				);
 				const matchingWinner = draw1.winners?.find(
 					(winner: any) => winner.bettor === walletAddress
 				);
@@ -296,7 +302,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					String(draw2.jackpot).replace(/,/g, '')
 					);
 
-					setJackpot(
+					setJackpot2(
 					isNaN(rawJackpot)
 						? '0.0000'
 						: (rawJackpot / 1_000_000).toFixed(4)
@@ -305,7 +311,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 setWinningNumber2(draw2.winningNumber || 'N/A');
                 setWinners2(draw2.winners || []);
 				setDrawStatus2(draw2.status || 'Close');
-				setRebate2(draw2.rebate || '0');
+				const rawRebate = Number(
+					String(draw2.rebate).replace(/,/g, '')
+					);
+				setRebate2(
+					isNaN(rawRebate)
+						? '0.0000'
+						: (rawRebate / 1_000_000).toFixed(4)
+				);
 				const matchingWinner = draw2.winners?.find(
 					(winner: any) => winner.bettor === walletAddress
 				);
@@ -414,8 +427,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				member_address: walletAddress!,
 				bet: {
 					bet_number: globalBetNumber.toString(),
-					bet_amount: import.meta.env.VITE_BET_AMOUNT || '1',
-					transaction_hash: (executeBet as any).transactionHash || '',
+					bet_amount: VITE_BET_AMOUNT|| '0.5',
+					transaction_hash: executeBet.message || '',
 					draw_number: draw || '1',
 				}
 			}
@@ -858,10 +871,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 															</div>
 														))}
 													</div>
+												) : drawStatus2 === "Processing" ? (
+													<IonText
+														style={{
+															color: "var(--ion-color-warning)",
+															fontSize: "0.9rem",
+															fontStyle: "italic",
+														}}
+													>
+														Processing...
+													</IonText>
 												) : (
 													(winningNumber2 || '0')
 														.toString()
-  														.padEnd(3, "0")		
+														.padEnd(3, "0")		
 														.split("")
 														.map((digit: string, index: number) => (
 															<div
