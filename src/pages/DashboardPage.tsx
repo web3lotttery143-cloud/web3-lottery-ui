@@ -264,9 +264,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             setIsJackpotLoading(false)
 
             if (draw1) {
-				const numberJackpot = Number(draw1.jackpot)
-				const finalNumberJackpot = (numberJackpot / 1000000).toFixed(4)
-                setJackpot(finalNumberJackpot.toString() || '0.0000')
+				const rawJackpot = Number(
+					String(draw1.jackpot).replace(/,/g, '')
+					);
+
+					setJackpot(
+					isNaN(rawJackpot)
+						? '0.0000'
+						: (rawJackpot / 1_000_000).toFixed(4)
+					);
+
                 setNumberOfTicketsSold(draw1.bets?.length || 0)
                 setWinningNumber(draw1.winningNumber || 'N/A'); 
                 setWinners(draw1.winners || []); 
@@ -285,9 +292,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             }
 
             if (draw2) {
-                const numberJackpot = Number(draw2.jackpot)
-				const finalNumberJackpot = (numberJackpot / 1000000).toFixed(4)
-                setJackpot(finalNumberJackpot.toString() || '0.0000')
+                const rawJackpot = Number(
+					String(draw2.jackpot).replace(/,/g, '')
+					);
+
+					setJackpot(
+					isNaN(rawJackpot)
+						? '0.0000'
+						: (rawJackpot / 1_000_000).toFixed(4)
+					);         
 				setNumberOfTicketsSold2(draw2.bets?.length || 0)
                 setWinningNumber2(draw2.winningNumber || 'N/A');
                 setWinners2(draw2.winners || []);
