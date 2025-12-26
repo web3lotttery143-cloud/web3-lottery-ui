@@ -1,12 +1,14 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
+import { SaveBetDto } from "../models/saveBet.model";
 import { useIonToast } from "@ionic/react";
 import type { AccountInfo } from "@polkadot/types/interfaces";
+import { VITE_API_URL, VITE_WS_PROVIDER, VITE_OPERATOR_ADDRESS } from "./constants";
 
 class WalletService {
-	apiUrl = import.meta.env.VITE_API_URL
+	apiUrl = VITE_API_URL
 	async getBalance(address: string) {
 		try {
-			const provider = new WsProvider(import.meta.env.VITE_WS_PROVIDER || "");
+			const provider = new WsProvider(VITE_WS_PROVIDER|| "");
 			const api = await ApiPromise.create({ provider });
 
 			const USDT_CURRENCY_ID = 1984;
@@ -55,7 +57,7 @@ class WalletService {
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ member_address: address, upline_address: uplineAddress || import.meta.env.VITE_OPERATOR_ADDRESS }),
+				body: JSON.stringify({ member_address: address, upline_address: uplineAddress || VITE_OPERATOR_ADDRESS}),
 			});
 
 			const data = await response.json();
@@ -63,6 +65,10 @@ class WalletService {
 			if (!response.ok) {
 				return {success: false, message: data.message}
 			}
+
+			if(address == VITE_OPERATOR_ADDRESS) {
+			return {success: true, message: 'Operator Connected...', data: 'Admin'}
+		}
 			return {success: true, message: data.message, data: data.data.upline_address}
 		} catch (error) {
 			return {success: false, message: `${error}`}
@@ -71,9 +77,7 @@ class WalletService {
 
 	async loginWallet(address: string): Promise<{success: boolean, message: string, data?: any}> {
     try {
-		if(address == import.meta.env.VITE_OPERATOR_ADDRESS) {
-			return {success: true, message: 'Operator Connected...', data: 'Admin'}
-		}
+		
         const response = await fetch(`${this.apiUrl}/members/login`, {
             method: "POST",
             headers: {
@@ -87,6 +91,10 @@ class WalletService {
         if (!response.ok) {
             return {success: false, message: data.error}
         }
+
+		if(address == VITE_OPERATOR_ADDRESS) {
+			return {success: true, message: 'Operator Connected...', data: 'Admin'}
+		}
 
         return {success: true, message: data.message, data: data.data.upline_address};
     } catch (error) {
@@ -156,6 +164,52 @@ class WalletService {
 			return { success: false, signedTx: "" };
 		}
 	};
+
+	async saveBets(betData: SaveBetDto): Promise<{success: boolean, message: string}> {
+		try {
+			const response = await fetch(`${this.apiUrl}/members/bets`, {
+				method: "POST",			
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(betData)
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				return {success: false, message: data.message}
+			}
+			return {success: true, message: data.message}
+		} catch (error) {
+			return {success: false, message: `${error}`};
+		}
+	}
+
+	async getBets(walletAddress: string): Promise<{success: boolean, message: string, data?: any}> {
+		try {
+			const response = await fetch(`${this.apiUrl}/bets/${walletAddress}`);
+
+			return {success: true, message: "Bets fetched successfully", data: await response.json()}
+		} catch (error) {
+			return {success: false, message: `${error}`};
+		}
+	}
+
+	async getMemberBets(walletAddress: string): Promise<{success: boolean, message: string, data?: any}> {
+		try {
+			const response = await fetch(`${this.apiUrl}/members/bets/${walletAddress}`);
+			if(!response.ok) {
+				return {success: false, message: "Failed to fetch member bets"};
+			}
+
+			const data = await response.json();
+			
+			return {success: true, message: "Member bets fetched successfully", data: data}
+		} catch (error) {
+			return {success: false, message: `${error}`};
+		}
+	}
 }
 
 const walletService = new WalletService();

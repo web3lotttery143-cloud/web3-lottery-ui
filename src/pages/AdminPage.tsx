@@ -24,9 +24,10 @@ import DigitInput from '../components/DigitInput';
 import { CLOSE_CYCLE_FOR_DRAW, GET_ADMIN_STATS, TRIGGER_DRAW } from '../graphql/queries';
 import xteriumService from '../services/xteriumService';
 import useAppStore from '../store/useAppStore';
+import lotteryService from '../services/lotteryService';
 
 const AdminPage: React.FC = () => {
-  const { walletAddress, isAdmin } = useAppStore();
+  const { walletAddress, isAdmin, isAfter10Am, drawStatus, drawStatus2 } = useAppStore();
   const [presentToast] = useIonToast();
   const [presentLoading, dismissLoading] = useIonLoading();
   const [forcedWinningNumber, setForcedWinningNumber] = useState('');
@@ -141,6 +142,51 @@ const AdminPage: React.FC = () => {
     );
   };
 
+  const handleOverrideWinningNumber = async () => {
+    try {
+      const currentDrawStatus = isAfter10Am ? drawStatus2 : drawStatus;
+      const currentDrawNumber = isAfter10Am ? 2 : 1;
+
+      if (currentDrawStatus !== 'Processing') {
+        presentToast({
+          message: 'Cycle status must be PROCESSING to override winning number.',
+          duration: 3000,
+          color: 'danger',
+        });
+        return;
+      }
+      await presentLoading({ message: 'Overriding winning number...' });
+
+      const res = await lotteryService.overrideWinningNumber({
+        draw_number: currentDrawNumber,
+        winning_number: Number(forcedWinningNumber),
+      });
+
+      if (!res.success) {
+        presentToast({
+          message: `Error: ${res.message}`,
+          duration: 3000,
+          color: 'danger',
+        });
+        return;
+      }
+
+      presentToast({
+        message: 'Winning number overridden successfully.',
+        duration: 3000,
+        color: 'success',
+      });
+    } catch (error: any) {
+      presentToast({
+        message: error.message || 'An error occurred while overriding winning number.',
+        duration: 3000,
+        color: 'danger',
+      });
+    } finally {
+      dismissLoading();
+    }
+  };
+
   if (!isAdmin) {
     return (
       <IonPage>
@@ -188,7 +234,7 @@ const AdminPage: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen>
         <div className="fade-in">
-          <IonCard className="custom-card">
+          {/* <IonCard className="custom-card">
             <IonCardHeader>
               <IonCardTitle className="custom-card-title">⚙️ Test Utilities</IonCardTitle>
             </IonCardHeader>
@@ -223,7 +269,7 @@ const AdminPage: React.FC = () => {
                 {loadingClose ? 'Closing...' : '🛑 CLOSE CYCLE FOR DRAW (TEST)'}
               </IonButton>
             </IonCardContent>
-          </IonCard>
+          </IonCard> */}
 
           <IonCard className="custom-card">
             <IonCardHeader>
@@ -254,13 +300,13 @@ const AdminPage: React.FC = () => {
                 }}
               >
                 <IonText style={{ color: 'var(--lottery-gold)', fontSize: '0.9rem' }}>
-                  ⚠️ This requires the cycle status to be 'CLOSED'.
+                  ⚠️ This requires the cycle status to be 'PROCESSING'.
                 </IonText>
               </div>
               <IonButton
                 className="custom-button"
                 expand="block"
-                onClick={handleTriggerDraw}
+                onClick={handleOverrideWinningNumber}
                 disabled={loadingDraw}
                 style={{
                   background: 'var(--lottery-emerald)',
@@ -277,7 +323,7 @@ const AdminPage: React.FC = () => {
             </IonCardContent>
           </IonCard>
 
-          <IonCard className="custom-card">
+          {/* <IonCard className="custom-card">
             <IonCardHeader>
               <IonCardTitle className="custom-card-title">
                 📊 Quick Stats (Current Cycle)
@@ -362,7 +408,7 @@ const AdminPage: React.FC = () => {
                 </IonList>
               )}
             </IonCardContent>
-          </IonCard>
+          </IonCard> */}
         </div>
       </IonContent>
     </IonPage>
