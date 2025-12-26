@@ -1,7 +1,8 @@
 import { ExecuteBetDto } from "../models/executeBet.model";
 import { OverrideWinningNumberDto } from "../models/overrideWinningNumber.model";
+import { VITE_API_URL } from "./constants";
 
-const LIVE_API = import.meta.env.VITE_API_URL || "";
+const LIVE_API = VITE_API_URL;
 	
 class LotteryService {
 	// LOTTERY SETUP
