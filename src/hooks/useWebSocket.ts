@@ -14,8 +14,6 @@ export const useWebSocket = () => {
     setWinners2,
     setDrawStatus,
     setDrawStatus2,
-    setRebate,
-    setRebate2,
     setAffiliateEarnings,
     setAffiliateEarnings2,
     walletAddress
@@ -25,47 +23,54 @@ export const useWebSocket = () => {
     webSocketService.connect();
 
     const handleMessage = (message: any) => {
-      if (message.type === 'lottery' || message.type === 'draw') {
+      if (message.type === 'draw' && message.data) {
         const data = message.data;
-        // Assuming data is an array of draws or an object containing draws
-        const draws = Array.isArray(data) ? data : data.draws;
-        
-        if (Array.isArray(draws)) {
-            const draw1 = draws[0];
-            const draw2 = draws[1];
+        const drawNumber = data.drawNumber;
 
-            if (draw1) {
-                const rawJackpot = Number(String(draw1.jackpot).replace(/,/g, ''));
-                setJackpot(isNaN(rawJackpot) ? '0.0000' : (rawJackpot / 1_000_000).toFixed(4));
-                setNumberOfTicketsSold(draw1.bets?.length || 0);
-                setWinningNumber(draw1.winningNumber || 'N/A');
-                setWinners(draw1.winners || []);
-                setDrawStatus(draw1.status || 'Close');
-                
-                const rawRebate = Number(String(draw1.rebate).replace(/,/g, ''));
-                setRebate(isNaN(rawRebate) ? '0.0000' : (rawRebate / 1_000_000).toFixed(4));
+        // Parse pot: "2.25 USDT" -> "2.2500"
+        let jackpotValue = '0.0000';
+        if (typeof data.pot === 'string') {
+            const num = parseFloat(data.pot.replace(/[^\d.-]/g, ''));
+            if (!isNaN(num)) {
+                jackpotValue = num.toFixed(4);
+            }
+        }
 
-                if (walletAddress) {
-                    const matchingWinner = draw1.winners?.find((winner: any) => winner.bettor === walletAddress);
+        const betsCount = typeof data.bets === 'number' ? data.bets : 0;
+        const winningNum = data.winningNumber !== undefined ? String(data.winningNumber) : 'N/A';
+        const status = data.status || 'Close';
+
+        if (drawNumber === 1) {
+            setJackpot(jackpotValue);
+            setNumberOfTicketsSold(betsCount);
+            setWinningNumber(winningNum);
+            setDrawStatus(status);
+            
+            if (Array.isArray(data.winners)) {
+                setWinners(data.winners);
+                 if (walletAddress) {
+                    const matchingWinner = data.winners.find((winner: any) => winner.bettor === walletAddress);
                     setAffiliateEarnings(matchingWinner ? matchingWinner.bettorShare || '0' : '0');
                 }
+            } else if (status === 'Open') {
+                setWinners([]);
+                setAffiliateEarnings('0');
             }
+        } else if (drawNumber === 2) {
+            setJackpot2(jackpotValue);
+            setNumberOfTicketsSold2(betsCount);
+            setWinningNumber2(winningNum);
+            setDrawStatus2(status);
 
-            if (draw2) {
-                const rawJackpot = Number(String(draw2.jackpot).replace(/,/g, ''));
-                setJackpot2(isNaN(rawJackpot) ? '0.0000' : (rawJackpot / 1_000_000).toFixed(4));
-                setNumberOfTicketsSold2(draw2.bets?.length || 0);
-                setWinningNumber2(draw2.winningNumber || 'N/A');
-                setWinners2(draw2.winners || []);
-                setDrawStatus2(draw2.status || 'Close');
-
-                const rawRebate = Number(String(draw2.rebate).replace(/,/g, ''));
-                setRebate2(isNaN(rawRebate) ? '0.0000' : (rawRebate / 1_000_000).toFixed(4));
-
-                if (walletAddress) {
-                    const matchingWinner = draw2.winners?.find((winner: any) => winner.bettor === walletAddress);
+             if (Array.isArray(data.winners)) {
+                setWinners2(data.winners);
+                 if (walletAddress) {
+                    const matchingWinner = data.winners.find((winner: any) => winner.bettor === walletAddress);
                     setAffiliateEarnings2(matchingWinner ? matchingWinner.bettorShare || '0' : '0');
                 }
+            } else if (status === 'Open') {
+                setWinners2([]);
+                setAffiliateEarnings2('0');
             }
         }
       }
@@ -76,5 +81,5 @@ export const useWebSocket = () => {
     return () => {
       webSocketService.removeListener(handleMessage);
     };
-  }, [walletAddress, setJackpot, setJackpot2, setNumberOfTicketsSold, setNumberOfTicketsSold2, setWinningNumber, setWinningNumber2, setWinners, setWinners2, setDrawStatus, setDrawStatus2, setRebate, setRebate2, setAffiliateEarnings, setAffiliateEarnings2]);
+  }, [walletAddress, setJackpot, setJackpot2, setNumberOfTicketsSold, setNumberOfTicketsSold2, setWinningNumber, setWinningNumber2, setWinners, setWinners2, setDrawStatus, setDrawStatus2, setAffiliateEarnings, setAffiliateEarnings2]);
 };
