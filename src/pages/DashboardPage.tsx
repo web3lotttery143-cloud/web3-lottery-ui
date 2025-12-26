@@ -42,7 +42,7 @@ import lotteryService from "../services/lotteryService";
 import walletService from "../services/walletService";
 import { execute } from "graphql";
 import { chevronDownCircleOutline } from "ionicons/icons";
-import { VITE_BET_AMOUNT } from "../services/constants";
+import { VITE_BET_AMOUNT, VITE_OPERATOR_ADDRESS } from "../services/constants";
 
 interface DashboardPageProps {
 	data: any;
@@ -139,17 +139,21 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			// Check if current time is >= 1:00 PM
 			const isAfterTenAM = hours > 13 || (hours === 13 && minutes >= 0);
 			setIsAfter10Am(isAfterTenAM); //testingDrawNumber
+
+			if (isAfterTenAM) {
+				setDraw("2");
+			} else {
+				setDraw("1");
+			}
 		} catch (error) {
-			console.error('Error checking time:', error);
-						presentToast({
-							message: 'Failed to check time',
-							duration: 2000,
-							color: 'danger',
-						});
+			presentToast({
+				message: 'Failed to check time',
+				duration: 2000,
+				color: 'danger',
+			});
 		} finally {
 			setDrawStatusLoading(false);
 		}
-		
 	};
 
 	const handleCancel = () => {
@@ -413,7 +417,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				draw_number: draw || '1',
 				bet_number: globalBetNumber,
 				bettor: walletAddress!,
-				upline: referralUpline || import.meta.env.VITE_OPERATOR_ADDRESS,
+				upline: referralUpline || VITE_OPERATOR_ADDRESS,
 			};
 
 			const executeBet = await lotteryService.executeBet(payload);
@@ -1196,8 +1200,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										className="dark-select"
 										style={{ width: "100%" }}
 									>
-										<IonSelectOption value="1">10 AM Draw</IonSelectOption>
-										<IonSelectOption value="2">10 PM Draw</IonSelectOption>
+										<IonSelectOption value="1">1 PM Draw</IonSelectOption>
+										<IonSelectOption value="2">9 PM Draw</IonSelectOption>
 									</IonSelect>
 								</IonItem>
 								<IonItem style={{ "--background": "transparent", marginTop: 16 }}>

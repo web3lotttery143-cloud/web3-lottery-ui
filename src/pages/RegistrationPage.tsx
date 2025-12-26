@@ -61,6 +61,7 @@ const RegistrationPage: React.FC = () => {
         setIsAdmin(true)
         presentToast({ message: response.message, duration: 2000, color: 'success'})
         connectWallet(connectedWallet)
+        setReferralUpline(response.data)
         router.push('/dashboard', 'root', 'replace');
       } else {
         setReferralUpline(response.data)
