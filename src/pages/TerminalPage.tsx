@@ -41,7 +41,7 @@ const TerminalPage: React.FC = () => {
         return () => {
             webSocketService.removeListener(handleMessage);
             webSocketService.removeStatusListener(handleStatus);
-            webSocketService.disconnect();
+            // webSocketService.disconnect(); // Keep connection alive globally
         };
     }, [present]);
 

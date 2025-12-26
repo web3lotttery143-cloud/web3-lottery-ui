@@ -22,12 +22,15 @@ import AppTabs from './components/AppTabs';
 import ReferralAcceptPage from './pages/ReferralAcceptPage';
 import RegistrationPage from './pages/RegistrationPage';
 import useAppStore from './store/useAppStore';
+import { useWebSocket } from './hooks/useWebSocket';
 
 setupIonicReact();
 
 const AppContent: React.FC = () => {
   const { isConnected } = useAppStore();
   const pathname = window.location.pathname;
+
+  useWebSocket();
 
   if (pathname.startsWith('/accept-referral')) {
     return <ReferralAcceptPage />;
