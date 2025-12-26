@@ -507,8 +507,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		return () => clearInterval(timer);
 	}, [confirmationModal]);
 
-	const cycle = data?.currentCycle;
-
 	return (
 		<IonPage>
 			<IonHeader translucent={true}>
