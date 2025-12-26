@@ -142,8 +142,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 			if (isAfterTenAM) {
 				setDraw("2");
+				setSelectedSegment("second")
 			} else {
 				setDraw("1");
+				setSelectedSegment("first")
 			}
 		} catch (error) {
 			presentToast({
@@ -1034,7 +1036,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										marginTop: "8px",
 									}}
 								>
-									{isAfter10Am ? 'Next Draw: 10 PM' : 'Next Draw: 10 AM'} - Hurry up and buy your tickets!	
+									{isAfter10Am ? 'Next Draw: 9 PM' : 'Next Draw: 1 PM'} - Hurry up and buy your tickets!	
 								</p>
 							</IonText>
 						</IonCardContent>
@@ -1188,19 +1190,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							<IonList lines="none" style={{ background: "transparent" }}>
 								<IonItem style={{ "--background": "transparent" }}>
 									<IonLabel position="stacked" style={{ color: "var(--lottery-gold)", fontWeight: 600 }}>
-										Select Draw
+										Draw Schedule
 									</IonLabel>
-									<IonSelect
-										value={draw}
-										onIonChange={(e) => setDraw(e.detail.value)}
-										placeholder="Choose draw"
-										fill="solid"
-										className="dark-select"
-										style={{ width: "100%" }}
-									>
-										<IonSelectOption value="1">1 PM Draw</IonSelectOption>
-										<IonSelectOption value="2">9 PM Draw</IonSelectOption>
-									</IonSelect>
+									<IonText style={{ 
+										fontSize: "1.2rem", 
+										fontWeight: 600, 
+										color: "var(--ion-color-primary)",
+										padding: "12px 0"
+									}}>
+										{isAfter10Am ? "9 PM Draw" : "1 PM Draw"}
+									</IonText>
 								</IonItem>
 								<IonItem style={{ "--background": "transparent", marginTop: 16 }}>
 									<IonLabel position="stacked" style={{ color: "var(--lottery-gold)", fontWeight: 600 }}>
