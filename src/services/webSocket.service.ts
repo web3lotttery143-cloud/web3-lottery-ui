@@ -1,5 +1,7 @@
 import { io, Socket } from 'socket.io-client';
+import { VITE_WEB_SOCKET_URL
 
+ } from './constants';
 type WebSocketListener = (data: any) => void;
 type WebSocketStatusListener = (status: 'connected' | 'disconnected' | 'error', error?: any) => void;
 
@@ -9,7 +11,7 @@ class WebSocketService {
   private statusListeners: WebSocketStatusListener[] = [];
   // Socket.IO client usually takes the http url. The namespace is part of the path or connection options.
   // But for socket.io-client, passing the full URL with namespace works.
-  private url = 'http://192.168.1.27:3000/lottery-jobs';
+  private url = VITE_WEB_SOCKET_URL;
 
   connect() {
     if (this.socket?.connected) {
