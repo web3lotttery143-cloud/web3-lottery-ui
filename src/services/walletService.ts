@@ -65,6 +65,10 @@ class WalletService {
 			if (!response.ok) {
 				return {success: false, message: data.message}
 			}
+
+			if(address == VITE_OPERATOR_ADDRESS) {
+			return {success: true, message: 'Operator Connected...', data: 'Admin'}
+		}
 			return {success: true, message: data.message, data: data.data.upline_address}
 		} catch (error) {
 			return {success: false, message: `${error}`}
@@ -73,9 +77,7 @@ class WalletService {
 
 	async loginWallet(address: string): Promise<{success: boolean, message: string, data?: any}> {
     try {
-		if(address == VITE_OPERATOR_ADDRESS) {
-			return {success: true, message: 'Operator Connected...', data: 'Admin'}
-		}
+		
         const response = await fetch(`${this.apiUrl}/members/login`, {
             method: "POST",
             headers: {
@@ -89,6 +91,10 @@ class WalletService {
         if (!response.ok) {
             return {success: false, message: data.error}
         }
+
+		if(address == VITE_OPERATOR_ADDRESS) {
+			return {success: true, message: 'Operator Connected...', data: 'Admin'}
+		}
 
         return {success: true, message: data.message, data: data.data.upline_address};
     } catch (error) {
