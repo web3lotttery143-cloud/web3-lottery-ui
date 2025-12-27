@@ -93,7 +93,7 @@ class WalletService {
         }
 
 		if(address == VITE_OPERATOR_ADDRESS) {
-			return {success: true, message: 'Operator Connected...', data: 'Admin'}
+			return {success: true, message: 'Operator Connected...', data: data.data.upline_address}
 		}
 
         return {success: true, message: data.message, data: data.data.upline_address};

@@ -57,7 +57,7 @@ const RegistrationPage: React.FC = () => {
         throw new Error(response.message)
       }
 
-      if(response.data === 'Admin') {
+      if(response.message === 'Operator Connected...') {
         setIsAdmin(true)
         presentToast({ message: response.message, duration: 2000, color: 'success'})
         connectWallet(connectedWallet)
