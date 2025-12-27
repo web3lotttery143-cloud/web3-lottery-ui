@@ -1024,7 +1024,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							<div className="progress-container">
 								<div
 									className="progress-bar"
-									style={{ width: `${((isAfter10Am ? numberOfTicketsSold2 : numberOfTicketsSold) || 0) / Number(maximumBets)}%` }}
+									style={{ width: `${Number(maximumBets) > 0 ? (((isAfter10Am ? numberOfTicketsSold2 : numberOfTicketsSold) || 0) / Number(maximumBets)) * 100 : 0}%` }}
 								></div>
 							</div>
 							<IonText>
