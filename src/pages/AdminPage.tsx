@@ -307,7 +307,7 @@ const AdminPage: React.FC = () => {
                 className="custom-button"
                 expand="block"
                 onClick={handleOverrideWinningNumber}
-                disabled={loadingDraw}
+                disabled={true}
                 style={{
                   background: 'var(--lottery-emerald)',
                   '--background': 'var(--lottery-emerald)',
