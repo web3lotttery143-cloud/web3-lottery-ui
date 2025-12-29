@@ -318,7 +318,7 @@ const AdminPage: React.FC = () => {
                   marginTop: '16px',
                 }}
               >
-                {loadingDraw ? '🎰 Drawing...' : '🚀 TRIGGER DRAW'}
+                {loadingDraw ? '🎰 Drawing...' : '🚀 OVERRIDE WINNING NUMBER'}
               </IonButton>
             </IonCardContent>
           </IonCard>
