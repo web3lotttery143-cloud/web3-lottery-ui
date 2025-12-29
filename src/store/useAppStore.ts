@@ -38,6 +38,7 @@ export interface AppState {
   rebate2: string | null;
   affiliateEarnings: string | null
   affiliateEarnings2: string | null
+  isSubmitting: boolean;
   connectWallet: (address: string) => void;
   disconnectWallet: () => void;
   setUserProfile: (profile: UserProfile) => void;
@@ -64,6 +65,7 @@ export interface AppState {
   setRebate2: (rebate2: string) => void;
   setAffiliateEarnings: (affiliateEarnings: string) => void;
   setAffiliateEarnings2: (affiliateEarnings2: string) => void;
+  setIsSubmitting: (isSubmitting: boolean) => void;
 }
 
 const useAppStore = create<AppState>()(
@@ -95,6 +97,7 @@ const useAppStore = create<AppState>()(
       rebate2: null,
       affiliateEarnings: null,
       affiliateEarnings2: null,
+      isSubmitting: false,
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
         set({
@@ -149,6 +152,7 @@ const useAppStore = create<AppState>()(
       setRebate2: rebate2 => set({ rebate2: rebate2 }),
       setAffiliateEarnings: affiliateEarnings => set({ affiliateEarnings: affiliateEarnings }),
       setAffiliateEarnings2: affiliateEarnings2 => set({ affiliateEarnings2: affiliateEarnings2 }),
+      setIsSubmitting: isSubmitting => set({ isSubmitting: isSubmitting }),
     }),
     {
       name: 'web3-lottery-app-storage',
