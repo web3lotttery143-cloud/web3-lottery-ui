@@ -47,6 +47,12 @@ const ProfilePage: React.FC = () => {
     }
   }, []); 
 
+  useEffect(() => {
+    if(!affiliateEarnings) {
+      fetchBets();
+    }
+  }, [])
+
   const handleRefresh = async (event: CustomEvent) => {
 		// Force refresh all data when user pulls down
 		try {
