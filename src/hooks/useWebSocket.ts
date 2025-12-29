@@ -14,8 +14,6 @@ export const useWebSocket = () => {
     setWinners2,
     setDrawStatus,
     setDrawStatus2,
-    setAffiliateEarnings,
-    setAffiliateEarnings2,
     walletAddress
   } = useAppStore();
 
@@ -50,11 +48,11 @@ export const useWebSocket = () => {
                 setWinners(data.winners);
                  if (walletAddress) {
                     const matchingWinner = data.winners.find((winner: any) => winner.bettor === walletAddress);
-                    setAffiliateEarnings(matchingWinner ? matchingWinner.bettorShare || '0' : '0');
+                    //setAffiliateEarnings(matchingWinner ? matchingWinner.bettorShare || '0' : '0');
                 }
             } else if (status === 'Open') {
                 setWinners([]);
-                setAffiliateEarnings('0');
+                //setAffiliateEarnings('0');
             }
         } else if (drawNumber === 2) {
             setJackpot2(jackpotValue);
@@ -66,11 +64,11 @@ export const useWebSocket = () => {
                 setWinners2(data.winners);
                  if (walletAddress) {
                     const matchingWinner = data.winners.find((winner: any) => winner.bettor === walletAddress);
-                    setAffiliateEarnings2(matchingWinner ? matchingWinner.bettorShare || '0' : '0');
+                    //setAffiliateEarnings2(matchingWinner ? matchingWinner.bettorShare || '0' : '0');
                 }
             } else if (status === 'Open') {
                 setWinners2([]);
-                setAffiliateEarnings2('0');
+                //setAffiliateEarnings2('0');
             }
         }
       }
@@ -81,5 +79,5 @@ export const useWebSocket = () => {
     return () => {
       webSocketService.removeListener(handleMessage);
     };
-  }, [walletAddress, setJackpot, setJackpot2, setNumberOfTicketsSold, setNumberOfTicketsSold2, setWinningNumber, setWinningNumber2, setWinners, setWinners2, setDrawStatus, setDrawStatus2, setAffiliateEarnings, setAffiliateEarnings2]);
+  }, [walletAddress, setJackpot, setJackpot2, setNumberOfTicketsSold, setNumberOfTicketsSold2, setWinningNumber, setWinningNumber2, setWinners, setWinners2, setDrawStatus, setDrawStatus2]);
 };
