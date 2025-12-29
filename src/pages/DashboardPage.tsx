@@ -299,11 +299,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				const matchingWinner = draw1.winners?.find(
 					(winner: any) => winner.bettor === walletAddress
 				);
-				if (matchingWinner) {
-					setAffiliateEarnings(matchingWinner.bettorShare || '0');
-				} else {
-					setAffiliateEarnings('0');
-				}
+				// if (matchingWinner) {
+				// 	setAffiliateEarnings(matchingWinner.bettorShare || '0');
+				// } else {
+				// 	setAffiliateEarnings('0');
+				// }
             }
 
             if (draw2) {
@@ -331,11 +331,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				const matchingWinner = draw2.winners?.find(
 					(winner: any) => winner.bettor === walletAddress
 				);
-				if (matchingWinner) {
-					setAffiliateEarnings2(matchingWinner.bettorShare || '0');
-				} else {
-					setAffiliateEarnings2('0');
-				}
+				// if (matchingWinner) {
+				// 	setAffiliateEarnings2(matchingWinner.bettorShare || '0');
+				// } else {
+				// 	setAffiliateEarnings2('0');
+				// }
             }
 
         } catch (error) {
@@ -423,7 +423,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				draw_number: draw || '1',
 				bet_number: globalBetNumber,
 				bettor: walletAddress!,
-				upline: referralUpline || VITE_OPERATOR_ADDRESS,
+				upline: referralUpline || "",
 			};
 
 			const executeBet = await lotteryService.executeBet(payload);

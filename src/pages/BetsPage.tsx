@@ -24,6 +24,7 @@ import walletService from '../services/walletService';
 
 const BetsPage: React.FC = () => {
   const walletAddress = useAppStore(state => state.walletAddress);
+  const {affiliateEarnings, setAffiliateEarnings, referralUpline} = useAppStore();
   const [bets, setBets] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +39,17 @@ const BetsPage: React.FC = () => {
       const response = await walletService.getMemberBets(walletAddress);
       if (response.success && response.data) {
         // The API returns { ..., bets: [...] }
-        setBets(response.data.bets || []);
+        const fetchedBets = response.data.bets || [];
+        setBets(fetchedBets);
+
+        // Calculate affiliate earnings: bets count * 0.5 * 10%
+        if(referralUpline !== "") {
+          const calculatedEarnings = fetchedBets.length * 0.5 * 0.10;
+          setAffiliateEarnings(calculatedEarnings);
+        } else {
+          setAffiliateEarnings(0);
+        }
+        
       } else {
         // If success is false, or data is missing
         if (!response.success) {
