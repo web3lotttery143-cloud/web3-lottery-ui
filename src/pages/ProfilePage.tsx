@@ -438,7 +438,7 @@ const ProfilePage: React.FC = () => {
                     {isAffiliateEarningsLoading ? (
                       <IonSpinner name="crescent" color="dark" style={{ width: '1rem', height: '1rem' }} />
                     ) : (
-                      `$${affiliateEarnings.toFixed(4) || '0.0000'}`
+                      `$${affiliateEarnings.toFixed(4) || 0.0000}`
                     )}
                   </IonBadge>
                 </IonItem>
