@@ -36,8 +36,9 @@ export interface AppState {
   numberOfTicketsSold2: number;
   rebate: string | null;
   rebate2: string | null;
-  affiliateEarnings: string | null
+  affiliateEarnings: number;
   affiliateEarnings2: string | null
+  isSubmitting: boolean;
   connectWallet: (address: string) => void;
   disconnectWallet: () => void;
   setUserProfile: (profile: UserProfile) => void;
@@ -62,8 +63,9 @@ export interface AppState {
   setNumberOfTicketsSold2: (ticketsSold2: number) => void;
   setRebate: (rebate: string) => void;
   setRebate2: (rebate2: string) => void;
-  setAffiliateEarnings: (affiliateEarnings: string) => void;
+  setAffiliateEarnings: (affiliateEarnings: number) => void;
   setAffiliateEarnings2: (affiliateEarnings2: string) => void;
+  setIsSubmitting: (isSubmitting: boolean) => void;
 }
 
 const useAppStore = create<AppState>()(
@@ -93,8 +95,9 @@ const useAppStore = create<AppState>()(
       numberOfTicketsSold2: 0,
       rebate: null,
       rebate2: null,
-      affiliateEarnings: null,
+      affiliateEarnings: 0,
       affiliateEarnings2: null,
+      isSubmitting: false,
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
         set({
@@ -122,7 +125,7 @@ const useAppStore = create<AppState>()(
           numberOfTicketsSold2: 0,
           rebate: null,
           rebate2: null,
-          affiliateEarnings: null,
+          affiliateEarnings: 0,
           affiliateEarnings2: null,
         }),
       setUserProfile: profile => set({ userProfile: profile }),
@@ -149,6 +152,7 @@ const useAppStore = create<AppState>()(
       setRebate2: rebate2 => set({ rebate2: rebate2 }),
       setAffiliateEarnings: affiliateEarnings => set({ affiliateEarnings: affiliateEarnings }),
       setAffiliateEarnings2: affiliateEarnings2 => set({ affiliateEarnings2: affiliateEarnings2 }),
+      setIsSubmitting: isSubmitting => set({ isSubmitting: isSubmitting }),
     }),
     {
       name: 'web3-lottery-app-storage',

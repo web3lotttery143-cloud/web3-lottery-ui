@@ -307,7 +307,7 @@ const AdminPage: React.FC = () => {
                 className="custom-button"
                 expand="block"
                 onClick={handleOverrideWinningNumber}
-                disabled={loadingDraw}
+                disabled={true}
                 style={{
                   background: 'var(--lottery-emerald)',
                   '--background': 'var(--lottery-emerald)',
@@ -318,7 +318,7 @@ const AdminPage: React.FC = () => {
                   marginTop: '16px',
                 }}
               >
-                {loadingDraw ? '🎰 Drawing...' : '🚀 TRIGGER DRAW'}
+                {loadingDraw ? '🎰 Drawing...' : '🚀 OVERRIDE WINNING NUMBER'}
               </IonButton>
             </IonCardContent>
           </IonCard>

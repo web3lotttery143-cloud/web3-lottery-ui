@@ -91,6 +91,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		setRebate2,
 		setAffiliateEarnings,
 		setAffiliateEarnings2,
+		isSubmitting,
+		setIsSubmitting
 	} = useAppStore(); // Global states
 
 	const [presentLoading, dismissLoading] = useIonLoading();
@@ -106,6 +108,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [winnersModal, setWinnersModal] = useState(false)
 	const [signedHex, setSignedHex] = useState("");
 	const [drawStatusLoading, setDrawStatusLoading] = useState(false);
+	//const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
 		onCompleted: (data) => {
@@ -180,14 +183,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 			const currentDrawStatus = isAfter10Am ? drawStatus2 : drawStatus;
 
-			if(currentDrawStatus !== 'Open') { 
-				presentToast({
-					message: "The draw is not open for betting.",
-					duration: 2000,
-					color: "danger",
-				});
-				return;
-			}
+			// if(currentDrawStatus !== 'Open') { 
+			// 	presentToast({
+			// 		message: "The draw is not open for betting.",
+			// 		duration: 2000,
+			// 		color: "danger",
+			// 	});
+			// 	return;
+			// }
 			
 			setIsModalOpen(true);
 		} catch (error) {
@@ -296,11 +299,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				const matchingWinner = draw1.winners?.find(
 					(winner: any) => winner.bettor === walletAddress
 				);
-				if (matchingWinner) {
-					setAffiliateEarnings(matchingWinner.bettorShare || '0');
-				} else {
-					setAffiliateEarnings('0');
-				}
+				// if (matchingWinner) {
+				// 	setAffiliateEarnings(matchingWinner.bettorShare || '0');
+				// } else {
+				// 	setAffiliateEarnings('0');
+				// }
             }
 
             if (draw2) {
@@ -328,11 +331,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				const matchingWinner = draw2.winners?.find(
 					(winner: any) => winner.bettor === walletAddress
 				);
-				if (matchingWinner) {
-					setAffiliateEarnings2(matchingWinner.bettorShare || '0');
-				} else {
-					setAffiliateEarnings2('0');
-				}
+				// if (matchingWinner) {
+				// 	setAffiliateEarnings2(matchingWinner.bettorShare || '0');
+				// } else {
+				// 	setAffiliateEarnings2('0');
+				// }
             }
 
         } catch (error) {
@@ -412,14 +415,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	}, []);
 
 	const handleSubmit = async () => {
-		presentLoading("Submitting transaction...");
+		setIsSubmitting(true);
+		setConfirmationModal(false);
 		window.history.replaceState({}, document.title, window.location.pathname);
 		const payload = {
 				signed_hex: signedHex,
 				draw_number: draw || '1',
 				bet_number: globalBetNumber,
 				bettor: walletAddress!,
-				upline: referralUpline || VITE_OPERATOR_ADDRESS,
+				upline: referralUpline || "",
 			};
 
 			const executeBet = await lotteryService.executeBet(payload);
@@ -452,8 +456,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				color: "danger",
 			});
 		} finally {
-			dismissLoading();
-			setConfirmationModal(false);
+			setIsSubmitting(false);
 			fetchDraws(),
 			fetchLotterySetup()
 		}
@@ -1024,7 +1027,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							<div className="progress-container">
 								<div
 									className="progress-bar"
-									style={{ width: `${((isAfter10Am ? numberOfTicketsSold2 : numberOfTicketsSold) || 0) / Number(maximumBets)}%` }}
+									style={{ width: `${Number(maximumBets) > 0 ? (((isAfter10Am ? numberOfTicketsSold2 : numberOfTicketsSold) || 0) / Number(maximumBets)) * 100 : 0}%` }}
 								></div>
 							</div>
 							<IonText>
@@ -1058,7 +1061,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 								className="custom-button bet-button"
 								expand="block"
 								onClick={handleOpen}
-								disabled={placingBet}
+								disabled={placingBet || isSubmitting}
 								style={{ marginTop: "24px" }}
 							>
 								🎫 Buy Ticket - $0.50
@@ -1369,6 +1372,33 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 						</IonFooter>
 					
 				</IonModal>
+
+				{isSubmitting && (
+					<div
+						style={{
+							position: "fixed",
+							bottom: "80px",
+							left: "50%",
+							transform: "translateX(-50%)",
+							zIndex: 9999,
+							backgroundColor: "var(--ion-color-dark)",
+							color: "white",
+							padding: "12px 24px",
+							borderRadius: "24px",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							minWidth: "300px",
+							gap: "12px",
+							boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+						}}
+					>
+						<IonSpinner name="crescent" color="light" style={{ width: "20px", height: "20px" }} />
+						<IonText style={{ fontSize: "0.9rem", fontWeight: 500 }}>
+							Submitting transaction...
+						</IonText>
+					</div>
+				)}
 			</IonContent>
 		</IonPage>
 	);

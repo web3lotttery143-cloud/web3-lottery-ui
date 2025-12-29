@@ -57,7 +57,7 @@ class WalletService {
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ member_address: address, upline_address: uplineAddress || VITE_OPERATOR_ADDRESS}),
+				body: JSON.stringify({ member_address: address, upline_address: uplineAddress || ""}),
 			});
 
 			const data = await response.json();
@@ -67,7 +67,7 @@ class WalletService {
 			}
 
 			if(address == VITE_OPERATOR_ADDRESS) {
-			return {success: true, message: 'Operator Connected...', data: 'Admin'}
+			return {success: true, message: 'Operator Connected...', data: data.data.upline_address}
 		}
 			return {success: true, message: data.message, data: data.data.upline_address}
 		} catch (error) {
@@ -93,7 +93,7 @@ class WalletService {
         }
 
 		if(address == VITE_OPERATOR_ADDRESS) {
-			return {success: true, message: 'Operator Connected...', data: 'Admin'}
+			return {success: true, message: 'Operator Connected...', data: data.data.upline_address}
 		}
 
         return {success: true, message: data.message, data: data.data.upline_address};

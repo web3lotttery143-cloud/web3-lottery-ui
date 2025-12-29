@@ -34,14 +34,16 @@ import useAppStore from '../store/useAppStore';
 import walletService from '../services/walletService';
 
 const ProfilePage: React.FC = () => {
-  const { walletAddress, userProfile, disconnectWallet, walletBalance, setWalletBalance, rebate, rebate2, isAfter10Am, affiliateEarnings, affiliateEarnings2, referralUpline } = useAppStore();
+  const { walletAddress, userProfile, disconnectWallet, walletBalance, setWalletBalance, rebate, rebate2, isAfter10Am, affiliateEarnings, affiliateEarnings2, referralUpline, setAffiliateEarnings } = useAppStore();
   const [presentToast] = useIonToast();
   const [isWalletBalanceLoading, setIsWalletBalanceLoading] = useState(false)
+  const [isAffiliateEarningsLoading, setIsAffiliateEarningsLoading] = useState(false)
   const affiliateLink = `${window.location.origin}/accept-referral?ref=${walletAddress}`;
 
   useEffect(() => {
     if(walletBalance === null) {
       fetchBalance();
+      fetchBets();
     }
   }, []); 
 
@@ -50,11 +52,45 @@ const ProfilePage: React.FC = () => {
 		try {
 			await Promise.all([
 				fetchBalance(),
+        fetchBets(),
 			]);
 		} catch (error) {
 			console.error('Refresh failed:', error);
 		} finally {
 			event.detail.complete();
+    }
+  };
+
+  const fetchBets = async () => {
+    if (!walletAddress) return;
+    
+    try {
+      setIsAffiliateEarningsLoading(true)
+      let response;
+      if(referralUpline !== ""){
+        response = await walletService.getMemberBets(walletAddress);
+      } else {
+        setAffiliateEarnings(0.0000)
+        return;
+      }
+      
+      if (response.success && response.data) {
+        // The API returns { ..., bets: [...] }
+        const fetchedBets = response.data.bets || [];
+
+        // Calculate affiliate earnings: bets count * 0.5 * 10%
+     
+        const calculatedEarnings = fetchedBets.length * 0.5 * 0.10;
+        setAffiliateEarnings(calculatedEarnings);  
+      } else {
+        if (!response.success) {
+          setAffiliateEarnings(0.0000);
+        }
+      }
+    } catch (err: any) {
+      setAffiliateEarnings(0.0000);
+    } finally {
+      setIsAffiliateEarningsLoading(false)
     }
   };
 
@@ -393,7 +429,11 @@ const ProfilePage: React.FC = () => {
                       padding: '6px 10px',
                     }}
                   >
-                    ${}{isAfter10Am ? (affiliateEarnings2 || '0') : (affiliateEarnings || '0')}
+                    {isAffiliateEarningsLoading ? (
+                      <IonSpinner name="crescent" color="dark" style={{ width: '1rem', height: '1rem' }} />
+                    ) : (
+                      `$${affiliateEarnings.toFixed(4) || '0.0000'}`
+                    )}
                   </IonBadge>
                 </IonItem>
              
