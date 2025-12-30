@@ -190,14 +190,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 			const currentDrawStatus = isAfter10Am ? drawStatus2 : drawStatus;
 
-			// if(currentDrawStatus !== 'Open') { 
-			// 	presentToast({
-			// 		message: "The draw is not open for betting.",
-			// 		duration: 2000,
-			// 		color: "danger",
-			// 	});
-			// 	return;
-			// }
+			if(currentDrawStatus !== 'Open') { 
+				presentToast({
+					message: "The draw is not open for betting.",
+					duration: 2000,
+					color: "danger",
+				});
+				return;
+			}
 			
 			setIsModalOpen(true);
 		} catch (error) {
