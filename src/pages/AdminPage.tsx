@@ -18,6 +18,7 @@ import {
   IonToolbar,
   useIonLoading,
   useIonToast,
+  IonToggle,
 } from '@ionic/react';
 import React, { useState } from 'react';
 import DigitInput from '../components/DigitInput';
@@ -25,9 +26,10 @@ import { CLOSE_CYCLE_FOR_DRAW, GET_ADMIN_STATS, TRIGGER_DRAW } from '../graphql/
 import xteriumService from '../services/xteriumService';
 import useAppStore from '../store/useAppStore';
 import lotteryService from '../services/lotteryService';
+import walletService from '../services/walletService';
 
 const AdminPage: React.FC = () => {
-  const { walletAddress, isAdmin, isAfter10Am, drawStatus, drawStatus2 } = useAppStore();
+  const { walletAddress, isAdmin, isAfter10Am, drawStatus, drawStatus2, setIsOverrideMode, isOverrideMode, setExpectedWinningNumber, expectedWinningNumber } = useAppStore();
   const [presentToast] = useIonToast();
   const [presentLoading, dismissLoading] = useIonLoading();
   const [forcedWinningNumber, setForcedWinningNumber] = useState('');
@@ -170,9 +172,13 @@ const AdminPage: React.FC = () => {
         });
         return;
       }
+      setExpectedWinningNumber(Number(forcedWinningNumber));
 
+      const signedHex = walletService.signTransaction(res.data!, walletAddress!) //open xterium wallet (can make not await since we won't be expecting a return from this)
+
+      // next is add the functionality to send the signed hex to backend to process the transaction
       presentToast({
-        message: 'Winning number overridden successfully.',
+        message: `${res.data}`,
         duration: 3000,
         color: 'success',
       });
@@ -271,17 +277,72 @@ const AdminPage: React.FC = () => {
             </IonCardContent>
           </IonCard> */}
 
-          <IonCard className="custom-card">
+            <IonCard className="custom-card">
             <IonCardHeader>
               <IonCardTitle className="custom-card-title">🎯 Lottery Controls</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <IonText
+              <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '20px',
+                border: isOverrideMode
+                ? '1px solid var(--lottery-gold)'
+                : '1px solid rgba(255, 255, 255, 0.1)',
+                transition: 'all 0.3s ease',
+              }}
+              >
+              <div>
+                <IonText
+                style={{
+                  color: isOverrideMode ? 'var(--lottery-gold)' : 'var(--text-color-primary)',
+                  fontWeight: '700',
+                  fontSize: '1.1rem',
+                  display: 'block',
+                }}
+                >
+                Override Mode
+                </IonText>
+                <IonText
                 style={{
                   color: 'var(--text-color-secondary)',
-                  fontSize: '0.9rem',
-                  marginBottom: '12px',
+                  fontSize: '0.85rem',
+                  marginTop: '4px',
                   display: 'block',
+                }}
+                >
+                {isOverrideMode ? 'Manual control enabled' : 'Standard operation'}
+                </IonText>
+              </div>
+              <IonToggle
+                mode="ios"
+                checked={isOverrideMode}
+                onIonChange={e => setIsOverrideMode(e.detail.checked)}
+                style={{
+                '--handle-background-checked': 'var(--lottery-gold)',
+                '--background-checked': 'rgba(255, 215, 0, 0.2)',
+                }}
+              />
+              </div>
+
+              <div
+              style={{
+                opacity: isOverrideMode ? 1 : 0.5,
+                pointerEvents: isOverrideMode ? 'auto' : 'none',
+                transition: 'opacity 0.3s ease',
+              }}
+              >
+              <IonText
+                style={{
+                color: 'var(--text-color-secondary)',
+                fontSize: '0.9rem',
+                marginBottom: '12px',
+                display: 'block',
                 }}
               >
                 Enter a 3-digit number to force a win (optional). If left blank, a random number
@@ -292,36 +353,48 @@ const AdminPage: React.FC = () => {
 
               <div
                 style={{
-                  marginTop: '24px',
-                  padding: '12px',
-                  background: 'rgba(255, 215, 0, 0.1)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255, 215, 0, 0.2)',
+                marginTop: '24px',
+                padding: '12px',
+                background: 'rgba(255, 215, 0, 0.1)',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 215, 0, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
                 }}
               >
+                <span style={{ fontSize: '1.2rem' }}>⚠️</span>
                 <IonText style={{ color: 'var(--lottery-gold)', fontSize: '0.9rem' }}>
-                  ⚠️ This requires the cycle status to be 'PROCESSING'.
+                This requires the cycle status to be <strong>PROCESSING</strong>.
                 </IonText>
               </div>
+
               <IonButton
                 className="custom-button"
                 expand="block"
                 onClick={handleOverrideWinningNumber}
-                disabled={true}
                 style={{
-                  background: 'var(--lottery-emerald)',
-                  '--background': 'var(--lottery-emerald)',
-                  '--color': '#ffffff',
-                  fontSize: '1.1rem',
-                  fontWeight: '700',
-                  height: '55px',
-                  marginTop: '16px',
+                '--background': 'var(--lottery-emerald)',
+                '--color': '#ffffff',
+                fontSize: '1.1rem',
+                fontWeight: '700',
+                height: '55px',
+                marginTop: '20px',
+                boxShadow: '0 4px 15px rgba(46, 204, 113, 0.3)',
                 }}
               >
-                {loadingDraw ? '🎰 Drawing...' : '🚀 OVERRIDE WINNING NUMBER'}
+                {loadingDraw ? (
+                <>
+                  <IonSpinner name="crescent" style={{ marginRight: '10px' }} />
+                  Drawing...
+                </>
+                ) : (
+                '🚀 OVERRIDE WINNING NUMBER'
+                )}
               </IonButton>
+              </div>
             </IonCardContent>
-          </IonCard>
+            </IonCard>
 
           {/* <IonCard className="custom-card">
             <IonCardHeader>

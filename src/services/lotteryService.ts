@@ -109,7 +109,7 @@ class LotteryService {
 		}
 	}
 
-	async overrideWinningNumber(data: OverrideWinningNumberDto): Promise<{success: boolean, message: string}> {
+	async overrideWinningNumber(data: OverrideWinningNumberDto): Promise<{success: boolean, message?: string, data?: string}> {
 		try {
 			const response = await fetch(`${LIVE_API}/api/draws/override`, {
 				method: "POST",
@@ -123,12 +123,35 @@ class LotteryService {
 				const errorData = await response.json();
 				return {success: false, message: errorData.message || 'Failed to override winning number'};
 			}
+			const hex = await response.text();
 
-			return {success: true, message: "Winning number overridden successfully"};
+			return {success: true, data: hex};
 		} catch (error) {
 			return {success: false, message: `${error}`};
 		}
 
+	}
+
+	async executeOverride(hex: string): Promise<{success: boolean, message: string}> {
+		try {
+			const response = await fetch(`${LIVE_API}/api/draws/execute`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ hex }),
+			});
+
+			const data = await response.json()
+
+			if (!response.ok) {
+				throw new Error 
+			}
+
+			return {success: true, message: data};
+		} catch (err) {
+			return { success: false, message: `${err}`} 
+		}
 	}
 }
 
