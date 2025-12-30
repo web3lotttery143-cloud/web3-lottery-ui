@@ -157,7 +157,7 @@ class WalletService {
 			}
 
 			const signedTx = params.get("signedTx") || "";
-			const betNumber = params.get("betNumber") || "";
+			// const betNumber = params.get("betNumber") || "";
 
 			return { success: true, signedTx: signedTx };
 		} catch (err) {

@@ -31,6 +31,7 @@ import {
 	IonSpinner,
 	IonChip,
 	IonFooter,
+	IonIcon,
 } from "@ionic/react";
 import { SaveBetDto } from "../models/saveBet.model";
 import React, { useState, useEffect } from "react";
@@ -41,7 +42,7 @@ import useAppStore from "../store/useAppStore";
 import lotteryService from "../services/lotteryService";
 import walletService from "../services/walletService";
 import { execute } from "graphql";
-import { chevronDownCircleOutline } from "ionicons/icons";
+import { chevronDownCircleOutline, terminal } from "ionicons/icons";
 import { VITE_BET_AMOUNT, VITE_OPERATOR_ADDRESS } from "../services/constants";
 
 interface DashboardPageProps {
@@ -92,7 +93,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		setAffiliateEarnings,
 		setAffiliateEarnings2,
 		isSubmitting,
-		setIsSubmitting
+		setIsSubmitting,
+		isOverrideMode,
+		setExpectedWinningNumber,
+		expectedWinningNumber
 	} = useAppStore(); // Global states
 
 	const [presentLoading, dismissLoading] = useIonLoading();
@@ -105,6 +109,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [selectedSegment, setSelectedSegment] = useState<SegmentValue>("first");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [confirmationModal, setConfirmationModal] = useState(false);
+	const [overRideModal, setOverRideModal] = useState(false);
 	const [winnersModal, setWinnersModal] = useState(false)
 	const [signedHex, setSignedHex] = useState("");
 	const [drawStatusLoading, setDrawStatusLoading] = useState(false);
@@ -161,10 +166,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		}
 	};
 
-	const handleCancel = () => {
+	const handleCancel = () => { // Cleanup
 		window.history.replaceState({}, document.title, window.location.pathname);
 		setConfirmationModal(false);
+		setOverRideModal(false)
 		setGlobalBetNumber(0);
+		setExpectedWinningNumber(0);
 	};
 
 
@@ -231,7 +238,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			}
 			setBetNumber(betNumber);
 			const hex = result.message
-			const signed_hex = await walletService.signTransaction(
+			const signed_hex =  walletService.signTransaction(
 				hex,
 				walletAddress
 			);
@@ -414,6 +421,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		checkTime();
 	}, []);
 
+	const handleOverride = async () => {
+		presentLoading({ message: "Executing override..." });
+		setOverRideModal(false)
+		window.history.replaceState({}, document.title, window.location.pathname);
+		const executeOverride = await lotteryService.executeOverride(signedHex)
+			
+		try {
+			if(!executeOverride.success) {
+				throw new Error
+			}
+
+			presentToast({ message: `Override executed: ${executeOverride.message}`, duration: 5000, color: "success", });
+		} catch (error) {
+			presentToast({ message: `${executeOverride.message}`, duration: 3000, color: "danger", });	
+		} finally {
+			dismissLoading();
+		}
+	}
+
 	const handleSubmit = async () => {
 		setIsSubmitting(true);
 		setConfirmationModal(false);
@@ -468,7 +494,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				const response = await walletService.checkSignedTxFromUrl();
 
 				if (!response.success) return
-				setConfirmationModal(true);
+
+				if(isOverrideMode){
+					setOverRideModal(true);
+				} else {
+					setConfirmationModal(true);
+				}
 
 				setSignedHex(response.signedTx);
 			} catch (err) {
@@ -1061,7 +1092,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 								className="custom-button bet-button"
 								expand="block"
 								onClick={handleOpen}
-								disabled={placingBet || isSubmitting}
+								disabled={placingBet || isSubmitting || isOverrideMode}
 								style={{ marginTop: "24px" }}
 							>
 								🎫 Buy Ticket - $0.50
@@ -1172,6 +1203,131 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 								}}
 							>
 								Confirm
+							</IonButton>
+						</div>
+					</IonFooter>
+				</IonModal>
+
+				<IonModal
+					isOpen={overRideModal}
+					onDidDismiss={handleCancel}
+					initialBreakpoint={1}		
+				>
+					<IonContent className="ion-padding" style={{ "--background": "var(--background-color)" }}>
+						<div style={{ padding: "16px", textAlign: "center" }}>
+							<div style={{
+								background: "rgba(220, 20, 60, 0.1)",
+								borderRadius: "50%",
+								width: "80px",
+								height: "80px",
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								margin: "0 auto 16px auto",
+								border: "2px solid var(--lottery-crimson)"
+							}}>
+								<IonIcon icon={terminal} style={{ fontSize: "40px", color: "var(--lottery-crimson)" }} />
+							</div>
+							
+							<h2 style={{ color: "var(--lottery-crimson)", fontWeight: "900", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "1px" }}>
+								⚠️ SYSTEM OVERRIDE
+							</h2>
+							<p style={{ color: "var(--text-color-secondary)", marginBottom: "24px", fontSize: "0.95rem" }}>
+								You are about to manually force a winning number. <br/>
+								<span style={{color: "var(--ion-color-warning)", fontWeight: "bold"}}>This action cannot be undone.</span>
+							</p>
+
+							<div style={{ 
+								background: "linear-gradient(180deg, rgba(20, 20, 20, 0.8) 0%, rgba(30, 30, 30, 0.8) 100%)", 
+								borderRadius: "16px", 
+								padding: "20px",
+								border: "1px solid rgba(220, 20, 60, 0.3)",
+								marginBottom: "24px",
+								boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+							}}>
+								<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "12px" }}>
+									<IonText color="medium" style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+										Target Draw
+									</IonText>
+									<IonBadge color="danger" style={{ fontSize: "1rem", padding: "6px 12px" }}>
+										#{draw}
+									</IonBadge>
+								</div>
+								
+								<div style={{ textAlign: "center", padding: "10px 0" }}>
+									<IonText color="medium" style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "8px" }}>
+										Forcing Winning Number
+									</IonText>
+									<div style={{ 
+										background: "rgba(0,0,0,0.3)", 
+										borderRadius: "8px", 
+										padding: "12px",
+										border: "1px dashed var(--lottery-crimson)"
+									}}>
+										<IonText style={{ 
+											fontSize: "3rem", 
+											fontWeight: "900", 
+											color: "var(--lottery-crimson)",
+											letterSpacing: "8px",
+											textShadow: "0 0 20px rgba(220, 20, 60, 0.3)"
+										}}>
+											{expectedWinningNumber || "---"}
+										</IonText>
+									</div>
+								</div>
+
+								<div style={{ marginTop: "20px" }}>
+									<IonText color="medium" style={{ fontSize: "0.75rem", display: "block", marginBottom: "6px", textAlign: "left" }}>
+										Transaction Signature (Hex)
+									</IonText>
+									<div style={{
+										background: "rgba(0,0,0,0.5)",
+										padding: "8px",
+										borderRadius: "4px",
+										textAlign: "left"
+									}}>
+										<IonText color="light" style={{ 
+											fontSize: "0.75rem", 
+											fontFamily: "monospace",
+											wordBreak: "break-all",
+											opacity: 0.7,
+											display: "block",
+											lineHeight: "1.4"
+										}}>
+											{signedHex ? signedHex.slice(0, 32) + "..." : "N/A"}
+										</IonText>
+									</div>
+								</div>
+							</div>
+						</div>
+					</IonContent>
+					<IonFooter>
+						<div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)", padding: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+							<IonButton
+								fill="outline"
+								color="medium"
+								expand="block"
+								onClick={handleCancel}
+								style={{
+									flex: 1,
+									fontWeight: "600"
+								}}
+							>
+								Cancel
+							</IonButton>
+
+							<IonButton
+								color="danger"
+								expand="block"
+								onClick={handleOverride}
+								style={{
+									flex: 1,
+									fontWeight: "bold",
+									"--box-shadow": "0 4px 12px rgba(220, 20, 60, 0.4)"
+								}}
+							>
+								<IonIcon icon={terminal} slot="start" />
+								EXECUTE OVERRIDE
 							</IonButton>
 						</div>
 					</IonFooter>

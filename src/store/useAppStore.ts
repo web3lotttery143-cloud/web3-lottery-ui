@@ -25,6 +25,7 @@ export interface AppState {
   draw: string | null
   winningNumber: string | null;
   winningNumber2: string | null;
+  expectedWinningNumber: number;
   jackpot: string | null;
   jackpot2: string | null;
   winners: any[];
@@ -39,6 +40,7 @@ export interface AppState {
   affiliateEarnings: number;
   affiliateEarnings2: string | null
   isSubmitting: boolean;
+  isOverrideMode: boolean;
   connectWallet: (address: string) => void;
   disconnectWallet: () => void;
   setUserProfile: (profile: UserProfile) => void;
@@ -66,6 +68,8 @@ export interface AppState {
   setAffiliateEarnings: (affiliateEarnings: number) => void;
   setAffiliateEarnings2: (affiliateEarnings2: string) => void;
   setIsSubmitting: (isSubmitting: boolean) => void;
+  setIsOverrideMode: (isOverrideMode: boolean) => void;
+  setExpectedWinningNumber: (expectedWinningNumber: number) => void;
 }
 
 const useAppStore = create<AppState>()(
@@ -84,6 +88,7 @@ const useAppStore = create<AppState>()(
       draw: '1',
       winningNumber: null,
       winningNumber2: null,
+      expectedWinningNumber: 0,
       jackpot: null,
       jackpot2: null,
       winners: [],     
@@ -98,6 +103,7 @@ const useAppStore = create<AppState>()(
       affiliateEarnings: 0,
       affiliateEarnings2: null,
       isSubmitting: false,
+      isOverrideMode: false,
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
         set({
@@ -127,6 +133,8 @@ const useAppStore = create<AppState>()(
           rebate2: null,
           affiliateEarnings: 0,
           affiliateEarnings2: null,
+          isSubmitting: false,
+          isOverrideMode: false,
         }),
       setUserProfile: profile => set({ userProfile: profile }),
       setIsAdmin: isAdmin => set({ isAdmin }),
@@ -153,6 +161,8 @@ const useAppStore = create<AppState>()(
       setAffiliateEarnings: affiliateEarnings => set({ affiliateEarnings: affiliateEarnings }),
       setAffiliateEarnings2: affiliateEarnings2 => set({ affiliateEarnings2: affiliateEarnings2 }),
       setIsSubmitting: isSubmitting => set({ isSubmitting: isSubmitting }),
+      setIsOverrideMode: isOverrideMode => set({ isOverrideMode: isOverrideMode }),
+      setExpectedWinningNumber: expectedWinningNumber => set({ expectedWinningNumber: expectedWinningNumber }),
     }),
     {
       name: 'web3-lottery-app-storage',
