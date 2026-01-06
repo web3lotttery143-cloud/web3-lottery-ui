@@ -34,11 +34,11 @@ class WalletService {
 		}
 	}
 
-	 openXterium() {
-		const callbackUrl = decodeURIComponent(window.location.href);
-		const deeplink = `xterium://app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417`;
-		window.open(deeplink, "_self");
-	}
+	//  openXterium() {
+	// 	const callbackUrl = decodeURIComponent(window.location.href);
+	// 	const deeplink = `xterium://app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417`;
+	// 	window.open(deeplink, "_self");
+	// }
 
 	async signTransaction(hex: string, address: string) {
 		try {
@@ -115,7 +115,7 @@ class WalletService {
 				params = new URLSearchParams(window.location.search);
 			}
 
-			let walletsParam = params.get("wallets");
+			let walletsParam = params.get("selectedAccounts");
 			
 
 			if (!walletsParam) return;
@@ -151,12 +151,15 @@ class WalletService {
 		
 		try {
 			const params = new URLSearchParams(window.location.search);
-			const status = params.get("status");
-			if (!status) {
+			// const status = params.get("status");
+			// if (!status) {
+			// 	return { success: false, signedTx: "" };
+			// }
+
+			const signedTx = params.get("signedHex") || "";
+			if(!signedTx) {
 				return { success: false, signedTx: "" };
 			}
-
-			const signedTx = params.get("signedTx") || "";
 			// const betNumber = params.get("betNumber") || "";
 
 			return { success: true, signedTx: signedTx };
