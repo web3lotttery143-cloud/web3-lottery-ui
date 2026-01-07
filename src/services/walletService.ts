@@ -43,7 +43,7 @@ class WalletService {
 	async signTransaction(hex: string, address: string) {
 		try {
 			const callbackUrl = encodeURIComponent(window.location.href);
-			const deeplink = `xterium://app/web3/sign-transaction?encodedCallDataHex=${hex}&callbackUrl=${callbackUrl}&walletAddress=${address}`;
+			const deeplink = `https://deeplink.xterium.app/web3/sign-transaction?encodedCallDataHex=${hex}&callbackUrl=${callbackUrl}&walletAddress=${address}`;
 			window.location.href = deeplink;
 		} catch (error) {
 			return `Something went wrong: ${error}`;
