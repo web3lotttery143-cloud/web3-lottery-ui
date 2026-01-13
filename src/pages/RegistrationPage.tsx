@@ -7,6 +7,10 @@ import {
   IonIcon,
   IonInput,
   IonItem,
+  IonLabel,
+  IonList,
+  IonRadio,
+  IonRadioGroup,
   IonModal,
   IonPage,
   IonRow,
@@ -29,12 +33,13 @@ const ADMIN_WALLET = import.meta.env.VITE_OPERATOR_WALLET_ADDRESS?.toLowerCase()
 
 const RegistrationPage: React.FC = () => {
   const router = useIonRouter();
-  const { connectWallet, setUserProfile, setIsAdmin, loginState, setLoginState, setReferralUpline } = useAppStore();
+  const { connectWallet, setUserProfile, setIsAdmin, loginState, setLoginState, setReferralUpline, setAvailableWallets: setStoreAvailableWallets } = useAppStore();
   const [present, dismiss] = useIonLoading();
   const [presentToast] = useIonToast();
   const [registerUser] = useMutation(REGISTER_USER); 
   const [confirmationModal, setConfirmationModal] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState('')
+  const [availableWallets, setAvailableWallets] = useState<{ address: string; label: string }[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [walletInput, setWalletInput] = useState('');
@@ -61,12 +66,14 @@ const RegistrationPage: React.FC = () => {
         setIsAdmin(true)
         presentToast({ message: response.message, duration: 2000, color: 'success'})
         connectWallet(connectedWallet)
+        setStoreAvailableWallets(availableWallets)
         setReferralUpline(response.data)
         router.push('/dashboard', 'root', 'replace');
       } else {
         setReferralUpline(response.data)
         presentToast({ message: response.message, duration: 2000, color: 'success'})
         connectWallet(connectedWallet)
+        setStoreAvailableWallets(availableWallets)
         router.push('/dashboard', 'root', 'replace');
       }    
     } catch (error) {
@@ -87,30 +94,27 @@ const RegistrationPage: React.FC = () => {
 
       if (wallets) {
         setConfirmationModal(true)
-        let firstWallet = '';
-        let walletList = '';
+        let walletList: any[] = [];
+        
         if (Array.isArray(wallets)) {
-          firstWallet = typeof wallets[0] === 'string' ? wallets[0] : (wallets[0]?.address ?? '');
-          walletList = wallets
-            .map(w => (typeof w === 'string' ? w : w.address ?? JSON.stringify(w)))
-            .join(', ');
-        } else if (typeof wallets === 'object') {
-          firstWallet = (wallets as any).address ?? '';
-          walletList = JSON.stringify(wallets);
+            walletList = wallets;
         } else {
-          firstWallet = String(wallets);
-          walletList = String(wallets);
+            walletList = [wallets];
         }
 
-        if (firstWallet) {
+        const processedWallets = walletList.map(w => {
+            if (typeof w === 'string') return { address: w, label: w };
+            const address = w.address || (typeof w === 'string' ? w : JSON.stringify(w));
+            const label = w.name || w.meta?.name || address;
+            return { address, label };
+        });
+
+        setAvailableWallets(processedWallets);
+
+        if (processedWallets.length > 0) {
+             const firstWallet = processedWallets[0].address;
              setDetectedWallet(firstWallet);
              setConnectedWallet(firstWallet)     
-        } else {
-             presentToast({
-                message: `Connected wallets: ${walletList}`,
-                duration: 2000,
-                color: 'success',
-             });
         }
       }
     };
@@ -367,37 +371,66 @@ const RegistrationPage: React.FC = () => {
             : "Please confirm your wallet to complete registration"}
               </p>
 
-              <div
-          style={{
-            background: "rgba(255, 215, 0, 0.1)",
-            borderRadius: "12px",
-            padding: "16px",
-            border: "1px solid rgba(255, 215, 0, 0.3)",
-            marginBottom: "16px",
-          }}
-              >
-          <p
-            style={{
-              color: "var(--text-color-secondary)",
-              fontSize: "0.85rem",
-              marginBottom: "8px",
-              fontWeight: 600,
-            }}
-          >
-            Connected Wallet:
-          </p>
-          <p
-            style={{
-              color: "var(--lottery-gold)",
-              fontSize: "0.9rem",
-              wordBreak: "break-all",
-              fontFamily: "monospace",
-              fontWeight: 600,
-            }}
-          >
-            {connectedWallet}
-          </p>
-              </div>
+              {availableWallets.length > 1 ? (
+                <div style={{ textAlign: "left", marginBottom: "16px" }}>
+                  <p
+                    style={{
+                      color: "var(--text-color-secondary)",
+                      fontSize: "0.85rem",
+                      marginBottom: "8px",
+                      fontWeight: 600,
+                      textAlign: "center"
+                    }}
+                  >
+                    Select Wallet:
+                  </p>
+                  <IonList style={{ background: 'transparent' }}>
+                    <IonRadioGroup value={connectedWallet} onIonChange={e => setConnectedWallet(e.detail.value)}>
+                      {availableWallets.map((wallet, index) => (
+                        <IonItem key={index} lines="none" style={{ '--background': 'rgba(255, 215, 0, 0.05)', marginBottom: '8px', borderRadius: '8px', border: '1px solid rgba(255, 215, 0, 0.2)' }}>
+                          <IonRadio slot="start" value={wallet.address} />
+                          <IonLabel>
+                            <h3 style={{ color: 'var(--lottery-gold)' }}>{wallet.label}</h3>
+                            <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>{wallet.address.substring(0, 10)}...{wallet.address.substring(wallet.address.length - 10)}</p>
+                          </IonLabel>
+                        </IonItem>
+                      ))}
+                    </IonRadioGroup>
+                  </IonList>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    background: "rgba(255, 215, 0, 0.1)",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    border: "1px solid rgba(255, 215, 0, 0.3)",
+                    marginBottom: "16px",
+                  }}
+                >
+                  <p
+                    style={{
+                      color: "var(--text-color-secondary)",
+                      fontSize: "0.85rem",
+                      marginBottom: "8px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Connected Wallet:
+                  </p>
+                  <p
+                    style={{
+                      color: "var(--lottery-gold)",
+                      fontSize: "0.9rem",
+                      wordBreak: "break-all",
+                      fontFamily: "monospace",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {connectedWallet}
+                  </p>
+                </div>
+              )}
             </div>
           </IonContent>
           

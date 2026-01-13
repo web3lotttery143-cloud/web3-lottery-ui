@@ -59,6 +59,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 	const { 
 		walletAddress, 
+        availableWallets,
+        connectWallet,
 		globalBetNumber, 
 		setGlobalBetNumber, 
 		referralUpline, 
@@ -548,7 +550,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			<IonHeader translucent={true}>
 				<IonToolbar>
 					<IonTitle>🛖 Dashboard</IonTitle>
-					{walletAddress && (
+					{walletAddress && availableWallets && availableWallets.length > 1 ? (
+						<IonItem slot="end" lines="none" style={{ '--background': 'transparent', '--min-height': '0' }}>
+							<IonSelect 
+								value={walletAddress} 
+								interface="popover" 
+								onIonChange={e => connectWallet(e.detail.value)}
+								style={{ 
+									fontSize: "0.8rem", 
+									opacity: 0.8,
+									maxWidth: '200px'
+								}}
+							>
+								{availableWallets.map((wallet) => (
+									<IonSelectOption key={wallet.address} value={wallet.address}>
+										{wallet.label.length > 15 ? wallet.label.substring(0, 6) + '...' + wallet.label.substring(wallet.label.length - 4) : wallet.label}
+									</IonSelectOption>
+								))}
+							</IonSelect>
+						</IonItem>
+					) : walletAddress && (
 						<IonLabel
 							slot="end"
 							className="ion-padding-end"
