@@ -50,7 +50,22 @@ class WalletService {
 		}
 	}
 
-	async registerWallet(address: string, uplineAddress?: string): Promise<{success: boolean, message: string, data?: any}> {
+	async registerWallet(address: string | string[], uplineAddress?: string): Promise<{success: boolean, message: string, data?: any}> {
+		if (Array.isArray(address)) {
+			try {
+				const responses = await Promise.all(address.map(addr => this.registerWallet(addr, uplineAddress)));
+				const failed = responses.find(r => !r.success);
+				if (failed) return failed;
+				
+				const operator = responses.find(r => r.message === 'Operator Connected...');
+				if (operator) return operator;
+				
+				return { success: true, message: responses[0]?.message || "Success", data: responses.map(r => r.data) };
+			} catch (error) {
+				return { success: false, message: `${error}` };
+			}
+		}
+
 		try {
 			const response = await fetch(`${this.apiUrl}/members`, {
 				method: "POST",

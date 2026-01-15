@@ -20,7 +20,7 @@ import {
   useIonRouter,
   IonFooter,
 } from '@ionic/react';
-import { clipboardOutline } from 'ionicons/icons';
+import { clipboardOutline, walletOutline, checkmarkCircle } from 'ionicons/icons';
 import React, { useState, useEffect } from 'react';
 import Logo from '../components/Logo';
 import { REGISTER_USER } from '../graphql/queries';
@@ -50,14 +50,8 @@ const RegistrationPage: React.FC = () => {
   const handleSubmit = async () => { 
     await present({message: 'Please wait...'})
     try {
-      let response;
-      if(loginState)
-      {
-        response = await walletService.loginWallet(connectedWallet);
-      } else {
-        response = await walletService.registerWallet(connectedWallet)
-      }
-
+        const walletsToRegister = availableWallets.length > 0 ? availableWallets.map(w => w.address) : connectedWallet;
+        const response = await walletService.registerWallet(walletsToRegister)     
       if(!response.success) {
         throw new Error(response.message)
       }
@@ -185,10 +179,10 @@ const RegistrationPage: React.FC = () => {
                   fontWeight: '700',
                 }}
               >
-                🚀 Register & Start Playing
+                🚀 Login & Start Playing
               </IonButton>
 
-              <IonItem lines="none" className="divider-item">
+              {/* <IonItem lines="none" className="divider-item">
                   <div className="divider">
                     <span className="line"></span>
                     <IonText color="medium" className="text">
@@ -196,9 +190,9 @@ const RegistrationPage: React.FC = () => {
                     </IonText>
                     <span className="line"></span>
                   </div>
-              </IonItem>
+              </IonItem> */}
 
-              <IonButton
+              {/* <IonButton
                 expand="block"
                 onClick={handleLogin}
                 className="custom-button"
@@ -214,7 +208,7 @@ const RegistrationPage: React.FC = () => {
                 }
               >
                 Login
-              </IonButton>
+              </IonButton> */}
               
               <div
                 style={{
@@ -372,59 +366,106 @@ const RegistrationPage: React.FC = () => {
               </p>
 
               {availableWallets.length > 1 ? (
-                <div style={{ textAlign: "left", marginBottom: "16px" }}>
+                <div style={{ textAlign: "left", marginBottom: "24px" }}>
                   <p
                     style={{
                       color: "var(--text-color-secondary)",
-                      fontSize: "0.85rem",
-                      marginBottom: "8px",
-                      fontWeight: 600,
-                      textAlign: "center"
+                      fontSize: "0.9rem",
+                      marginBottom: "12px",
+                      fontWeight: 500,
+                      textAlign: "center",
+                      letterSpacing: "0.5px"
                     }}
                   >
-                    Select Wallet:
+                    Select Wallet to Connect:
                   </p>
-                  <IonList style={{ background: 'transparent' }}>
+                  <IonList style={{ background: 'transparent', padding: 0 }}>
                     <IonRadioGroup value={connectedWallet} onIonChange={e => setConnectedWallet(e.detail.value)}>
-                      {availableWallets.map((wallet, index) => (
-                        <IonItem key={index} lines="none" style={{ '--background': 'rgba(255, 215, 0, 0.05)', marginBottom: '8px', borderRadius: '8px', border: '1px solid rgba(255, 215, 0, 0.2)' }}>
-                          <IonRadio slot="start" value={wallet.address} />
-                          <IonLabel>
-                            <h3 style={{ color: 'var(--lottery-gold)' }}>{wallet.label}</h3>
-                            <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>{wallet.address.substring(0, 10)}...{wallet.address.substring(wallet.address.length - 10)}</p>
-                          </IonLabel>
-                        </IonItem>
-                      ))}
+                      {availableWallets.map((wallet, index) => {
+                        const isSelected = connectedWallet === wallet.address;
+                        return (
+                          <IonItem 
+                            key={index} 
+                            lines="none" 
+                            style={{ 
+                              '--background': isSelected ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)', 
+                              marginBottom: '10px', 
+                              borderRadius: '12px', 
+                              border: isSelected ? '1px solid var(--lottery-gold)' : '1px solid rgba(255, 255, 255, 0.1)',
+                              transition: 'all 0.3s ease',
+                              '--padding-start': '12px',
+                              '--inner-padding-end': '12px'
+                            }}
+                          >
+                            <IonRadio slot="start" value={wallet.address} style={{ marginInlineEnd: '16px', '--color-checked': 'var(--lottery-gold)' }} />
+                            <IonIcon icon={walletOutline} slot="start" style={{ color: isSelected ? 'var(--lottery-gold)' : 'var(--text-color-secondary)', marginRight: '12px' }} />
+                            <IonLabel style={{ margin: '12px 0' }}>
+                              <h3 style={{ 
+                                color: isSelected ? 'var(--lottery-gold)' : 'var(--ion-color-light)',
+                                fontWeight: isSelected ? '700' : '500', 
+                                fontSize: '1rem',
+                                marginBottom: '4px' 
+                              }}>
+                                {wallet.label}
+                              </h3>
+                              <p style={{ 
+                                fontSize: '0.85rem', 
+                                opacity: 0.8,
+                                fontFamily: 'monospace',
+                                color: 'var(--text-color-secondary)'
+                              }}>
+                                {wallet.address.substring(0, 6)}...{wallet.address.substring(wallet.address.length - 6)}
+                              </p>
+                            </IonLabel>
+                            {isSelected && (
+                              <IonIcon icon={checkmarkCircle} slot="end" style={{ color: 'var(--lottery-gold)' }} />
+                            )}
+                          </IonItem>
+                        );
+                      })}
                     </IonRadioGroup>
                   </IonList>
                 </div>
               ) : (
                 <div
                   style={{
-                    background: "rgba(255, 215, 0, 0.1)",
-                    borderRadius: "12px",
-                    padding: "16px",
+                    background: "linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.02) 100%)",
+                    borderRadius: "16px",
+                    padding: "20px",
                     border: "1px solid rgba(255, 215, 0, 0.3)",
-                    marginBottom: "16px",
+                    marginBottom: "24px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
                   }}
                 >
+                  <div style={{ 
+                    background: 'rgba(255, 215, 0, 0.2)', 
+                    borderRadius: '50%', 
+                    padding: '12px',
+                    marginBottom: '12px'
+                  }}>
+                    <IonIcon icon={walletOutline} style={{ fontSize: '24px', color: 'var(--lottery-gold)' }} />
+                  </div>
                   <p
                     style={{
                       color: "var(--text-color-secondary)",
-                      fontSize: "0.85rem",
+                      fontSize: "0.9rem",
                       marginBottom: "8px",
-                      fontWeight: 600,
+                      fontWeight: 500,
                     }}
                   >
-                    Connected Wallet:
+                    Connected Wallet
                   </p>
                   <p
                     style={{
                       color: "var(--lottery-gold)",
-                      fontSize: "0.9rem",
+                      fontSize: "1.1rem",
                       wordBreak: "break-all",
                       fontFamily: "monospace",
-                      fontWeight: 600,
+                      fontWeight: 700,
+                      textAlign: "center"
                     }}
                   >
                     {connectedWallet}

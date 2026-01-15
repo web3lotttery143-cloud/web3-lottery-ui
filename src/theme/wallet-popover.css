@@ -1,0 +1,37 @@
+
+/* Wallet Select Popover Styles */
+.wallet-select-popover {
+  --background: var(--card-background-color);
+  --color: var(--text-color);
+  --min-width: 200px;
+}
+
+.wallet-select-popover .popover-content {
+  background: var(--card-background-color);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+}
+
+.wallet-select-popover ion-list,
+.wallet-select-popover ion-content {
+  background: var(--card-background-color) !important;
+  --background: var(--card-background-color) !important;
+}
+
+.wallet-select-popover ion-item {
+  --background: transparent !important;
+  background: transparent !important;
+  --background-hover: rgba(255, 215, 0, 0.1);
+  --background-activated: rgba(255, 215, 0, 0.2);
+  --color: var(--text-color);
+  color: var(--text-color);
+}
+
+.wallet-select-popover ion-radio {
+  --color: var(--lottery-gold);
+  --color-checked: var(--lottery-gold);
+}
+
+.wallet-select-popover ion-label {
+  color: var(--text-color) !important;
+}
