@@ -42,7 +42,7 @@ import useAppStore from "../store/useAppStore";
 import lotteryService from "../services/lotteryService";
 import walletService from "../services/walletService";
 import { execute } from "graphql";
-import { chevronDownCircleOutline, terminal } from "ionicons/icons";
+import { walletOutline, chevronDownCircleOutline, terminal } from "ionicons/icons";
 import { VITE_BET_AMOUNT, VITE_OPERATOR_ADDRESS } from "../services/constants";
 
 interface DashboardPageProps {
@@ -59,6 +59,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 	const { 
 		walletAddress, 
+        availableWallets,
+        connectWallet,
+		setIsAdmin,
 		globalBetNumber, 
 		setGlobalBetNumber, 
 		referralUpline, 
@@ -548,15 +551,77 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			<IonHeader translucent={true}>
 				<IonToolbar>
 					<IonTitle>🛖 Dashboard</IonTitle>
-					{walletAddress && (
-						<IonLabel
-							slot="end"
-							className="ion-padding-end"
-							style={{ fontSize: "0.8rem", opacity: 0.8 }}
-						>
-							{walletAddress.substring(0, 6)}...
-							{walletAddress.substring(walletAddress.length - 4)}
-						</IonLabel>
+					{walletAddress && availableWallets && availableWallets.length > 1 ? (
+						<div slot="end" className="ion-padding-end">
+							<div style={{
+								display: 'flex',
+								alignItems: 'center',
+								background: 'transparent',
+								border: '1px solid rgba(255, 215, 0, 0.4)',
+								borderRadius: '20px',
+								height: '36px',
+								padding: '0 8px 0 12px',
+								transition: 'all 0.3s ease'
+							}}>
+								<IonIcon icon={walletOutline} style={{ color: 'var(--lottery-gold)', marginRight: '4px', fontSize: '18px' }} />
+								<IonSelect 
+									value={walletAddress} 
+								
+									onIonChange={e => {
+										const address = e.detail.value;
+										connectWallet(address)
+										
+										if(address == VITE_OPERATOR_ADDRESS) {
+											setIsAdmin(true)
+										} else {
+											setIsAdmin(false)
+										}
+									}}
+									interfaceOptions={{ cssClass: 'wallet-select-popover' }}
+								
+									style={{ 
+										fontSize: "0.9rem", 
+										fontWeight: '700',
+										color: 'white',
+										maxWidth: '160px',
+										'--padding-start': '4px',
+										'--padding-end': '0',
+										'--placeholder-opacity': '1',
+										minHeight: 'auto'
+									}}
+									
+								>
+									{availableWallets.map((wallet) => (
+										<IonSelectOption key={wallet.address} value={wallet.address}>
+											{wallet.label}
+										</IonSelectOption>
+									))}
+								</IonSelect>
+							</div>
+						</div>
+					) : walletAddress && (
+						<div slot="end" className="ion-padding-end" style={{ display: 'flex', alignItems: 'center' }}>
+							<div style={{
+								display: 'flex',
+								alignItems: 'center',
+								background: 'transparent',
+								border: '1px solid rgba(255, 215, 0, 0.3)',
+								borderRadius: '20px',
+								padding: '6px 16px',
+							}}>
+								<IonIcon icon={walletOutline} style={{ color: 'var(--lottery-gold)', marginRight: '8px', fontSize: '16px' }} />
+								<IonLabel style={{ 
+									fontSize: "0.85rem", 
+									color: 'var(--lottery-gold)', 
+									fontWeight: '600', 
+									margin: 0,
+									letterSpacing: '0.5px',
+									fontFamily: 'monospace'
+								}}>
+									{walletAddress.substring(0, 6)}...{walletAddress.substring(walletAddress.length - 4)}
+								</IonLabel>
+							</div>
+						</div>
 					)}
 				</IonToolbar>
 			</IonHeader>

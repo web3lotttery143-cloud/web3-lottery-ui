@@ -41,6 +41,7 @@ export interface AppState {
   affiliateEarnings2: string | null
   isSubmitting: boolean;
   isOverrideMode: boolean;
+  availableWallets: { address: string; label: string }[];
   connectWallet: (address: string) => void;
   disconnectWallet: () => void;
   setUserProfile: (profile: UserProfile) => void;
@@ -48,6 +49,7 @@ export interface AppState {
   setLastSeenCompletedCycle: (cycleNumber: number) => void;
   setGlobalBetNumber: (betNumber: number) => void;
   setLoginState: (login: boolean) => void;
+  setAvailableWallets: (wallets: { address: string; label: string }[]) => void;
   setReferralUpline: (referral: string) => void
   setNumberOfTicketsSold: (ticketsSold: number) => void
   setMaximumBets: (maximumBets: string) => void
@@ -104,6 +106,7 @@ const useAppStore = create<AppState>()(
       affiliateEarnings2: null,
       isSubmitting: false,
       isOverrideMode: false,
+      availableWallets: [],
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
         set({
@@ -135,6 +138,7 @@ const useAppStore = create<AppState>()(
           affiliateEarnings2: null,
           isSubmitting: false,
           isOverrideMode: false,
+          availableWallets: [],
         }),
       setUserProfile: profile => set({ userProfile: profile }),
       setIsAdmin: isAdmin => set({ isAdmin }),
@@ -163,6 +167,7 @@ const useAppStore = create<AppState>()(
       setIsSubmitting: isSubmitting => set({ isSubmitting: isSubmitting }),
       setIsOverrideMode: isOverrideMode => set({ isOverrideMode: isOverrideMode }),
       setExpectedWinningNumber: expectedWinningNumber => set({ expectedWinningNumber: expectedWinningNumber }),
+      setAvailableWallets: wallets => set({ availableWallets: wallets }),
     }),
     {
       name: 'web3-lottery-app-storage',

@@ -1,6 +1,7 @@
 /* File: packages/frontend/src/theme/theme.css */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import './wallet-popover.css';
 
 :root {
   --font-family-base: 'Inter', sans-serif;
