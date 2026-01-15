@@ -56,15 +56,21 @@ const RegistrationPage: React.FC = () => {
         throw new Error(response.message)
       }
 
+      let upline = response.data;
+      if (Array.isArray(response.data)) {
+        const index = availableWallets.findIndex(w => w.address === connectedWallet);
+        upline = response.data[index !== -1 ? index : 0];
+      }
+
       if(response.message === 'Operator Connected...') {
         setIsAdmin(true)
         presentToast({ message: response.message, duration: 2000, color: 'success'})
         connectWallet(connectedWallet)
         setStoreAvailableWallets(availableWallets)
-        setReferralUpline(response.data)
+        setReferralUpline(upline)
         router.push('/dashboard', 'root', 'replace');
       } else {
-        setReferralUpline(response.data)
+        setReferralUpline(upline)
         presentToast({ message: response.message, duration: 2000, color: 'success'})
         connectWallet(connectedWallet)
         setStoreAvailableWallets(availableWallets)
