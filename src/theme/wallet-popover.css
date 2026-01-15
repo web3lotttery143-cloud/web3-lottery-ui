@@ -2,7 +2,7 @@
 /* Wallet Select Popover Styles */
 .wallet-select-popover {
   --background: var(--card-background-color);
-  --color: var(--text-color);
+  --color: #fff;
   --min-width: 200px;
 }
 
@@ -23,8 +23,8 @@
   background: transparent !important;
   --background-hover: rgba(255, 215, 0, 0.1);
   --background-activated: rgba(255, 215, 0, 0.2);
-  --color: var(--text-color);
-  color: var(--text-color);
+  --color: #fff;
+  color: #fff;
 }
 
 .wallet-select-popover ion-radio {
@@ -33,5 +33,24 @@
 }
 
 .wallet-select-popover ion-label {
-  color: var(--text-color) !important;
+  color: #fff !important;
+}
+
+/* Alert Interface Styles */
+.wallet-select-popover .alert-wrapper {
+  background: var(--card-background-color) !important;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.wallet-select-popover .alert-radio-label {
+  color: #fff !important;
+}
+
+.wallet-select-popover .alert-radio-button[aria-checked="true"] .alert-radio-label {
+  color: var(--lottery-gold) !important;
+  font-weight: 700;
+}
+
+.wallet-select-popover .alert-radio-inner {
+  border-color: var(--lottery-gold) !important;
 }

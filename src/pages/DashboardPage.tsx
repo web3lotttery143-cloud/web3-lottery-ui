@@ -61,6 +61,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		walletAddress, 
         availableWallets,
         connectWallet,
+		setIsAdmin,
 		globalBetNumber, 
 		setGlobalBetNumber, 
 		referralUpline, 
@@ -565,14 +566,23 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 								<IonIcon icon={walletOutline} style={{ color: 'var(--lottery-gold)', marginRight: '4px', fontSize: '18px' }} />
 								<IonSelect 
 									value={walletAddress} 
-									interface="popover" 
-									onIonChange={e => connectWallet(e.detail.value)}
+								
+									onIonChange={e => {
+										const address = e.detail.value;
+										connectWallet(address)
+										
+										if(address == VITE_OPERATOR_ADDRESS) {
+											setIsAdmin(true)
+										} else {
+											setIsAdmin(false)
+										}
+									}}
 									interfaceOptions={{ cssClass: 'wallet-select-popover' }}
-									mode="ios"
+								
 									style={{ 
 										fontSize: "0.9rem", 
 										fontWeight: '700',
-										color: 'var(--lottery-gold)',
+										color: 'white',
 										maxWidth: '160px',
 										'--padding-start': '4px',
 										'--padding-end': '0',
