@@ -124,7 +124,7 @@ const RegistrationPage: React.FC = () => {
 
   const handleOpenXterium = () => {
     const callbackUrl = encodeURIComponent(window.location.href);
-    const deeplink = `https://deeplink.xterium.app/web3/approval?callbackUrl=${callbackUrl}&chainId=2000`;
+    const deeplink = `https://deeplink.xterium.app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417`;
     
     // Attempt: window.open with _self target
     window.open(deeplink, '_self');
