@@ -356,6 +356,25 @@ ion-select::part(icon) {
   opacity: 1;
 }
 
+ion-segment-button::part(indicator-background) {
+  background: var(--lottery-purple);
+}
+
+ion-segment-button.md::part(indicator-background) {
+  height: 4px;
+}
+
+ion-modal {
+  --background: transparent;
+  --backdrop-opacity: 0.5; /* Adjust darkness of backdrop */
+}
+
+/* Or for completely transparent backdrop */
+ion-modal {
+  --background: transparent;
+  --backdrop-opacity: 0;
+}
+
 .divider {
   display: flex;
   align-items: center;
