@@ -116,6 +116,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [winnersModal, setWinnersModal] = useState(false)
 	const [signedHex, setSignedHex] = useState("");
 	const [drawStatusLoading, setDrawStatusLoading] = useState(false);
+	const [isSubmittingModalMinimized, setIsSubmittingModalMinimized] = useState(false);
 	//const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const [placeBet, { loading: placingBet }] = useMutation(PLACE_BET, {
@@ -718,6 +719,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					<IonSegment
 						value={selectedSegment}
 						onIonChange={(e) => setSelectedSegment(e.detail.value!)}
+						mode="ios"
+						style={{ marginTop: "10px"}}
 					>
 						<IonSegmentButton value="first">
 							<IonLabel color="primary">1 PM Draw</IonLabel>
@@ -894,6 +897,39 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 												)}
 											</IonText>
 										</IonItem>
+
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Contract Address
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--lottery-gold)",
+													fontWeight: "700",
+													fontSize: "1.1rem",
+												}}
+											>
+												<a href={`https://node.xode.net/xode-polkadot/account/XqBiR36SHdpKJRLHPnC5mqY7QXFqwixsHP2nhSSoyjJv4hh4C?fbclid=IwY2xjawPedOpleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAEwAAEeQzBSdLKrSEzow6AxgncWQBC1Y8fmnsfFQng5KXkx3llSFnDJUYiVLIhWTrA_aem_hkI_6w1ELx5xfPGPluqmYw`} target='_blank'>
+													XqBiR36S....
+												</a>
+											</IonText>
+										</IonItem>
 									</IonList>
 								</IonCardContent>
 							</IonCard>
@@ -1065,6 +1101,39 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 												): (
 													 `$ ${jackpot2 || "0"}`
 												)}
+											</IonText>
+										</IonItem>
+
+										<IonItem
+											style={
+												{
+													"--background": "transparent",
+													"--border-color": "rgba(255, 215, 0, 0.2)",
+													"--padding-start": "16px",
+													"--inner-padding-end": "16px",
+												} as any
+											}
+										>
+											<IonLabel>
+												<IonText
+													style={{
+														color: "var(--text-color-secondary)",
+														fontSize: "0.9rem",
+													}}
+												>
+													Contract Address
+												</IonText>
+											</IonLabel>
+											<IonText
+												style={{
+													color: "var(--lottery-gold)",
+													fontWeight: "700",
+													fontSize: "1.1rem",
+												}}
+											>
+												<a href={`https://node.xode.net/xode-polkadot/account/XqBiR36SHdpKJRLHPnC5mqY7QXFqwixsHP2nhSSoyjJv4hh4C?fbclid=IwY2xjawPedOpleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAEwAAEeQzBSdLKrSEzow6AxgncWQBC1Y8fmnsfFQng5KXkx3llSFnDJUYiVLIhWTrA_aem_hkI_6w1ELx5xfPGPluqmYw`} target='_blank'>
+													XqBiR36S....
+												</a>
 											</IonText>
 										</IonItem>
 									</IonList>
@@ -1401,7 +1470,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				<IonModal
 					isOpen={isModalOpen}
 					onDidDismiss={() => setIsModalOpen(false)}
-					initialBreakpoint={0.5}
+					initialBreakpoint={0.6}
 				>
 					<IonContent
 						className="ion-padding"
@@ -1594,32 +1663,105 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					
 				</IonModal>
 
-				{isSubmitting && (
-					<div
-						style={{
-							position: "fixed",
-							bottom: "80px",
-							left: "50%",
-							transform: "translateX(-50%)",
-							zIndex: 9999,
-							backgroundColor: "var(--ion-color-dark)",
-							color: "white",
-							padding: "12px 24px",
-							borderRadius: "24px",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-							minWidth: "300px",
-							gap: "12px",
-							boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-						}}
-					>
-						<IonSpinner name="crescent" color="light" style={{ width: "20px", height: "20px" }} />
-						<IonText style={{ fontSize: "0.9rem", fontWeight: 500 }}>
-							Submitting transaction...
-						</IonText>
-					</div>
-				)}
+				<IonModal
+					isOpen={isSubmitting}
+					onDidDismiss={() => {
+						if (isSubmitting) {
+						return;
+						}
+					}}
+					backdropDismiss={false}
+					className={isSubmittingModalMinimized ? "minimized-modal" : ""}
+					style={{
+						'--background': 'transparent',
+						'--backdrop-opacity': isSubmittingModalMinimized ? '0' : '0.5',
+					}}
+				>
+					<IonContent style={{ "--background": "transparent" }}>
+						{isSubmittingModalMinimized ? (
+							<div
+								style={{
+									position: "fixed",
+									bottom: "80px",
+									left: "50%",
+									transform: "translateX(-50%)",
+									zIndex: 9999,
+									backgroundColor: "var(--ion-color-warning)",
+									color: "white",
+									padding: "8px 16px",
+									borderRadius: "20px",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									gap: "12px",
+									boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+									cursor: "pointer",
+									userSelect: "none",
+									fontSize: "0.85rem",
+									fontWeight: 600,
+								}}
+								onClick={() => setIsSubmittingModalMinimized(false)}
+							>
+								<IonSpinner name="crescent" color="light" style={{ width: "16px", height: "16px" }} />
+								<span>Transaction submitting...</span>
+							</div>
+						) : (
+							<div
+								style={{
+									position: "fixed",
+									top: "50%",
+									left: "50%",
+									transform: "translate(-50%, -50%)",
+									zIndex: 9999,
+									backgroundColor: "var(--ion-color-warning)",
+									color: "white",
+									padding: "24px",
+									borderRadius: "16px",
+									display: "flex",
+									flexDirection: "column",
+									alignItems: "center",
+									justifyContent: "center",
+									minWidth: "320px",
+									gap: "16px",
+									boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+									border: "1px solid rgba(255, 255, 255, 0.1)",
+								}}
+							>
+								<div
+									style={{
+										position: "absolute",
+										top: "12px",
+										right: "12px",
+										background: "rgba(255, 255, 255, 0.2)",
+										border: "none",
+										color: "white",
+										borderRadius: "6px",
+										padding: "6px 12px",
+										cursor: "pointer",
+										fontSize: "0.8rem",
+										fontWeight: 600,
+										transition: "background 0.2s ease",
+									}}
+									onClick={() => setIsSubmittingModalMinimized(true)}
+									onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)")}
+									onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)")}
+								>
+									Minimize
+								</div>
+
+								<div style={{ marginTop: "12px" }}>
+									<IonSpinner name="crescent" color="light" style={{ width: "48px", height: "48px" }} />
+								</div>
+								<IonText style={{ fontSize: "1.1rem", fontWeight: 600, textAlign: "center" }}>
+									Submitting Transaction
+								</IonText>
+								<IonText style={{ fontSize: "0.9rem", opacity: 0.9, textAlign: "center" }}>
+									Please wait while your transaction is being processed...
+								</IonText>
+							</div>
+						)}
+					</IonContent>
+				</IonModal>
 			</IonContent>
 		</IonPage>
 	);

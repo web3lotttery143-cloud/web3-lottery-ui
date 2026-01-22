@@ -233,7 +233,9 @@ const BetsPage: React.FC = () => {
           color: 'var(--lottery-gold)',
           wordBreak: 'break-all'
           }}>
-          {bet.transaction_hash}
+          <a href={`https://node.xode.net/xode-polkadot/extrinsics/${bet.transaction_hash}`} target='_blank' rel='noopener noreferrer'>
+            {bet.transaction_hash}
+          </a>
           </div>
         </div>
         )}
