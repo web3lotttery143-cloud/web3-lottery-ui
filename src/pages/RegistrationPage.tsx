@@ -124,7 +124,8 @@ const RegistrationPage: React.FC = () => {
 
   const handleOpenXterium = () => {
     const callbackUrl = encodeURIComponent(window.location.href);
-    const deeplink = `https://deeplink.xterium.app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417`;
+    const deeplink = `https://deeplink.xterium.app/web3/approval?callbackUrl=${callbackUrl}`;
+    //const deeplink = `intent://deeplink.xterium.app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417#Intent;scheme=https;package=com.xterium.wallet;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.xterium.wallet;end;`
     
     // Attempt: window.open with _self target
     window.open(deeplink, '_self');
@@ -160,7 +161,7 @@ const RegistrationPage: React.FC = () => {
                     fontSize: '2rem',
                   }}
                 >
-                  WEB3 LOTTERY
+                  INFINITY JACKPOT
                 </h1>
               </IonText>
               <IonText>
