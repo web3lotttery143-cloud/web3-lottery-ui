@@ -31,6 +31,7 @@ const AppTabs: React.FC = () => {
     lastSeenCompletedCycle,
     setLastSeenCompletedCycle,
     isOverrideMode,
+    isAddJackpotMode
   } = useAppStore();
 
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -149,7 +150,7 @@ const AppTabs: React.FC = () => {
         <div
           style={{
         position: 'fixed',
-        bottom: '70px',
+        bottom: isAddJackpotMode ? '110px' : '70px',
         width: '100%',
         background: 'linear-gradient(135deg, #ff4d4d 0%, #b30000 100%)',
         color: '#fff',
@@ -176,6 +177,40 @@ const AppTabs: React.FC = () => {
           />
           <span style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}>
         OVERRIDE MODE ACTIVE
+          </span>
+        </div>
+      )}
+      {isAddJackpotMode && (
+        <div
+          style={{
+        position: 'fixed',
+        bottom: '70px',
+        width: '100%',
+        background: 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)',
+        color: '#fff',
+        textAlign: 'center',
+        padding: '8px 16px',
+        fontSize: '13px',
+        fontWeight: '700',
+        zIndex: 999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        boxShadow: '0 -2px 10px rgba(39, 174, 96, 0.4)',
+        borderTop: '1px solid rgba(46, 204, 113, 0.3)',
+        letterSpacing: '0.5px',
+          }}
+        >
+          <IonIcon
+        icon={cashOutline}
+        style={{
+          fontSize: '18px',
+          animation: 'pulse 2s ease-in-out infinite',
+        }}
+          />
+          <span style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}>
+        ADD JACKPOT MODE ACTIVE
           </span>
         </div>
       )}

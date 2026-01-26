@@ -41,6 +41,8 @@ export interface AppState {
   affiliateEarnings2: string | null
   isSubmitting: boolean;
   isOverrideMode: boolean;
+  isAddJackpotMode: boolean;
+  jackpotAmount: number
   availableWallets: { address: string; label: string }[];
   connectWallet: (address: string) => void;
   disconnectWallet: () => void;
@@ -71,14 +73,16 @@ export interface AppState {
   setAffiliateEarnings2: (affiliateEarnings2: string) => void;
   setIsSubmitting: (isSubmitting: boolean) => void;
   setIsOverrideMode: (isOverrideMode: boolean) => void;
+  setIsAddJackpotMode: (isAddJackpotMode: boolean) => void;
   setExpectedWinningNumber: (expectedWinningNumber: number) => void;
+  setJackpotAmount: (jackpotAmount: number) => void;
 }
 
 const useAppStore = create<AppState>()(
   persist(
     set => ({
       isConnected: false,
-      isAdmin: false,
+      isAdmin: true,
       walletAddress: null,
       userProfile: null,
       lastSeenCompletedCycle: 0,
@@ -106,6 +110,8 @@ const useAppStore = create<AppState>()(
       affiliateEarnings2: null,
       isSubmitting: false,
       isOverrideMode: false,
+      isAddJackpotMode: false,
+      jackpotAmount: 0,
       availableWallets: [],
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
@@ -138,7 +144,9 @@ const useAppStore = create<AppState>()(
           affiliateEarnings2: null,
           isSubmitting: false,
           isOverrideMode: false,
+          isAddJackpotMode: false,
           availableWallets: [],
+          jackpotAmount: 0,
         }),
       setUserProfile: profile => set({ userProfile: profile }),
       setIsAdmin: isAdmin => set({ isAdmin }),
@@ -166,8 +174,10 @@ const useAppStore = create<AppState>()(
       setAffiliateEarnings2: affiliateEarnings2 => set({ affiliateEarnings2: affiliateEarnings2 }),
       setIsSubmitting: isSubmitting => set({ isSubmitting: isSubmitting }),
       setIsOverrideMode: isOverrideMode => set({ isOverrideMode: isOverrideMode }),
+      setIsAddJackpotMode: isAddJackpotMode => set({ isAddJackpotMode: isAddJackpotMode }),
       setExpectedWinningNumber: expectedWinningNumber => set({ expectedWinningNumber: expectedWinningNumber }),
       setAvailableWallets: wallets => set({ availableWallets: wallets }),
+      setJackpotAmount: jackpotAmount => set({ jackpotAmount: jackpotAmount }),
     }),
     {
       name: 'web3-lottery-app-storage',
