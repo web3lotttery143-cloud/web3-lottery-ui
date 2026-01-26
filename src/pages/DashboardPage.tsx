@@ -32,6 +32,7 @@ import {
 	IonChip,
 	IonFooter,
 	IonIcon,
+	IonPopover
 } from "@ionic/react";
 import { SaveBetDto } from "../models/saveBet.model";
 import React, { useState, useEffect } from "react";
@@ -42,7 +43,7 @@ import useAppStore from "../store/useAppStore";
 import lotteryService from "../services/lotteryService";
 import walletService from "../services/walletService";
 import { execute } from "graphql";
-import { walletOutline, chevronDownCircleOutline, terminal } from "ionicons/icons";
+import { walletOutline, chevronDownCircleOutline, terminal, cashOutline } from "ionicons/icons";
 import { VITE_BET_AMOUNT, VITE_OPERATOR_ADDRESS } from "../services/constants";
 
 interface DashboardPageProps {
@@ -99,7 +100,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		setIsSubmitting,
 		isOverrideMode,
 		setExpectedWinningNumber,
-		expectedWinningNumber
+		expectedWinningNumber,
+		jackpotAmount,
+		setJackpotAmount,
+		isAddJackpotMode,
 	} = useAppStore(); // Global states
 
 	const [presentLoading, dismissLoading] = useIonLoading();
@@ -113,6 +117,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [confirmationModal, setConfirmationModal] = useState(false);
 	const [overRideModal, setOverRideModal] = useState(false);
+	const [addJackpotModal, setAddJackpotModal] = useState(false);
 	const [winnersModal, setWinnersModal] = useState(false)
 	const [signedHex, setSignedHex] = useState("");
 	const [drawStatusLoading, setDrawStatusLoading] = useState(false);
@@ -174,6 +179,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		window.history.replaceState({}, document.title, window.location.pathname);
 		setConfirmationModal(false);
 		setOverRideModal(false)
+		setAddJackpotModal(false)
 		setGlobalBetNumber(0);
 		setExpectedWinningNumber(0);
 	};
@@ -444,6 +450,32 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		}
 	}
 
+	const handleAddJackpot = async () => { // add DTO (signed_hex, draw_number, jackpot)
+		presentLoading({ message: "Adding jackpot..." });
+		setAddJackpotModal(false)
+		window.history.replaceState({}, document.title, window.location.pathname);
+
+		const drawNumber = Number(draw)
+		const payload = {
+			signed_hex: signedHex,
+			draw_number: drawNumber,
+			jackpot_amount: jackpotAmount,
+		}
+		const executeAddJackpot = await lotteryService.executeDrawJackpot(payload)
+		
+		try {
+			if(!executeAddJackpot.success) {
+				throw new Error
+			}
+
+			presentToast({ message: `Jackpot added: ${executeAddJackpot.message}`, duration: 5000, color: "success", });
+		} catch (error) {
+			presentToast({ message: `Failed to add jackpot`, duration: 3000, color: "danger", });	
+		} finally {
+			dismissLoading();
+		}
+	}
+
 	const handleSubmit = async () => {
 		setIsSubmitting(true);
 		setConfirmationModal(false);
@@ -501,6 +533,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 				if(isOverrideMode){
 					setOverRideModal(true);
+				} else if(isAddJackpotMode) {
+					setAddJackpotModal(true);
 				} else {
 					setConfirmationModal(true);
 				}
@@ -1226,7 +1260,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 								className="custom-button bet-button"
 								expand="block"
 								onClick={handleOpen}
-								disabled={placingBet || isSubmitting || isOverrideMode}
+								disabled={placingBet || isSubmitting || isOverrideMode || isAddJackpotMode}
 								style={{ marginTop: "24px" }}
 							>
 								🎫 Buy Ticket - $0.50
@@ -1466,6 +1500,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 						</div>
 					</IonFooter>
 				</IonModal>
+
+
 
 				<IonModal
 					isOpen={isModalOpen}
@@ -1761,6 +1797,195 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							</div>
 						)}
 					</IonContent>
+				</IonModal>
+
+				<IonModal
+					isOpen={addJackpotModal}
+					onDidDismiss={() => setAddJackpotModal(false)}
+					initialBreakpoint={1}		
+				>
+					<IonContent className="ion-padding" style={{ "--background": "var(--background-color)" }}>
+						<div style={{ padding: "16px", textAlign: "center" }}>
+							<div style={{
+								background: "rgba(46, 204, 113, 0.1)",
+								borderRadius: "50%",
+								width: "80px",
+								height: "80px",
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								margin: "0 auto 16px auto",
+								border: "2px solid var(--lottery-emerald)"
+							}}>
+								<IonIcon icon={cashOutline} style={{ fontSize: "40px", color: "var(--lottery-emerald)" }} />
+							</div>
+							
+							<h2 style={{ color: "var(--lottery-emerald)", fontWeight: "900", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "1px" }}>
+								💰 ADD JACKPOT
+							</h2>
+							<p style={{ color: "var(--text-color-secondary)", marginBottom: "24px", fontSize: "0.95rem" }}>
+								You are about to add funds to the jackpot.
+							</p>
+
+							<div style={{ 
+								background: "linear-gradient(180deg, rgba(20, 20, 20, 0.8) 0%, rgba(30, 30, 30, 0.8) 100%)", 
+								borderRadius: "16px", 
+								padding: "20px",
+								border: "1px solid rgba(46, 204, 113, 0.3)",
+								marginBottom: "24px",
+								boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+							}}>
+								<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "12px" }}>
+									<IonText color="medium" style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+										Target Draw
+									</IonText>
+									{/* <IonBadge color="success" style={{ fontSize: "1rem", padding: "6px 12px" }}>
+										#{isAfter10Am ? "2" : "1"}
+									</IonBadge> */}
+
+									<IonBadge 
+										id="draw-badge-trigger" 
+										color="success" 
+										style={{ 
+											fontSize: "1rem", 
+											padding: "6px 12px", 
+											cursor: "pointer" // Make it feel like a button
+										}}
+									>
+										#{isAfter10Am ? "2" : "1"} ▾
+									</IonBadge>
+
+									<IonPopover 
+										trigger="draw-badge-trigger" 
+										mode="ios"
+										style={{
+											'--width': '200px'
+										}}
+									>
+										<IonContent>
+											<IonList lines="none" style={{ background: "transparent" }}>
+												<IonItem 
+													button 
+													onClick={() => {
+														setIsAfter10Am(false);
+														document.querySelector('ion-popover')?.dismiss();
+													}}
+													detail={false}
+												>
+													<IonLabel>#1 (1 PM Draw)</IonLabel>
+												</IonItem>
+												<IonItem 
+													button 
+													onClick={() => {
+														setIsAfter10Am(true);
+														document.querySelector('ion-popover')?.dismiss();
+													}}
+													detail={false}
+												>
+													<IonLabel>#2 (9 PM Draw)</IonLabel>
+												</IonItem>
+											</IonList>
+										</IonContent>
+									</IonPopover>
+								</div>
+								
+								<div style={{ textAlign: "center", padding: "10px 0" }}>
+									<IonText color="medium" style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "8px" }}>
+										Amount to Add
+									</IonText>
+									<div style={{ 
+										background: "rgba(0,0,0,0.3)", 
+										borderRadius: "8px", 
+										padding: "12px",
+										border: "1px dashed var(--lottery-emerald)"
+									}}>
+										<IonText style={{ 
+											fontSize: "2.5rem", 
+											fontWeight: "900", 
+											color: "var(--lottery-emerald)",
+											letterSpacing: "2px",
+											textShadow: "0 0 20px rgba(46, 204, 113, 0.3)"
+										}}>
+											$ {jackpotAmount || "0.00"}
+										</IonText>
+									</div>
+								</div>
+
+								<div style={{ marginTop: "20px" }}>
+									<IonText color="medium" style={{ fontSize: "0.75rem", display: "block", marginBottom: "6px", textAlign: "left" }}>
+										Current {isAfter10Am ? "9 PM" : "1 PM"} Draw Jackpot
+									</IonText>
+									<div style={{
+										background: "rgba(0,0,0,0.5)",
+										padding: "8px",
+										borderRadius: "4px",
+										textAlign: "center"
+									}}>
+										<IonText color="light" style={{ 
+											fontSize: "1.1rem", 
+											fontWeight: "700",
+											color: "var(--lottery-gold)"
+										}}>
+											$ {isAfter10Am ? jackpot2 : jackpot}
+										</IonText>
+									</div>
+								</div>
+
+								<div style={{ marginTop: "20px" }}>
+									<IonText color="medium" style={{ fontSize: "0.75rem", display: "block", marginBottom: "6px", textAlign: "left" }}>
+										Transaction Signature (Hex)
+									</IonText>
+									<div style={{
+										background: "rgba(0,0,0,0.5)",
+										padding: "8px",
+										borderRadius: "4px",
+										textAlign: "left"
+									}}>
+										<IonText color="light" style={{ 
+											fontSize: "0.75rem", 
+											fontFamily: "monospace",
+											wordBreak: "break-all",
+											opacity: 0.7,
+											display: "block",
+											lineHeight: "1.4"
+										}}>
+											{signedHex ? signedHex.slice(0, 32) + "..." : "N/A"}
+										</IonText>
+									</div>
+								</div>
+							</div>
+						</div>
+					</IonContent>
+					<IonFooter>
+						<div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)", padding: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+							<IonButton
+								fill="outline"
+								color="medium"
+								expand="block"
+								onClick={handleCancel}
+								style={{
+									flex: 1,
+									fontWeight: "600"
+								}}
+							>
+								Cancel
+							</IonButton>
+
+							<IonButton
+								color="success"
+								expand="block"
+								onClick={handleAddJackpot}
+								style={{
+									flex: 1,
+									fontWeight: "bold",
+									"--box-shadow": "0 4px 12px rgba(46, 204, 113, 0.4)"
+								}}
+							>
+								<IonIcon icon={cashOutline} slot="start" />
+								CONFIRM ADD
+							</IonButton>
+						</div>
+					</IonFooter>
 				</IonModal>
 			</IonContent>
 		</IonPage>

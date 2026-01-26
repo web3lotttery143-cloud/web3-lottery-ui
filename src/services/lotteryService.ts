@@ -1,3 +1,4 @@
+import { AddDrawJackpotDto } from "../models/addDrawJackpot.model";
 import { ExecuteBetDto } from "../models/executeBet.model";
 import { OverrideWinningNumberDto } from "../models/overrideWinningNumber.model";
 import { VITE_API_URL } from "./constants";
@@ -149,6 +150,50 @@ class LotteryService {
 			}
 
 			return {success: true, message: data};
+		} catch (err) {
+			return { success: false, message: `${err}`} 
+		}
+	}
+
+	async addJackpot(amount: number): Promise<{success: boolean, message: string, data?: string}> { // create DTO
+		try {
+			const response = await fetch(`${LIVE_API}/api/draws/add-draw-jackpot`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ amount }),
+			});
+
+			const data = await response.text()
+
+			if (!response.ok) {
+				throw new Error 
+			}
+
+			return {success: true, message: 'Succ', data: data};
+		} catch (err) {
+			return { success: false, message: `${err}`} 
+		}
+	}
+
+	async executeDrawJackpot(data: AddDrawJackpotDto): Promise<{success: boolean, message: string}> { // add params
+		try {
+			const response = await fetch(`${LIVE_API}/api/draws/execute-draw-jackpot`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ data }),
+			});
+
+			const res = await response.json()
+
+			if (!response.ok) {
+				throw new Error 
+			}
+
+			return {success: true, message: res};
 		} catch (err) {
 			return { success: false, message: `${err}`} 
 		}

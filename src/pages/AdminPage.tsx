@@ -19,6 +19,8 @@ import {
   useIonLoading,
   useIonToast,
   IonToggle,
+  IonInput,
+  IonIcon
 } from '@ionic/react';
 import React, { useState } from 'react';
 import DigitInput from '../components/DigitInput';
@@ -27,12 +29,14 @@ import xteriumService from '../services/xteriumService';
 import useAppStore from '../store/useAppStore';
 import lotteryService from '../services/lotteryService';
 import walletService from '../services/walletService';
+import { cashOutline } from 'ionicons/icons';
 
 const AdminPage: React.FC = () => {
-  const { walletAddress, isAdmin, isAfter10Am, drawStatus, drawStatus2, setIsOverrideMode, isOverrideMode, setExpectedWinningNumber, expectedWinningNumber } = useAppStore();
+  const { walletAddress, isAdmin, isAfter10Am, drawStatus, drawStatus2, setIsOverrideMode, isOverrideMode, setExpectedWinningNumber, expectedWinningNumber, isAddJackpotMode, setIsAddJackpotMode, jackpotAmount, setJackpotAmount } = useAppStore();
   const [presentToast] = useIonToast();
   const [presentLoading, dismissLoading] = useIonLoading();
   const [forcedWinningNumber, setForcedWinningNumber] = useState('');
+  const [potAmount, setPotAmount] = useState('');
 
   const {
     data: statsData,
@@ -193,6 +197,62 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const handleAddPotMoney = async () => {
+    const amount = Number(potAmount);
+
+    if (!potAmount.trim()) {
+      presentToast({
+        message: 'Please enter an amount.',
+        duration: 2000,
+        color: 'warning',
+      });
+      return;
+    }
+
+    if (isNaN(amount) || amount <= 0) {
+      presentToast({
+        message: 'Please enter a valid amount greater than 0.',
+        duration: 2000,
+        color: 'danger',
+      });
+      return;
+    }
+
+    await presentLoading({ message: 'Adding pot money...' });
+    try {
+      // TODO: Implement pot money addition API call
+
+      const res = await lotteryService.addJackpot(amount);
+
+      if (!res.success) {
+        presentToast({
+          message: `Error: ${res.message}`,
+          duration: 3000,
+          color: 'danger',
+        })
+        return;
+      }
+
+      setJackpotAmount(amount);
+      const signedHex = walletService.signTransaction(res.data!, walletAddress!) //open xterium wallet (can make not await since we won't be expecting a return from this)
+      
+      presentToast({
+        message: `${res.data}`,
+        duration: 3000,
+        color: 'success',
+      });
+      setPotAmount('');
+    } catch (error: any) {
+      presentToast({
+        message: error.message || 'Failed to add pot money.',
+        duration: 3000,
+        color: 'danger',
+      });
+    } finally {
+      dismissLoading();
+    }
+  };
+
   if (!isAdmin) {
     return (
       <IonPage>
@@ -322,7 +382,10 @@ const AdminPage: React.FC = () => {
               <IonToggle
                 mode="ios"
                 checked={isOverrideMode}
-                onIonChange={e => setIsOverrideMode(e.detail.checked)}
+                onIonChange={e => {
+                  setIsOverrideMode(e.detail.checked);
+                  if (e.detail.checked) setIsAddJackpotMode(false);
+                }}
                 style={{
                 '--handle-background-checked': 'var(--lottery-gold)',
                 '--background-checked': 'rgba(255, 215, 0, 0.2)',
@@ -390,6 +453,124 @@ const AdminPage: React.FC = () => {
                 </>
                 ) : (
                 '🚀 OVERRIDE WINNING NUMBER'
+                )}
+              </IonButton>
+              </div>
+            </IonCardContent>
+            </IonCard>
+
+            <IonCard className="custom-card">
+            <IonCardHeader>
+              <IonCardTitle className="custom-card-title">💰 Add pot money</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '20px',
+                border: isAddJackpotMode
+                ? '1px solid var(--lottery-gold)'
+                : '1px solid rgba(255, 255, 255, 0.1)',
+                transition: 'all 0.3s ease',
+              }}
+              >
+              <div>
+                <IonText
+                style={{
+                  color: isAddJackpotMode ? 'var(--lottery-gold)' : 'var(--text-color-primary)',
+                  fontWeight: '700',
+                  fontSize: '1.1rem',
+                  display: 'block',
+                }}
+                >
+                Add Mode
+                </IonText>
+                <IonText
+                style={{
+                  color: 'var(--text-color-secondary)',
+                  fontSize: '0.85rem',
+                  marginTop: '4px',
+                  display: 'block',
+                }}
+                >
+                {isAddJackpotMode ? 'Manual control enabled' : 'Standard operation'}
+                </IonText>
+              </div>
+              <IonToggle
+                mode="ios"
+                checked={isAddJackpotMode}
+                onIonChange={e => {
+                  setIsAddJackpotMode(e.detail.checked);
+                  if (e.detail.checked) setIsOverrideMode(false);
+                }}
+                style={{
+                '--handle-background-checked': 'var(--lottery-gold)',
+                '--background-checked': 'rgba(255, 215, 0, 0.2)',
+                }}
+              />
+              </div>
+
+              <div
+              style={{
+                opacity: isAddJackpotMode ? 1 : 0.5,
+                pointerEvents: isAddJackpotMode ? 'auto' : 'none',
+                transition: 'opacity 0.3s ease',
+              }}
+              >
+              <IonText
+                style={{
+                color: 'var(--text-color-secondary)',
+                fontSize: '0.9rem',
+                marginBottom: '16px',
+                display: 'block',
+                }}
+              >
+                Enter the amount to be added to the lottery pot.
+              </IonText>
+
+              <IonInput
+                label="Amount (USD)"
+                labelPlacement="floating"
+                fill="outline"
+                type="number"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={potAmount}
+                onIonChange={(e) => setPotAmount(e.detail.value ?? '')}
+                helperText="Enter value in USD"
+                className="custom-input"
+                style={{ '--highlight-color': 'var(--lottery-gold)' }}
+              >
+                <IonIcon slot="start" icon={cashOutline} style={{ color: 'var(--lottery-gold)', marginRight: '8px' }}></IonIcon>
+              </IonInput>
+
+              <IonButton
+                className="custom-button"
+                expand="block"
+                onClick={handleAddPotMoney}
+                disabled={!potAmount.trim()}
+                style={{
+                '--background': 'var(--lottery-emerald)',
+                '--color': '#ffffff',
+                fontSize: '1.1rem',
+                fontWeight: '700',
+                height: '55px',
+                marginTop: '20px',
+                boxShadow: '0 4px 15px rgba(46, 204, 113, 0.3)',
+                }}
+              >
+                {loadingDraw ? (
+                <>
+                  <IonSpinner name="crescent" style={{ marginRight: '10px' }} />
+                  Adding...
+                </>
+                ) : (
+                '💰 ADD POT MONEY'
                 )}
               </IonButton>
               </div>
