@@ -43,7 +43,7 @@ import useAppStore from "../store/useAppStore";
 import lotteryService from "../services/lotteryService";
 import walletService from "../services/walletService";
 import { execute } from "graphql";
-import { walletOutline, chevronDownCircleOutline, terminal, cashOutline } from "ionicons/icons";
+import { walletOutline, chevronDownCircleOutline, terminal, cashOutline, checkmarkOutline } from "ionicons/icons";
 import { VITE_BET_AMOUNT, VITE_OPERATOR_ADDRESS } from "../services/constants";
 
 interface DashboardPageProps {
@@ -439,7 +439,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			
 		try {
 			if(!executeOverride.success) {
-				throw new Error
+				presentToast({ message: `${executeOverride.message}`, duration: 3000, color: "danger", });	
+				return
 			}
 
 			presentToast({ message: `Override executed: ${executeOverride.message}`, duration: 5000, color: "success", });
@@ -465,12 +466,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		
 		try {
 			if(!executeAddJackpot.success) {
-				throw new Error
+				presentToast({ message: `Failed to add jackpot ${executeAddJackpot.message}`, duration: 3000, color: "danger", });	
+				return
 			}
 
 			presentToast({ message: `Jackpot added: ${executeAddJackpot.message}`, duration: 5000, color: "success", });
 		} catch (error) {
-			presentToast({ message: `Failed to add jackpot`, duration: 3000, color: "danger", });	
+			presentToast({ message: `Failed to add jackpot ${error}`, duration: 3000, color: "danger", });	
 		} finally {
 			dismissLoading();
 		}
@@ -559,7 +561,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 		setProgress(0);
 
-		const duration = 5000;
+		const duration = 12000;
 		const interval = 50;
 		let current = 0;
 
@@ -1290,87 +1292,127 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					onDidDismiss={handleCancel}
 					initialBreakpoint={1}
 				>
-					<IonContent
-						className="ion-padding"
-						style={{ "--background": "var(--background-color)" }}
-					>
+					<IonContent className="ion-padding" style={{ "--background": "var(--background-color)" }}>
 						<IonProgressBar value={progress} color="warning" style={{ marginBottom: 16 }} />
-
-						<div style={{ padding: "8px" }}>
-							<h2 style={{ color: "var(--lottery-gold)", marginBottom: 8 }}>
-								Confirm Transaction
-								<span role="img" aria-label="check"> ✅</span>
+						<div style={{ padding: "16px", textAlign: "center" }}>
+							<div style={{
+								background: "rgba(46, 213, 115, 0.1)",
+								borderRadius: "50%",
+								width: "80px",
+								height: "80px",
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								margin: "0 auto 16px auto",
+								border: "2px solid var(--lottery-emerald)"
+							}}>
+								<IonIcon icon={checkmarkOutline} style={{ fontSize: "40px", color: "var(--lottery-emerald)" }} />
+							</div>
+							
+							<h2 style={{ color: "var(--lottery-emerald)", fontWeight: "900", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "1px" }}>
+							 CONFIRM TRANSACTION
 							</h2>
-							<IonList lines="none" style={{ background: "transparent" }}>
-								<IonItem style={{ "--background": "transparent" }}>
-									<IonLabel>
-										<IonText color="medium" style={{ fontWeight: 500 }}>Draw Number:</IonText>
-									</IonLabel>
-									<IonText color="primary">{draw}</IonText>
-								</IonItem>
-								<IonItem style={{ "--background": "transparent" }}>
-									<IonLabel>
-										<IonText color="medium" style={{ fontWeight: 500 }}>Bet Number:</IonText>
-									</IonLabel>
-									<IonText color="primary">{globalBetNumber}</IonText>
-								</IonItem>
-								<IonItem style={{ "--background": "transparent" }}>
-									<IonLabel>
-										<IonText color="medium" style={{ fontWeight: 500 }}>Referrer:</IonText>
-									</IonLabel>
-									<IonText color="primary">
+							<p style={{ color: "var(--text-color-secondary)", marginBottom: "24px", fontSize: "0.95rem" }}>
+								Review your bet details before confirming.
+							</p>
+
+							<div style={{ 
+								background: "linear-gradient(180deg, rgba(20, 20, 20, 0.8) 0%, rgba(30, 30, 30, 0.8) 100%)", 
+								borderRadius: "16px", 
+								padding: "20px",
+								border: "1px solid rgba(46, 213, 115, 0.3)",
+								marginBottom: "24px",
+								boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+							}}>
+								<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "12px" }}>
+									<IonText color="medium" style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+										Draw Number
+									</IonText>
+									<IonBadge color="primary" style={{ fontSize: "1rem", padding: "6px 12px" }}>
+										#{draw}
+									</IonBadge>
+								</div>
+
+								<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "12px" }}>
+									<IonText color="medium" style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+										Bet Number
+									</IonText>
+									<IonText style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--ion-color-primary)" }}>
+										{globalBetNumber}
+									</IonText>
+								</div>
+
+								<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "12px" }}>
+									<IonText color="medium" style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+										Referrer
+									</IonText>
+									<IonText style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-color-secondary)" }}>
 										{referralUpline
 											? `${referralUpline.substring(0, 6)}...${referralUpline.substring(referralUpline.length - 4)}`
 											: "N/A"}
 									</IonText>
-								</IonItem>
-								<IonItem style={{ "--background": "transparent" }}>
-									<IonLabel>
-										<IonText color="medium" style={{ fontWeight: 500 }}>Ticket Price:</IonText>
-									</IonLabel>
-									<IonText color="success">$0.50</IonText>
-								</IonItem>
-								<IonItem style={{ "--background": "transparent" }}>
-									<IonLabel>
-										<IonText color="medium" style={{ fontWeight: 500 }}>Signed Hex:</IonText>
-									</IonLabel>
-									<IonText
-										style={{
-											wordBreak: "break-all",
-											fontSize: "0.85rem",
-											opacity: 0.8,
-										}}
-									>
-										{signedHex ? signedHex.slice(0, 16) + "..." : "N/A"}
+								</div>
+
+								<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "12px" }}>
+									<IonText color="medium" style={{ fontSize: "0.9rem", fontWeight: "500" }}>
+										Ticket Price
 									</IonText>
-								</IonItem>
-							</IonList>
+									<IonText style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--lottery-emerald)" }}>
+										$0.50
+									</IonText>
+								</div>
+
+								<div style={{ marginTop: "20px" }}>
+									<IonText color="medium" style={{ fontSize: "0.75rem", display: "block", marginBottom: "6px", textAlign: "left" }}>
+										Transaction Signature (Hex)
+									</IonText>
+									<div style={{
+										background: "rgba(0,0,0,0.5)",
+										padding: "8px",
+										borderRadius: "4px",
+										textAlign: "left"
+									}}>
+										<IonText color="light" style={{ 
+											fontSize: "0.75rem", 
+											fontFamily: "monospace",
+											wordBreak: "break-all",
+											opacity: 0.7,
+											display: "block",
+											lineHeight: "1.4"
+										}}>
+											{signedHex ? signedHex.slice(0, 32) + "..." : "N/A"}
+										</IonText>
+									</div>
+								</div>
+							</div>
 						</div>
 					</IonContent>
 					<IonFooter>
-						<div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)", padding: "16px" }}>
+						<div style={{ display: "flex", gap: "12px", alignContent: "flex-end", background: "var(--background-color)", padding: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
 							<IonButton
-								className="custom-button"
+								fill="outline"
+								color="medium"
 								expand="block"
 								onClick={handleCancel}
 								style={{
 									flex: 1,
-									"--background": "var(--lottery-crimson)",
+									fontWeight: "600"
 								}}
 							>
 								Cancel
 							</IonButton>
 
 							<IonButton
-								className="custom-button"
+								color="success"
 								expand="block"
 								onClick={handleSubmit}
 								style={{
 									flex: 1,
-									"--background": "var(--lottery-emerald)",
+									fontWeight: "bold",
+									"--box-shadow": "0 4px 12px rgba(46, 213, 115, 0.4)"
 								}}
 							>
-								Confirm
+								CONFIRM
 							</IonButton>
 						</div>
 					</IonFooter>
@@ -1735,10 +1777,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 									userSelect: "none",
 									fontSize: "0.85rem",
 									fontWeight: 600,
+									transition: "all 0.2s ease",
 								}}
 								onClick={() => setIsSubmittingModalMinimized(false)}
 							>
-								<IonSpinner name="crescent" color="light" style={{ width: "16px", height: "16px" }} />
+								<IonSpinner name="crescent" color="warning" style={{ width: "16px", height: "16px" }} />
 								<span>Transaction submitting...</span>
 							</div>
 						) : (
@@ -1749,9 +1792,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 									left: "50%",
 									transform: "translate(-50%, -50%)",
 									zIndex: 9999,
-									backgroundColor: "var(--ion-color-warning)",
+									backgroundColor: "var(--background-color)",
 									color: "white",
-									padding: "24px",
+									padding: "32px 24px 24px 24px",
 									borderRadius: "16px",
 									display: "flex",
 									flexDirection: "column",
@@ -1760,7 +1803,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 									minWidth: "320px",
 									gap: "16px",
 									boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-									border: "1px solid rgba(255, 255, 255, 0.1)",
+									border: "1px solid rgba(255, 215, 0, 0.2)",
 								}}
 							>
 								<div
@@ -1768,31 +1811,46 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 										position: "absolute",
 										top: "12px",
 										right: "12px",
-										background: "rgba(255, 255, 255, 0.2)",
-										border: "none",
-										color: "white",
+										background: "rgba(255, 215, 0, 0.1)",
+										border: "1px solid rgba(255, 215, 0, 0.2)",
+										color: "var(--lottery-gold)",
 										borderRadius: "6px",
 										padding: "6px 12px",
 										cursor: "pointer",
 										fontSize: "0.8rem",
 										fontWeight: 600,
-										transition: "background 0.2s ease",
+										transition: "all 0.2s ease",
 									}}
 									onClick={() => setIsSubmittingModalMinimized(true)}
-									onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)")}
-									onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)")}
+									onMouseEnter={(e) => {
+										e.currentTarget.style.background = "rgba(255, 215, 0, 0.15)";
+										e.currentTarget.style.borderColor = "rgba(255, 215, 0, 0.3)";
+									}}
+									onMouseLeave={(e) => {
+										e.currentTarget.style.background = "rgba(255, 215, 0, 0.1)";
+										e.currentTarget.style.borderColor = "rgba(255, 215, 0, 0.2)";
+									}}
 								>
 									Minimize
 								</div>
 
-								<div style={{ marginTop: "12px" }}>
-									<IonSpinner name="crescent" color="light" style={{ width: "48px", height: "48px" }} />
+								<div style={{
+									background: "rgba(46, 213, 115, 0.1)",
+									borderRadius: "50%",
+									width: "64px",
+									height: "64px",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									border: "2px solid rgba(46, 213, 115, 0.3)"
+								}}>
+									<IonSpinner name="crescent" color="primary" style={{ width: "40px", height: "40px" }} />
 								</div>
-								<IonText style={{ fontSize: "1.1rem", fontWeight: 600, textAlign: "center" }}>
-									Submitting Transaction
+								<IonText style={{ fontSize: "1.1rem", fontWeight: 700, textAlign: "center", color: "var(--lottery-emerald)" }}>
+									SUBMITTING TRANSACTION
 								</IonText>
-								<IonText style={{ fontSize: "0.9rem", opacity: 0.9, textAlign: "center" }}>
-									Please wait while your transaction is being processed...
+								<IonText style={{ fontSize: "0.9rem", opacity: 0.8, textAlign: "center", color: "var(--text-color-secondary)" }}>
+									Please don't close this window or navigate away until the process is complete.
 								</IonText>
 							</div>
 						)}

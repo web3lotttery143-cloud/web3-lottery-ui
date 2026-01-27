@@ -78,10 +78,10 @@ class LotteryService {
         });
 
         // Get the raw text (transaction hash)
-        const rawText = await response.text();
+        const rawText = await response.json();
         
         if (!response.ok) {
-            return {success: false, message: `Status ${response.status}: ${rawText}`}
+            return { success: false, message: `${rawText.message}`} 
         }
 
         // Just return the transaction hash directly, no JSON parsing needed
@@ -144,9 +144,10 @@ class LotteryService {
 			});
 
 			const data = await response.json()
+			const msg = data.message
 
 			if (!response.ok) {
-				throw new Error 
+				return { success: false, message: `${msg}`} 
 			}
 
 			return {success: true, message: data};
@@ -188,9 +189,10 @@ class LotteryService {
 			});
 
 			const res = await response.json()
+			const msg = res.message
 
 			if (!response.ok) {
-				throw new Error 
+				return { success: false, message: `${msg}`} 
 			}
 
 			return {success: true, message: res};
