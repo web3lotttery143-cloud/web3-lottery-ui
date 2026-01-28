@@ -45,6 +45,7 @@ import walletService from "../services/walletService";
 import { execute } from "graphql";
 import { walletOutline, chevronDownCircleOutline, terminal, cashOutline, checkmarkOutline } from "ionicons/icons";
 import { VITE_BET_AMOUNT, VITE_OPERATOR_ADDRESS } from "../services/constants";
+import "../styles/marquee.css";
 
 interface DashboardPageProps {
 	data: any;
@@ -1178,6 +1179,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 						</div>
 					)}
 
+					<div className="marquee-container">
+						<div className="marquee-content">
+							<span>📢 1 PM Draw opens at 6 AM and closes at 12 PM • 9 PM Draw
+							opens at 2 PM and closes at 8 PM • Good luck! 🎰 </span>
+							<span aria-hidden="true">📢 1 PM Draw opens at 6 AM and closes at 12 PM • 9 PM Draw
+							opens at 2 PM and closes at 8 PM • Good luck! 🎰 </span>
+						</div>
+					</div>
+
 					<IonCard className="custom-card jackpot-card">
 						<IonCardHeader>
 							<IonCardTitle className="custom-card-title ion-text-center">
@@ -1188,7 +1198,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							<IonText color="warning">
 								<h1
 									style={{
-										fontSize: "3.5rem",
+										fontSize: "3.2rem",
 										fontWeight: "900",
 										margin: "0",
 										background: "linear-gradient(135deg, #FFD700, #FFA500)",
