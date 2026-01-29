@@ -81,7 +81,7 @@ class LotteryService {
         const rawText = await response.text();
         
         if (!response.ok) {
-            return { success: false, message: `${rawText}`} 
+            return {success: false, message: `Status ${response.status}: ${rawText}`}
         }
 
         // Just return the transaction hash directly, no JSON parsing needed
