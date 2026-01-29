@@ -1,0 +1,41 @@
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.25) 50%, rgba(255, 215, 0, 0.15) 100%);
+  border-top: 2px solid rgba(255, 215, 0, 0.5);
+  border-bottom: 2px solid rgba(255, 215, 0, 0.5);
+  padding: 16px 0;
+  display: flex;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2), inset 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+.marquee-content {
+  display: flex;
+  white-space: nowrap;
+  /* Adjust the time (30s) to control speed */
+  animation: scroll-left 15s linear infinite;
+}
+
+.marquee-content span {
+  /* This ensures the text is spaced out nicely */
+  padding-right: 50px; 
+  color: var(--lottery-gold);
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    /* We move exactly half the width of the double-content */
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-container:hover .marquee-content {
+  animation-play-state: paused;
+}
