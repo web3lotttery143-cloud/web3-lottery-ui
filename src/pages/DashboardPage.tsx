@@ -495,6 +495,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 		try {
 			if(!executeBet.success) {
+				const betPayload: SaveBetDto = {
+				member_address: walletAddress!,
+				bet: {
+					bet_number: globalBetNumber.toString(),
+					bet_amount: VITE_BET_AMOUNT|| '0.5',
+					transaction_hash: executeBet.message || '',
+					draw_number: draw || '1',
+					success: false
+					}
+				}
+				const saveBet = await walletService.saveBets(betPayload)
 				throw new Error
 			}
 
@@ -505,6 +516,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					bet_amount: VITE_BET_AMOUNT|| '0.5',
 					transaction_hash: executeBet.message || '',
 					draw_number: draw || '1',
+					success: true
 				}
 			}
 			const saveBet = await walletService.saveBets(betPayload)

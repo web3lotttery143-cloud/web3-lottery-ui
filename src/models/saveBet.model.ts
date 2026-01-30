@@ -5,5 +5,6 @@ export interface SaveBetDto {
         bet_amount: string
         transaction_hash: string
         draw_number: string
+        success: boolean
     }
 }

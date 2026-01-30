@@ -155,6 +155,7 @@ const BetsPage: React.FC = () => {
           #{bet.draw_number}
           </div>
         </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <IonBadge
           style={{
           background: 'var(--gold-gradient)',
@@ -168,6 +169,24 @@ const BetsPage: React.FC = () => {
         >
           ${bet.bet_amount}
         </IonBadge>
+        <IonBadge
+          style={{
+          background: bet.success ? 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)' : 'linear-gradient(135deg, #f44336 0%, #da190b 100%)',
+          color: '#fff',
+          fontWeight: '700',
+          fontSize: '0.9rem',
+          padding: '6px 10px',
+          borderRadius: '8px',
+          boxShadow: bet.success ? '0 4px 10px rgba(76, 175, 80, 0.3)' : '0 4px 10px rgba(244, 67, 54, 0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          whiteSpace: 'nowrap'
+          }}
+        >
+          {bet.success ? '✓ Success' : '✗ Failed'}
+        </IonBadge>
+        </div>
         </div>
         </div>
 
@@ -230,12 +249,16 @@ const BetsPage: React.FC = () => {
           <div style={{ marginBottom: '4px' }}>Transaction Hash:</div>
           <div style={{ 
           fontFamily: 'monospace', 
-          color: 'var(--lottery-gold)',
+          color: bet.success ? 'var(--lottery-gold)' : '#f44336',
           wordBreak: 'break-all'
           }}>
-          <a href={`https://node.xode.net/xode-polkadot/extrinsics/${bet.transaction_hash}`} target='_blank' rel='noopener noreferrer'>
-            {bet.transaction_hash}
-          </a>
+          {bet.success ? (
+            <a href={`https://node.xode.net/xode-polkadot/extrinsics/${bet.transaction_hash}`} target='_blank' rel='noopener noreferrer'>
+              {bet.transaction_hash}
+            </a>
+          ) : (
+            <span>{bet.transaction_hash || 'Failed transaction'}</span>
+          )}
           </div>
         </div>
         )}

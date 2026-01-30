@@ -83,10 +83,11 @@ const ProfilePage: React.FC = () => {
       if (response.success && response.data) {
         // The API returns { ..., bets: [...] }
         const fetchedBets = response.data.bets || [];
+        const successfulBets = fetchedBets.filter((b: any) => b.success === true);
 
         // Calculate affiliate earnings: bets count * 0.5 * 10%
      
-        const calculatedEarnings = fetchedBets.length * 0.5 * 0.10;
+        const calculatedEarnings = successfulBets.length * 0.5 * 0.10;
         setAffiliateEarnings(calculatedEarnings);  
       } else {
         if (!response.success) {
