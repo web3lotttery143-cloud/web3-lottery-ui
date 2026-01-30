@@ -325,7 +325,7 @@ const BetsPage: React.FC = () => {
                   letterSpacing: "0.5px",
                   fontWeight: "600"
                 }}>
-                  Transaction Hash
+                  Transaction Details
                 </IonText>
               </div>
               <div style={{
