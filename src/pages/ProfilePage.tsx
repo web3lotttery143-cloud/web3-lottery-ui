@@ -113,6 +113,7 @@ const ProfilePage: React.FC = () => {
       message: `${error}`,
       duration: 1500,
       color: 'error',
+      position: "top",
     });
     } finally {
       setIsWalletBalanceLoading(false)
@@ -126,6 +127,7 @@ const ProfilePage: React.FC = () => {
       message: 'Copied to clipboard!',
       duration: 1500,
       color: 'success',
+      position: "top",
     });
   };
 
@@ -135,6 +137,7 @@ const ProfilePage: React.FC = () => {
       message: 'Wallet disconnected',
       duration: 2000,
       color: 'success',
+      position: "top",
     });
   };
 

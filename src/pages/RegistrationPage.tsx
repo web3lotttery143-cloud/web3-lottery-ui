@@ -64,20 +64,20 @@ const RegistrationPage: React.FC = () => {
 
       if(response.message === 'Operator Connected...') {
         setIsAdmin(true)
-        presentToast({ message: response.message, duration: 2000, color: 'success'})
+        presentToast({ message: response.message, duration: 2000, color: 'success', position: "top" })
         connectWallet(connectedWallet)
         setStoreAvailableWallets(availableWallets)
         setReferralUpline(upline)
         router.push('/dashboard', 'root', 'replace');
       } else {
         setReferralUpline(upline)
-        presentToast({ message: response.message, duration: 2000, color: 'success'})
+        presentToast({ message: response.message, duration: 2000, color: 'success', position: "top",})
         connectWallet(connectedWallet)
         setStoreAvailableWallets(availableWallets)
         router.push('/dashboard', 'root', 'replace');
       }    
     } catch (error) {
-      presentToast({ message: `${error}`, duration: 2000, color: 'danger' });                                     
+      presentToast({ message: `${error}`, duration: 2000, color: 'danger', position: "top", });                                     
     } finally {
       setConfirmationModal(false)
       setDetectedWallet(null)

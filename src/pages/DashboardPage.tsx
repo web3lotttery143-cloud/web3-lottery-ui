@@ -134,6 +134,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				)}...`,
 				duration: 1000,
 				color: "success",
+				position: "top",
 			});
 			setBetNumber("");
 			refetch();
@@ -143,6 +144,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				message: error.message,
 				duration: 1000,
 				color: "danger",
+				position: "top",
 			});
 		},
 	});
@@ -156,7 +158,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 			// Check if current time is >= 1:00 PM
 			const isAfterTenAM = hours > 13 || (hours === 13 && minutes >= 0);
-			setIsAfter10Am(isAfterTenAM); //testingDrawNumber
+			//setIsAfter10Am(isAfterTenAM); //testingDrawNumber
+			setIsAfter10Am(false)
 
 			if (isAfterTenAM) {
 				setDraw("2");
@@ -170,6 +173,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				message: 'Failed to check time',
 				duration: 2000,
 				color: 'danger',
+				position: "top",
 			});
 		} finally {
 			setDrawStatusLoading(false);
@@ -193,6 +197,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					message: "Please enter a 3-digit number.",
 					duration: 2000,
 					color: "warning",
+					position: "top",
 				});
 				return;
 			}
@@ -206,6 +211,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					message: "The draw is not open for betting.",
 					duration: 2000,
 					color: "danger",
+					position: "top",
 				});
 				return;
 			}
@@ -216,6 +222,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				message: `Error: ${error instanceof Error ? error.message : String(error)}`,
 				duration: 3000,
 				color: "danger",
+				position: "top",
 			});
 		} finally {
 			dismissLoading();
@@ -228,6 +235,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				message: "Wallet not connected.",
 				duration: 2000,
 				color: "danger",
+				position: "top",
 			});
 			return;
 		}
@@ -244,6 +252,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					message: `Add bet failed: ${result.message}`,
 					color: "danger",
 					duration: 5000,
+					position: "top",
 				});
 				return;
 			}
@@ -258,6 +267,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 				message: e.message || "An error occurred.",
 				duration: 3000,
 				color: "danger",
+				position: "top",
 			});
 		} finally {
 			dismissLoading();
@@ -280,7 +290,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             const result = await lotteryService.getDraws();
 
             if(!result.success || !result.draws) {
-                presentToast({ message: `${result.message}`, duration: 3000, color: "danger", });
+                presentToast({ message: `${result.message}`, duration: 3000, color: "danger", position: "top", });
                 return;
             }
 
@@ -357,7 +367,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             }
 
         } catch (error) {
-            presentToast({ message: `${error}`, duration: 3000, color: "danger", });
+            presentToast({ message: `${error}`, duration: 3000, color: "danger", position: "top" });
             setWinningNumber('N/A')
             setWinningNumber2('N/A')
             setIsWinnerNumberLoading(false)
@@ -375,7 +385,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             }
             setMaximumBets(data.maximumBets || '0')
         } catch (error) {
-            presentToast({ message: `${error}`, duration: 3000, color: "danger", });
+            presentToast({ message: `${error}`, duration: 3000, color: "danger", position: "top" });
         }
     }
 
@@ -406,7 +416,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			presentToast({
 				message: `Refresh failed: ${error}`,
 				duration: 3000,
-				color: "danger",
+				color: "danger", 
+				position: "top",
 			});
 		} finally {
 			event.detail.complete();
@@ -440,13 +451,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			
 		try {
 			if(!executeOverride.success) {
-				presentToast({ message: `${executeOverride.message}`, duration: 3000, color: "danger", });	
+				presentToast({ message: `${executeOverride.message}`, duration: 3000, color: "danger", position: "top",});	
 				return
 			}
 
-			presentToast({ message: `Override executed: ${executeOverride.message}`, duration: 5000, color: "success", });
+			presentToast({ message: `Override executed: ${executeOverride.message}`, duration: 5000, color: "success", position: "top",});
 		} catch (error) {
-			presentToast({ message: `${executeOverride.message}`, duration: 3000, color: "danger", });	
+			presentToast({ message: `${executeOverride.message}`, duration: 3000, color: "danger", position: "top", });	
 		} finally {
 			dismissLoading();
 		}
@@ -467,13 +478,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		
 		try {
 			if(!executeAddJackpot.success) {
-				presentToast({ message: `Failed to add jackpot ${executeAddJackpot.message}`, duration: 3000, color: "danger", });	
+				presentToast({ message: `Failed to add jackpot ${executeAddJackpot.message}`, duration: 3000, color: "danger", position: "top" });	
 				return
 			}
 
-			presentToast({ message: `Jackpot added: ${executeAddJackpot.message}`, duration: 5000, color: "success", });
+			presentToast({ message: `Jackpot added: ${executeAddJackpot.message}`, duration: 5000, color: "success", position: "top" });
 		} catch (error) {
-			presentToast({ message: `Failed to add jackpot ${error}`, duration: 3000, color: "danger", });	
+			presentToast({ message: `Failed to add jackpot ${error}`, duration: 3000, color: "danger", position: "top" });	
 		} finally {
 			dismissLoading();
 		}
@@ -522,15 +533,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			const saveBet = await walletService.saveBets(betPayload)
 			presentToast({
 				message: `Transaction completed: ${executeBet.message}`,
-				duration: 5000,
+				duration: 2000,
 				color: "success",
+				position: "top",
 			});
 			
 		} catch (error) {
 			presentToast({
 				message: `${executeBet.message}`,
-				duration: 10000,
+				duration: 2000,
 				color: "danger",
+				position: "top",
 			});
 		} finally {
 			setIsSubmitting(false);
@@ -558,8 +571,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 			} catch (err) {
 				presentToast({
 					message: `Error: ${String(err)}`,
-					duration: 5000,
+					duration: 2000,
 					color: "danger",
+					position: "top",
 				});
 			} finally {
 				await dismissLoading();
@@ -1763,7 +1777,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					
 				</IonModal>
 
-				{isSubmitting && (
+				{/* {isSubmitting && (
 					isSubmittingModalMinimized ? (
 						<div
 							style={{
@@ -1863,7 +1877,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							</IonText>
 						</div>
 					)
-				)}
+				)} */}
 
 
 				<IonModal
