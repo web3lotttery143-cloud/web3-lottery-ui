@@ -21,6 +21,7 @@ import './theme/variables.css';
 import AppTabs from './components/AppTabs';
 import ReferralAcceptPage from './pages/ReferralAcceptPage';
 import RegistrationPage from './pages/RegistrationPage';
+import SubmittingModal from './components/SubmittingModal';
 import useAppStore from './store/useAppStore';
 import { useWebSocket } from './hooks/useWebSocket';
 
@@ -80,6 +81,7 @@ const App: React.FC = () => {
         <IonReactRouter>
           <AppContent />
         </IonReactRouter>
+        <SubmittingModal />
       </IonApp>
     </ApolloProvider>
   );

@@ -83,10 +83,11 @@ const ProfilePage: React.FC = () => {
       if (response.success && response.data) {
         // The API returns { ..., bets: [...] }
         const fetchedBets = response.data.bets || [];
+        const successfulBets = fetchedBets.filter((b: any) => b.success === true);
 
         // Calculate affiliate earnings: bets count * 0.5 * 10%
      
-        const calculatedEarnings = fetchedBets.length * 0.5 * 0.10;
+        const calculatedEarnings = successfulBets.length * 0.5 * 0.10;
         setAffiliateEarnings(calculatedEarnings);  
       } else {
         if (!response.success) {
@@ -112,6 +113,7 @@ const ProfilePage: React.FC = () => {
       message: `${error}`,
       duration: 1500,
       color: 'error',
+      position: "top",
     });
     } finally {
       setIsWalletBalanceLoading(false)
@@ -125,6 +127,7 @@ const ProfilePage: React.FC = () => {
       message: 'Copied to clipboard!',
       duration: 1500,
       color: 'success',
+      position: "top",
     });
   };
 
@@ -134,6 +137,7 @@ const ProfilePage: React.FC = () => {
       message: 'Wallet disconnected',
       duration: 2000,
       color: 'success',
+      position: "top",
     });
   };
 

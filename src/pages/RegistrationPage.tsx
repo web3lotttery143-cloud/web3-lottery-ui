@@ -64,20 +64,20 @@ const RegistrationPage: React.FC = () => {
 
       if(response.message === 'Operator Connected...') {
         setIsAdmin(true)
-        presentToast({ message: response.message, duration: 2000, color: 'success'})
+        presentToast({ message: response.message, duration: 2000, color: 'success', position: "top" })
         connectWallet(connectedWallet)
         setStoreAvailableWallets(availableWallets)
         setReferralUpline(upline)
         router.push('/dashboard', 'root', 'replace');
       } else {
         setReferralUpline(upline)
-        presentToast({ message: response.message, duration: 2000, color: 'success'})
+        presentToast({ message: response.message, duration: 2000, color: 'success', position: "top",})
         connectWallet(connectedWallet)
         setStoreAvailableWallets(availableWallets)
         router.push('/dashboard', 'root', 'replace');
       }    
     } catch (error) {
-      presentToast({ message: `${error}`, duration: 2000, color: 'danger' });                                     
+      presentToast({ message: `${error}`, duration: 2000, color: 'danger', position: "top", });                                     
     } finally {
       setConfirmationModal(false)
       setDetectedWallet(null)
@@ -124,7 +124,7 @@ const RegistrationPage: React.FC = () => {
 
   const handleOpenXterium = () => {
     const callbackUrl = encodeURIComponent(window.location.href);
-    const deeplink = `https://deeplink.xterium.app/web3/approval?callbackUrl=${callbackUrl}`;
+    const deeplink = `https://deeplink.xterium.app/web3/connect-accounts?origin=${callbackUrl}&callbackUrl=${callbackUrl}`;
     //const deeplink = `intent://deeplink.xterium.app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417#Intent;scheme=https;package=com.xterium.wallet;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.xterium.wallet;end;`
     
     // Attempt: window.open with _self target

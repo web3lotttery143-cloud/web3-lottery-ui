@@ -43,7 +43,13 @@ class WalletService {
 	async signTransaction(hex: string, address: string) {
 		try {
 			const callbackUrl = encodeURIComponent(window.location.href);
-			const deeplink = `https://deeplink.xterium.app/web3/sign-transaction?encodedCallDataHex=${hex}&callbackUrl=${callbackUrl}&walletAddress=${address}`;
+			const genesisHash = "0xb2985e778bb748c70e450dcc084cc7da79fe742cc23d3b040abd7028187de69c";
+			const payload = {
+				address: address,
+				genesis_hash: genesisHash,
+				transaction_hex: hex	
+			}
+			const deeplink = `https://deeplink.xterium.app/web3/sign-transaction?signingType=signTransactionHex&payload=${JSON.stringify(payload)}&callbackUrl=${callbackUrl}`;
 			window.location.href = deeplink;
 		} catch (error) {
 			return `Something went wrong: ${error}`;
@@ -171,7 +177,7 @@ class WalletService {
 			// 	return { success: false, signedTx: "" };
 			// }
 
-			const signedTx = params.get("signedHex") || "";
+			const signedTx = params.get("signedTransactionHex") || "";
 			if(!signedTx) {
 				return { success: false, signedTx: "" };
 			}
