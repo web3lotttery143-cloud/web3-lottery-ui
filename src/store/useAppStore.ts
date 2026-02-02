@@ -82,7 +82,7 @@ const useAppStore = create<AppState>()(
   persist(
     set => ({
       isConnected: false,
-      isAdmin: true,
+      isAdmin: false,
       walletAddress: null,
       userProfile: null,
       lastSeenCompletedCycle: 0,
