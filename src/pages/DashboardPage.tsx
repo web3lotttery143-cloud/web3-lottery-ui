@@ -158,8 +158,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 			// Check if current time is >= 1:00 PM
 			const isAfterTenAM = hours > 13 || (hours === 13 && minutes >= 0);
-			//setIsAfter10Am(isAfterTenAM); //testingDrawNumber
-			setIsAfter10Am(false)
+			setIsAfter10Am(isAfterTenAM); //testingDrawNumber
+			//setIsAfter10Am(false)
 
 			if (isAfterTenAM) {
 				setDraw("2");

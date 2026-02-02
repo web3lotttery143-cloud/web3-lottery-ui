@@ -41,7 +41,7 @@ const ReferralAcceptPage: React.FC = () => {
   
   const handleOpen = () => {
     const callbackUrl = encodeURIComponent(window.location.href);
-    const deeplink = `https://deeplink.xterium.app/web3/approval?callbackUrl=${callbackUrl}`
+    const deeplink = `https://deeplink.xterium.app/web3/connect-accounts?callbackUrl=${callbackUrl}`
     window.open(deeplink, '_self');
     setReferralUpline(referrerAddress!)
   }
