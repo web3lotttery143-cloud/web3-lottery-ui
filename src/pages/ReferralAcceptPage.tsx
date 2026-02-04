@@ -40,7 +40,8 @@ const ReferralAcceptPage: React.FC = () => {
   const { connectWallet, setUserProfile, referralUpline, setReferralUpline } = useAppStore();
   
   const handleOpen = () => {
-    const callbackUrl = encodeURIComponent(window.location.href);
+    //const callbackUrl = encodeURIComponent(window.location.href);
+    const callbackUrl = 'https://app.infinityjackpot.net'
     const deeplink = `https://deeplink.xterium.app/web3/connect-accounts?origin=${callbackUrl}&callbackUrl=${callbackUrl}`
     window.open(deeplink, '_self');
     setReferralUpline(referrerAddress!)
