@@ -123,7 +123,8 @@ const RegistrationPage: React.FC = () => {
   }, []);
 
   const handleOpenXterium = () => {
-    const callbackUrl = encodeURIComponent(window.location.href);
+    //const callbackUrl = encodeURIComponent(window.location.href);
+    const callbackUrl = 'https://app.infinityjackpot.net'
     const deeplink = `https://deeplink.xterium.app/web3/connect-accounts?origin=${callbackUrl}&callbackUrl=${callbackUrl}`;
     //const deeplink = `intent://deeplink.xterium.app/web3/approval?callbackUrl=${callbackUrl}&chainId=3417#Intent;scheme=https;package=com.xterium.wallet;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.xterium.wallet;end;`
     
