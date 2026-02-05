@@ -67,6 +67,21 @@ class LotteryService {
 		}
 	}
 
+	// Get all bets (no draw filter)
+	async getAllBets() {
+		try {
+			const res = await fetch(`${LIVE_API}/admin/member-bets`);
+			if (!res.ok) {
+				return { success: false, message: 'Failed to fetch bets' };
+			}
+			const data = await res.json();
+			// Expecting an array response
+			return data;
+		} catch (error) {
+			return { success: false, message: `${error}` };
+		}
+	}
+
 	async executeBet(transactionData: ExecuteBetDto): Promise<{success: boolean, message: string}> {
     try {
         const response = await fetch(`${LIVE_API}/api/bets/execute`, {

@@ -22,7 +22,7 @@ import {
   IonInput,
   IonIcon
 } from '@ionic/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DigitInput from '../components/DigitInput';
 import { CLOSE_CYCLE_FOR_DRAW, GET_ADMIN_STATS, TRIGGER_DRAW } from '../graphql/queries';
 import xteriumService from '../services/xteriumService';
@@ -196,6 +196,39 @@ const AdminPage: React.FC = () => {
       dismissLoading();
     }
   };
+
+    // Members bets
+    const [bets, setBets] = useState<any[]>([]);
+    const [loadingBets, setLoadingBets] = useState(false);
+    const [betsError, setBetsError] = useState<string | null>(null);
+
+    useEffect(() => {
+      let mounted = true;
+      const loadBets = async () => {
+        setLoadingBets(true);
+        setBetsError(null);
+        try {
+          const res: any = await lotteryService.getAllBets();
+          let list: any[] = [];
+          if (Array.isArray(res)) list = res;
+          else if (res?.Ok) list = res.Ok;
+          else if (res?.success === false && res.message) {
+            setBetsError(res.message);
+          }
+
+          if (mounted && Array.isArray(list)) setBets(list);
+        } catch (e: any) {
+          if (mounted) setBetsError(e.message || `${e}`);
+        } finally {
+          if (mounted) setLoadingBets(false);
+        }
+      };
+
+      loadBets();
+      return () => {
+        mounted = false;
+      };
+    }, []);
 
   const handleAddPotMoney = async () => {
     const amount = Number(potAmount);
@@ -457,6 +490,42 @@ const AdminPage: React.FC = () => {
               </IonButton>
               </div>
             </IonCardContent>
+            </IonCard>
+
+            <IonCard className="custom-card">
+              <IonCardHeader>
+                <IonCardTitle className="custom-card-title">🎟️ Members Bets</IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                {loadingBets ? (
+                  <div className="ion-text-center">
+                    <IonSpinner name="crescent" />
+                  </div>
+                ) : betsError ? (
+                  <IonText color="danger">Error loading bets: {betsError}</IonText>
+                ) : !bets || bets.length === 0 ? (
+                  <IonText style={{ color: 'var(--text-color-secondary)' }}>No bets found.</IonText>
+                ) : (
+                  <IonList style={{ background: 'transparent' }}>
+                    {bets.map((b: any, idx: number) => (
+                      <IonItem key={idx} style={{ '--background': 'transparent' }}>
+                        <IonLabel>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ fontWeight: 700 }}>{b.member_address}</div>
+                            <div style={{ color: 'var(--text-color-secondary)', fontSize: '0.95rem' }}>
+                              Bet: <strong style={{ color: 'var(--lottery-gold)' }}>{b.bet_number}</strong>
+                              &nbsp; • &nbsp; Draw: {b.draw_number}
+                            </div>
+                            <div style={{ color: 'var(--text-color-secondary)', fontSize: '0.8rem' }}>
+                              {b.date ? new Date(b.date).toLocaleString() : ''}
+                            </div>
+                          </div>
+                        </IonLabel>
+                      </IonItem>
+                    ))}
+                  </IonList>
+                )}
+              </IonCardContent>
             </IonCard>
 
             <IonCard className="custom-card">
