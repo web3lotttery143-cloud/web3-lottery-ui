@@ -76,6 +76,10 @@ export interface AppState {
   setIsAddJackpotMode: (isAddJackpotMode: boolean) => void;
   setExpectedWinningNumber: (expectedWinningNumber: number) => void;
   setJackpotAmount: (jackpotAmount: number) => void;
+  lastRevealedDate1: string;
+  lastRevealedDate2: string;
+  setLastRevealedDate1: (date: string) => void;
+  setLastRevealedDate2: (date: string) => void;
 }
 
 const useAppStore = create<AppState>()(
@@ -112,6 +116,8 @@ const useAppStore = create<AppState>()(
       isOverrideMode: false,
       isAddJackpotMode: false,
       jackpotAmount: 0,
+      lastRevealedDate1: '',
+      lastRevealedDate2: '',
       availableWallets: [],
       connectWallet: address => set({ isConnected: true, walletAddress: address }),
       disconnectWallet: () =>
@@ -147,6 +153,8 @@ const useAppStore = create<AppState>()(
           isAddJackpotMode: false,
           availableWallets: [],
           jackpotAmount: 0,
+          lastRevealedDate1: '',
+          lastRevealedDate2: '',
         }),
       setUserProfile: profile => set({ userProfile: profile }),
       setIsAdmin: isAdmin => set({ isAdmin }),
@@ -178,6 +186,8 @@ const useAppStore = create<AppState>()(
       setExpectedWinningNumber: expectedWinningNumber => set({ expectedWinningNumber: expectedWinningNumber }),
       setAvailableWallets: wallets => set({ availableWallets: wallets }),
       setJackpotAmount: jackpotAmount => set({ jackpotAmount: jackpotAmount }),
+      setLastRevealedDate1: date => set({ lastRevealedDate1: date }),
+      setLastRevealedDate2: date => set({ lastRevealedDate2: date }),
     }),
     {
       name: 'web3-lottery-app-storage',

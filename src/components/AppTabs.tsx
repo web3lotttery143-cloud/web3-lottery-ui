@@ -31,7 +31,13 @@ const AppTabs: React.FC = () => {
     lastSeenCompletedCycle,
     setLastSeenCompletedCycle,
     isOverrideMode,
-    isAddJackpotMode
+    isAddJackpotMode,
+    winningNumber,
+    winningNumber2,
+    lastRevealedDate1,
+    lastRevealedDate2,
+    setLastRevealedDate1,
+    setLastRevealedDate2
   } = useAppStore();
 
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -68,6 +74,44 @@ const AppTabs: React.FC = () => {
       setLastSeenCompletedCycle(lastCompleted.cycleNumber);
     }
   }, [data, setUserProfile, lastSeenCompletedCycle, setLastSeenCompletedCycle, refetch]);
+
+  useEffect(() => {
+    const checkTimeBasedReveal = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      // Format YYYY-MM-DD in local time
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const todayStr = `${year}-${month}-${day}`;
+
+      // Draw 1: Check if after 1 PM
+      if (currentHour >= 13) {
+        if (lastRevealedDate1 !== todayStr && winningNumber && winningNumber !== 'N/A' && winningNumber.length === 3) {
+          console.log('[AppTabs] Revealing Draw 1 (Time-based)');
+          setLastWinningNumber(winningNumber);
+          setIsDrawModalOpen(true);
+          setLastRevealedDate1(todayStr);
+          return; // Prevent showing both at once if logic overlaps
+        }
+      }
+
+      // Draw 2: Check if after 9 PM
+      if (currentHour >= 21) {
+        if (lastRevealedDate2 !== todayStr && winningNumber2 && winningNumber2 !== 'N/A' && winningNumber2.length === 3) {
+          console.log('[AppTabs] Revealing Draw 2 (Time-based)');
+          setLastWinningNumber(winningNumber2);
+          setIsDrawModalOpen(true);
+          setLastRevealedDate2(todayStr);
+        }
+      }
+    };
+
+    checkTimeBasedReveal();
+    // Check every minute to handle time passing while app is open
+    const interval = setInterval(checkTimeBasedReveal, 60000);
+    return () => clearInterval(interval);
+  }, [winningNumber, winningNumber2, lastRevealedDate1, lastRevealedDate2, setLastRevealedDate1, setLastRevealedDate2]);
 
   const renderTabContent = () => {
     switch (activeTab) {
