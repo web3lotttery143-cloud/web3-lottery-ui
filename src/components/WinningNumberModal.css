@@ -2,17 +2,45 @@
 
 @keyframes spin {
   0% {
-
     transform: translateY(0);
   }
   100% {
-
-    transform: translateY(-3500px);
+    transform: translateY(-4500px);
   }
 }
 
 .draw-modal .ion-content {
-  --background: var(--background-color);
+  --background: radial-gradient(circle at center, #2e3b55 0%, #1a1a2e 100%);
+  --padding-top: 0;
+  --padding-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button-wrapper {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.close-button-wrapper:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.close-button-wrapper ion-icon {
+    font-size: 24px;
+    color: #fff;
 }
 
 .slot-machine-container {
@@ -22,32 +50,119 @@
   justify-content: center;
   height: 100%;
   text-align: center;
+  padding: 20px;
+}
+
+.trophy-icon {
+    font-size: 4rem;
+    color: #ffd700;
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.trophy-icon.visible {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+    animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-10px) scale(1); }
+    100% { transform: translateY(0px) scale(1); }
 }
 
 .draw-title {
-  color: var(--lottery-gold);
-  font-weight: 700;
-  margin-bottom: 24px;
+  font-size: 1.8rem;
+  font-weight: 900;
+  margin-bottom: 0px;
+  background: linear-gradient(to right, #ffffff, #ffd700);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.draw-subtitle {
+  color: #a0a0a0;
+  font-size: 1rem;
+  margin-top: 4px;
+  margin-bottom: 40px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
 }
 
 .slots-container {
   display: flex;
   justify-content: center;
-  gap: 16px;
-  padding: 20px;
-  border-radius: var(--border-radius);
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid var(--lottery-gold);
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+  gap: 12px;
+  padding: 30px 40px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #1f1f1f, #0f0f0f);
+  border: 4px solid #444;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 0 60px rgba(0, 0, 0, 0.8);
+  position: relative;
+  transition: all 0.5s ease;
 }
 
+.slots-container.winner-glow {
+    border-color: #ffd700;
+    box-shadow: 
+        0 0 0 4px #000, 
+        0 0 60px rgba(255, 215, 0, 0.6), 
+        inset 0 0 20px rgba(0, 0, 0, 0.8);
+    transform: scale(1.02);
+}
+
+/* Decorative screws */
+.slots-container::before,
+.slots-container::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle at 30% 30%, #fff, #888);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  top: 15px;
+}
+.slots-container::before { left: 15px; }
+.slots-container::after { right: 15px; }
+
 .slot-wrapper {
-  width: 60px;
-  height: 70px;
-  background: var(--card-background-color);
-  border-radius: 12px;
+  width: 70px;
+  height: 90px;
+  background: #f8f9fa;
+  border-radius: 8px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  box-shadow: 
+    inset 0 0 15px rgba(0,0,0,0.6), 
+    0 4px 6px rgba(0,0,0,0.3);
+  border: 1px solid #333;
+}
+
+.slot-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, transparent 100%);
+  z-index: 10;
+  pointer-events: none;
+  border-radius: 8px 8px 0 0;
 }
 
 .slot-inner {
@@ -56,17 +171,75 @@
 }
 
 .slot-inner.spin {
-
   animation: spin 1.5s linear infinite;
+  filter: blur(1px); /* Motion blur */
 }
 
 .slot-number {
-  width: 60px;
-  height: 70px;
+  width: 70px;
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--text-color);
+  font-size: 3rem;
+  font-weight: 900;
+  font-family: 'Courier New', monospace; /* Monospaced for classic look */
+  color: #333;
+  text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+}
+
+/* Landed Animation */
+@keyframes land {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); color: #d63031; }
+  100% { transform: scale(1); color: #c0392b; }
+}
+
+.slot-wrapper.landed .slot-number {
+  color: #c0392b; /* Change color when landed */
+  animation: land 0.3s ease-out forwards;
+}
+
+/* Make the specific winning number slot pop more */
+.slot-wrapper.landed {
+    border-color: #ffd700;
+}
+
+.machine-header-decoration {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 15px;
+    background: #333;
+    border-radius: 10px 10px 0 0;
+    border: 2px solid #555;
+    border-bottom: none;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.claim-button {
+    margin-top: 50px;
+    --background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+    --color: #000;
+    --border-radius: 30px;
+    --box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4);
+    font-weight: 800;
+    font-size: 1.1rem;
+    width: 80%;
+    height: 50px;
+    letter-spacing: 1px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 4px 25px rgba(218, 165, 32, 0.6); }
+    100% { transform: scale(1); box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4); }
+}
+
+/* Landed Animation Color Specifics */
+.slot-wrapper.landed .slot-number {
+  color: #c0392b; 
 }

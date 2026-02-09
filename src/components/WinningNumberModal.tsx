@@ -1,10 +1,13 @@
-import { IonButton, IonContent, IonHeader, IonModal, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonContent, IonIcon, IonModal } from '@ionic/react';
+import confetti from 'canvas-confetti';
+import { closeOutline, trophy } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
 import './WinningNumberModal.css';
 
 interface WinningNumberModalProps {
   isOpen: boolean;
   winningNumber: string;
+  drawLabel?: string;
   onDismiss: () => void;
 }
 
@@ -20,9 +23,9 @@ const SlotDigit: React.FC<{ digit: string; isSpinning: boolean }> = ({ digit, is
         return;
       }
 
-      const yOffset = digitValue * 70;
+      const yOffset = digitValue * 90;
 
-      const finalPosition = 70 * 10 * 5 + yOffset;
+      const finalPosition = 90 * 10 * 5 + yOffset;
       setStyle({
         transform: `translateY(-${finalPosition}px)`,
         transition: 'transform 1s ease-out',
@@ -35,7 +38,8 @@ const SlotDigit: React.FC<{ digit: string; isSpinning: boolean }> = ({ digit, is
   const numbers = Array.from({ length: 60 }, (_, i) => i % 10).join('');
 
   return (
-    <div className="slot-wrapper">
+    <div className={`slot-wrapper ${!isSpinning ? 'landed' : ''}`}>
+      <div className="slot-shine"></div>
       <div className={`slot-inner ${isSpinning ? 'spin' : ''}`} style={style}>
         {numbers.split('').map((n, i) => (
           <div key={i} className="slot-number">
@@ -50,56 +54,95 @@ const SlotDigit: React.FC<{ digit: string; isSpinning: boolean }> = ({ digit, is
 const WinningNumberModal: React.FC<WinningNumberModalProps> = ({
   isOpen,
   winningNumber,
+  drawLabel,
   onDismiss,
 }) => {
   const [digits, setDigits] = useState(['0', '0', '0']);
   const [isSpinning, setIsSpinning] = useState([false, false, false]);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setIsSpinning([true, true, true]);
-
+      setShowConfetti(false);
       setDigits(['0', '0', '0']);
 
       setTimeout(() => {
         setIsSpinning(s => [false, s[1], s[2]]);
-        setDigits(d => [winningNumber[0], d[1], d[2]]);
+        setDigits(d => [winningNumber[0] || '0', d[1], d[2]]);
       }, 1500);
 
       setTimeout(() => {
         setIsSpinning(s => [s[0], false, s[2]]);
-        setDigits(d => [d[0], winningNumber[1], d[2]]);
+        setDigits(d => [d[0], winningNumber[1] || '0', d[2]]);
       }, 2500);
 
       setTimeout(() => {
         setIsSpinning(s => [s[0], s[1], false]);
-        setDigits(d => [d[0], d[1], winningNumber[2]]);
+        setDigits(d => [d[0], d[1], winningNumber[2] || '0']);
+        setShowConfetti(true);
+        triggerConfetti();
       }, 3500);
     }
   }, [isOpen, winningNumber]);
 
+  const triggerConfetti = () => {
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 20001 }; // Higher z-index for ionic modal
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(function () {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      // since particles fall down, start a bit higher than random
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      });
+    }, 250);
+  };
+
   return (
     <IonModal isOpen={isOpen} onDidDismiss={onDismiss} className="draw-modal">
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>🎉 We Have a Winner! 🎉</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent className="ion-padding">
+      <IonContent className="ion-padding" scrollY={false}>
+        <div className="close-button-wrapper" onClick={onDismiss}>
+          <IonIcon icon={closeOutline} />
+        </div>
+
         <div className="slot-machine-container">
-          <h2 className="draw-title">The winning number is...</h2>
-          <div className="slots-container">
+          <div className={`trophy-icon ${showConfetti ? 'visible' : ''}`}>
+            <IonIcon icon={trophy} />
+          </div>
+
+          <h2 className="draw-title">WINNING NUMBER</h2>
+          {drawLabel && <h3 className="draw-subtitle">{drawLabel}</h3>}
+
+          <div className={`slots-container ${showConfetti ? 'winner-glow' : ''}`}>
             <SlotDigit digit={digits[0]} isSpinning={isSpinning[0]} />
             <SlotDigit digit={digits[1]} isSpinning={isSpinning[1]} />
             <SlotDigit digit={digits[2]} isSpinning={isSpinning[2]} />
           </div>
+
           <IonButton
-            className="custom-button"
+            className="claim-button"
             expand="block"
             onClick={onDismiss}
-            style={{ marginTop: '32px' }}
+            disabled={isSpinning.some(s => s)}
           >
-            Check My Tickets
+            {isSpinning.some(s => s) ? 'Drawing...' : 'Awesome!'}
           </IonButton>
         </div>
       </IonContent>
