@@ -2,17 +2,15 @@
 
 @keyframes spin {
   0% {
-
     transform: translateY(0);
   }
   100% {
-
-    transform: translateY(-3500px);
+    transform: translateY(-4500px);
   }
 }
 
 .draw-modal .ion-content {
-  --background: var(--background-color);
+  --background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 }
 
 .slot-machine-container {
@@ -22,32 +20,84 @@
   justify-content: center;
   height: 100%;
   text-align: center;
+  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
 }
 
 .draw-title {
-  color: var(--lottery-gold);
-  font-weight: 700;
-  margin-bottom: 24px;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(to right, #ffd700, #ffaa00, #ffd700);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+.draw-subtitle {
+  color: #a0a0a0;
+  font-size: 1.1rem;
+  margin-top: 0;
+  margin-bottom: 32px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .slots-container {
   display: flex;
   justify-content: center;
-  gap: 16px;
-  padding: 20px;
-  border-radius: var(--border-radius);
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid var(--lottery-gold);
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+  gap: 12px;
+  padding: 24px 32px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  border: 4px solid #ffd700;
+  box-shadow: 
+    0 0 0 4px #000, /* Outer black rim */
+    0 0 40px rgba(255, 215, 0, 0.2), /* Gold glow */
+    inset 0 0 20px rgba(0, 0, 0, 0.8); /* Inner depth shadow */
+  position: relative;
 }
 
+/* Decorative screws on the machine */
+.slots-container::before,
+.slots-container::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 30% 30%, #fff, #888);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  top: 10px;
+}
+.slots-container::before { left: 10px; }
+.slots-container::after { right: 10px; }
+
 .slot-wrapper {
-  width: 60px;
-  height: 70px;
-  background: var(--card-background-color);
-  border-radius: 12px;
+  width: 70px;
+  height: 90px;
+  background: #f0f0f0;
+  border-radius: 8px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  box-shadow: 
+    inset 0 0 15px rgba(0,0,0,0.8), /* Deep inner shadow for curvature */
+    0 2px 5px rgba(0,0,0,0.5); 
+  border: 1px solid #333;
+}
+
+.slot-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, transparent 100%);
+  z-index: 10;
+  pointer-events: none;
+  border-radius: 8px 8px 0 0;
 }
 
 .slot-inner {
@@ -56,17 +106,36 @@
 }
 
 .slot-inner.spin {
-
   animation: spin 1.5s linear infinite;
+  filter: blur(1px); /* Motion blur */
 }
 
 .slot-number {
-  width: 60px;
-  height: 70px;
+  width: 70px;
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--text-color);
+  font-size: 3rem;
+  font-weight: 900;
+  font-family: 'Courier New', monospace; /* Monospaced for classic look */
+  color: #333;
+  text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+}
+
+/* Landed Animation */
+@keyframes land {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); color: #d63031; }
+  100% { transform: scale(1); color: #c0392b; }
+}
+
+.slot-wrapper.landed .slot-number {
+  color: #c0392b; /* Change color when landed */
+  animation: land 0.3s ease-out forwards;
+}
+
+/* Make the specific winning number slot pop more */
+.slot-wrapper.landed {
+    border-color: #ffd700;
 }

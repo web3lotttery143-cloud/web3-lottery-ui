@@ -5,6 +5,7 @@ import './WinningNumberModal.css';
 interface WinningNumberModalProps {
   isOpen: boolean;
   winningNumber: string;
+  drawLabel?: string;
   onDismiss: () => void;
 }
 
@@ -20,9 +21,9 @@ const SlotDigit: React.FC<{ digit: string; isSpinning: boolean }> = ({ digit, is
         return;
       }
 
-      const yOffset = digitValue * 70;
+      const yOffset = digitValue * 90;
 
-      const finalPosition = 70 * 10 * 5 + yOffset;
+      const finalPosition = 90 * 10 * 5 + yOffset;
       setStyle({
         transform: `translateY(-${finalPosition}px)`,
         transition: 'transform 1s ease-out',
@@ -35,7 +36,8 @@ const SlotDigit: React.FC<{ digit: string; isSpinning: boolean }> = ({ digit, is
   const numbers = Array.from({ length: 60 }, (_, i) => i % 10).join('');
 
   return (
-    <div className="slot-wrapper">
+    <div className={`slot-wrapper ${!isSpinning ? 'landed' : ''}`}>
+      <div className="slot-shine"></div>
       <div className={`slot-inner ${isSpinning ? 'spin' : ''}`} style={style}>
         {numbers.split('').map((n, i) => (
           <div key={i} className="slot-number">
@@ -50,6 +52,7 @@ const SlotDigit: React.FC<{ digit: string; isSpinning: boolean }> = ({ digit, is
 const WinningNumberModal: React.FC<WinningNumberModalProps> = ({
   isOpen,
   winningNumber,
+  drawLabel,
   onDismiss,
 }) => {
   const [digits, setDigits] = useState(['0', '0', '0']);
@@ -88,6 +91,7 @@ const WinningNumberModal: React.FC<WinningNumberModalProps> = ({
       <IonContent className="ion-padding">
         <div className="slot-machine-container">
           <h2 className="draw-title">The winning number is...</h2>
+          {drawLabel && <h3 className="draw-subtitle">{drawLabel}</h3>}
           <div className="slots-container">
             <SlotDigit digit={digits[0]} isSpinning={isSpinning[0]} />
             <SlotDigit digit={digits[1]} isSpinning={isSpinning[1]} />
@@ -99,7 +103,7 @@ const WinningNumberModal: React.FC<WinningNumberModalProps> = ({
             onClick={onDismiss}
             style={{ marginTop: '32px' }}
           >
-            Check My Tickets
+            Close
           </IonButton>
         </div>
       </IonContent>

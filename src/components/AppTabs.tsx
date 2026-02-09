@@ -44,6 +44,7 @@ const AppTabs: React.FC = () => {
 
   const [isDrawModalOpen, setIsDrawModalOpen] = useState(false);
   const [lastWinningNumber, setLastWinningNumber] = useState<string | null>(null);
+  const [drawLabel, setDrawLabel] = useState<string | undefined>(undefined);
 
   const { data, loading, refetch } = useQuery(GET_ME_AND_CURRENT_CYCLE, {
     variables: { walletAddress },
@@ -70,6 +71,7 @@ const AppTabs: React.FC = () => {
       );
 
       setLastWinningNumber(lastCompleted.winningNumber);
+      setDrawLabel(`Draw #${lastCompleted.cycleNumber}`);
       setIsDrawModalOpen(true);
       setLastSeenCompletedCycle(lastCompleted.cycleNumber);
     }
@@ -90,6 +92,7 @@ const AppTabs: React.FC = () => {
         if (lastRevealedDate1 !== todayStr && winningNumber && winningNumber !== 'N/A' && winningNumber.length === 3) {
           console.log('[AppTabs] Revealing Draw 1 (Time-based)');
           setLastWinningNumber(winningNumber);
+          setDrawLabel('1:00 PM Draw');
           setIsDrawModalOpen(true);
           setLastRevealedDate1(todayStr);
           return; // Prevent showing both at once if logic overlaps
@@ -101,6 +104,7 @@ const AppTabs: React.FC = () => {
         if (lastRevealedDate2 !== todayStr && winningNumber2 && winningNumber2 !== 'N/A' && winningNumber2.length === 3) {
           console.log('[AppTabs] Revealing Draw 2 (Time-based)');
           setLastWinningNumber(winningNumber2);
+          setDrawLabel('9:00 PM Draw');
           setIsDrawModalOpen(true);
           setLastRevealedDate2(todayStr);
         }
@@ -313,6 +317,7 @@ const AppTabs: React.FC = () => {
       <WinningNumberModal
         isOpen={isDrawModalOpen}
         winningNumber={lastWinningNumber || '000'}
+        drawLabel={drawLabel}
         onDismiss={() => setIsDrawModalOpen(false)}
       />
     </div>
