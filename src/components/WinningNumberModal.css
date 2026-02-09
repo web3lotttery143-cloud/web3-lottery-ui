@@ -10,7 +10,37 @@
 }
 
 .draw-modal .ion-content {
-  --background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  --background: radial-gradient(circle at center, #2e3b55 0%, #1a1a2e 100%);
+  --padding-top: 0;
+  --padding-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button-wrapper {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.close-button-wrapper:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.close-button-wrapper ion-icon {
+    font-size: 24px;
+    color: #fff;
 }
 
 .slot-machine-container {
@@ -20,71 +50,106 @@
   justify-content: center;
   height: 100%;
   text-align: center;
-  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+  padding: 20px;
+}
+
+.trophy-icon {
+    font-size: 4rem;
+    color: #ffd700;
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.trophy-icon.visible {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+    animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-10px) scale(1); }
+    100% { transform: translateY(0px) scale(1); }
 }
 
 .draw-title {
   font-size: 1.8rem;
-  font-weight: 800;
-  margin-bottom: 8px;
-  background: linear-gradient(to right, #ffd700, #ffaa00, #ffd700);
+  font-weight: 900;
+  margin-bottom: 0px;
+  background: linear-gradient(to right, #ffffff, #ffd700);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
-  letter-spacing: 1px;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 .draw-subtitle {
   color: #a0a0a0;
-  font-size: 1.1rem;
-  margin-top: 0;
-  margin-bottom: 32px;
-  font-weight: 500;
+  font-size: 1rem;
+  margin-top: 4px;
+  margin-bottom: 40px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
 }
 
 .slots-container {
   display: flex;
   justify-content: center;
   gap: 12px;
-  padding: 24px 32px;
+  padding: 30px 40px;
   border-radius: 20px;
-  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-  border: 4px solid #ffd700;
+  background: linear-gradient(145deg, #1f1f1f, #0f0f0f);
+  border: 4px solid #444;
   box-shadow: 
-    0 0 0 4px #000, /* Outer black rim */
-    0 0 40px rgba(255, 215, 0, 0.2), /* Gold glow */
-    inset 0 0 20px rgba(0, 0, 0, 0.8); /* Inner depth shadow */
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 0 60px rgba(0, 0, 0, 0.8);
   position: relative;
+  transition: all 0.5s ease;
 }
 
-/* Decorative screws on the machine */
+.slots-container.winner-glow {
+    border-color: #ffd700;
+    box-shadow: 
+        0 0 0 4px #000, 
+        0 0 60px rgba(255, 215, 0, 0.6), 
+        inset 0 0 20px rgba(0, 0, 0, 0.8);
+    transform: scale(1.02);
+}
+
+/* Decorative screws */
 .slots-container::before,
 .slots-container::after {
   content: '';
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   background: radial-gradient(circle at 30% 30%, #fff, #888);
   border-radius: 50%;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.5);
-  top: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  top: 15px;
 }
-.slots-container::before { left: 10px; }
-.slots-container::after { right: 10px; }
+.slots-container::before { left: 15px; }
+.slots-container::after { right: 15px; }
 
 .slot-wrapper {
   width: 70px;
   height: 90px;
-  background: #f0f0f0;
+  background: #f8f9fa;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
   box-shadow: 
-    inset 0 0 15px rgba(0,0,0,0.8), /* Deep inner shadow for curvature */
-    0 2px 5px rgba(0,0,0,0.5); 
+    inset 0 0 15px rgba(0,0,0,0.6), 
+    0 4px 6px rgba(0,0,0,0.3);
   border: 1px solid #333;
 }
 
@@ -138,4 +203,43 @@
 /* Make the specific winning number slot pop more */
 .slot-wrapper.landed {
     border-color: #ffd700;
+}
+
+.machine-header-decoration {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 15px;
+    background: #333;
+    border-radius: 10px 10px 0 0;
+    border: 2px solid #555;
+    border-bottom: none;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.claim-button {
+    margin-top: 50px;
+    --background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+    --color: #000;
+    --border-radius: 30px;
+    --box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4);
+    font-weight: 800;
+    font-size: 1.1rem;
+    width: 80%;
+    height: 50px;
+    letter-spacing: 1px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 4px 25px rgba(218, 165, 32, 0.6); }
+    100% { transform: scale(1); box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4); }
+}
+
+/* Landed Animation Color Specifics */
+.slot-wrapper.landed .slot-number {
+  color: #c0392b; 
 }
