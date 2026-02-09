@@ -20,16 +20,19 @@ import {
   useIonToast,
   IonToggle,
   IonInput,
-  IonIcon
+  IonIcon,
+  IonButtons,
+  IonRefresher,
+  IonRefresherContent
 } from '@ionic/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DigitInput from '../components/DigitInput';
 import { CLOSE_CYCLE_FOR_DRAW, GET_ADMIN_STATS, TRIGGER_DRAW } from '../graphql/queries';
 import xteriumService from '../services/xteriumService';
 import useAppStore from '../store/useAppStore';
 import lotteryService from '../services/lotteryService';
 import walletService from '../services/walletService';
-import { cashOutline } from 'ionicons/icons';
+import { cashOutline, refreshOutline, ticketOutline } from 'ionicons/icons';
 
 const AdminPage: React.FC = () => {
   const { walletAddress, isAdmin, isAfter10Am, drawStatus, drawStatus2, setIsOverrideMode, isOverrideMode, setExpectedWinningNumber, expectedWinningNumber, isAddJackpotMode, setIsAddJackpotMode, jackpotAmount, setJackpotAmount } = useAppStore();
@@ -197,6 +200,53 @@ const AdminPage: React.FC = () => {
     }
   };
 
+    // Members bets
+    const [bets, setBets] = useState<any[]>([]);
+    const [loadingBets, setLoadingBets] = useState(false);
+    const [betsError, setBetsError] = useState<string | null>(null);
+
+    const loadBets = async () => {
+      setLoadingBets(true);
+      setBetsError(null);
+      try {
+        const res: any = await lotteryService.getAllBets();
+        let list: any[] = [];
+        if (Array.isArray(res)) list = res;
+        else if (res?.Ok) list = res.Ok;
+        else if (res?.success === false && res.message) {
+          setBetsError(res.message);
+        }
+
+        if (Array.isArray(list)) {
+          // Sort by date descending by default
+          list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          setBets(list);
+        }
+      } catch (e: any) {
+        setBetsError(e.message || `${e}`);
+      } finally {
+        setLoadingBets(false);
+      }
+    };
+
+    useEffect(() => {
+      loadBets();
+    }, []);
+
+    const truncateAddress = (addr: string) => {
+      if (!addr) return '';
+      return addr.length > 12 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
+    };
+
+    const formatDate = (d: string | number | Date | undefined) => {
+      if (!d) return '';
+      try {
+        return new Date(d).toLocaleString();
+      } catch {
+        return String(d);
+      }
+    };
+
   const handleAddPotMoney = async () => {
     const amount = Number(potAmount);
 
@@ -299,6 +349,11 @@ const AdminPage: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
+        <IonRefresher slot="fixed" onIonRefresh={(e) => {
+          loadBets().finally(() => e.detail.complete());
+        }}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
         <div className="fade-in">
           {/* <IonCard className="custom-card">
             <IonCardHeader>
@@ -336,6 +391,117 @@ const AdminPage: React.FC = () => {
               </IonButton>
             </IonCardContent>
           </IonCard> */}
+
+          <IonCard className="custom-card" style={{ height: '60vh' }}>
+              <IonCardHeader>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <IonCardTitle className="custom-card-title">🎟️ Members Bets</IonCardTitle>
+                  <IonButton fill="clear" onClick={loadBets} disabled={loadingBets} size="small">
+                    <IonIcon icon={refreshOutline} slot="start" />
+                    Refresh
+                  </IonButton>
+                </div>
+              </IonCardHeader>
+              <IonCardContent>
+                {loadingBets && bets.length === 0 ? (
+                  <div className="ion-text-center" style={{ padding: '40px' }}>
+                    <IonSpinner name="crescent" />
+                    <p style={{ color: 'var(--text-color-secondary)', marginTop: '12px' }}>Updating records...</p>
+                  </div>
+                ) : betsError ? (
+                  <div className="ion-text-center" style={{ padding: '20px' }}>
+                    <IonText color="danger">
+                      <p>Error: {betsError}</p>
+                    </IonText>
+                    <IonButton fill="outline" size="small" onClick={loadBets}>Try Again</IonButton>
+                  </div>
+                ) : !bets || bets.length === 0 ? (
+                  <div className="ion-text-center" style={{ padding: '40px 20px' }}>
+                    <IonIcon icon={ticketOutline} style={{ fontSize: '3.5rem', color: 'rgba(255,255,255,0.05)', marginBottom: '16px' }} />
+                    <IonText style={{ color: 'var(--text-color-secondary)', display: 'block' }}>
+                      No active bets recorded.
+                    </IonText>
+                  </div>
+                ) : (
+                  <div style={{ 
+                    height: '80vh', 
+                    overflowY: 'auto', 
+                    paddingRight: '4px',
+                    marginRight: '-4px' 
+                  }}>
+                    {bets.map((b: any, idx: number) => (
+                      <div 
+                        key={idx} 
+                        style={{ 
+                          background: 'rgba(255, 255, 255, 0.04)',
+                          borderRadius: '16px',
+                          padding: '16px',
+                          marginBottom: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '16px',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <div style={{
+                          minWidth: '60px',
+                          height: '60px',
+                          borderRadius: '12px',
+                          background: 'var(--gold-gradient)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#000',
+                          boxShadow: '0 4px 10px rgba(255, 215, 0, 0.2)'
+                        }}>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.7 }}>BET</span>
+                          <span style={{ fontSize: '1.4rem', fontWeight: 900 }}>{String(b.bet_number).padStart(3, '0')}</span>
+                        </div>
+                        
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ 
+                                fontWeight: 800, 
+                                fontSize: '1rem', 
+                                color: 'var(--lottery-gold)',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {truncateAddress(b.member_address)}
+                              </div>
+                              <div style={{ color: 'var(--text-color-secondary)', fontSize: '0.8rem', marginTop: '4px' }}>
+                                Draw #{b.draw_number}
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right', minWidth: 'fit-content' }}>
+                              <div style={{ 
+                                color: 'var(--text-color-primary)', 
+                                fontSize: '0.75rem', 
+                                fontWeight: 600,
+                                opacity: 0.8
+                              }}>
+                                {new Date(b.date).toLocaleDateString()}
+                              </div>
+                              <div style={{ 
+                                color: 'var(--text-color-secondary)', 
+                                fontSize: '0.7rem',
+                                marginTop: '2px' 
+                              }}>
+                                {new Date(b.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </IonCardContent>
+          </IonCard>
 
             <IonCard className="custom-card">
             <IonCardHeader>
