@@ -60,30 +60,56 @@ const WinningNumberModal: React.FC<WinningNumberModalProps> = ({
   const [digits, setDigits] = useState(['0', '0', '0']);
   const [isSpinning, setIsSpinning] = useState([false, false, false]);
   const [showConfetti, setShowConfetti] = useState(false);
+  const timeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([]);
+  const spinSequenceRef = React.useRef(0);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsSpinning([true, true, true]);
-      setShowConfetti(false);
-      setDigits(['0', '0', '0']);
+    timeoutsRef.current.forEach(timeoutId => clearTimeout(timeoutId));
+    timeoutsRef.current = [];
 
-      setTimeout(() => {
-        setIsSpinning(s => [false, s[1], s[2]]);
-        setDigits(d => [winningNumber[0] || '0', d[1], d[2]]);
-      }, 1500);
-
-      setTimeout(() => {
-        setIsSpinning(s => [s[0], false, s[2]]);
-        setDigits(d => [d[0], winningNumber[1] || '0', d[2]]);
-      }, 2500);
-
-      setTimeout(() => {
-        setIsSpinning(s => [s[0], s[1], false]);
-        setDigits(d => [d[0], d[1], winningNumber[2] || '0']);
-        setShowConfetti(true);
-        triggerConfetti();
-      }, 3500);
+    if (!isOpen) {
+      return;
     }
+
+    spinSequenceRef.current += 1;
+    const sequenceId = spinSequenceRef.current;
+
+    setIsSpinning([true, true, true]);
+    setShowConfetti(false);
+    setDigits(['0', '0', '0']);
+
+    const timeout1 = setTimeout(() => {
+      if (spinSequenceRef.current !== sequenceId) {
+        return;
+      }
+      setIsSpinning(s => [false, s[1], s[2]]);
+      setDigits(d => [winningNumber[0] || '0', d[1], d[2]]);
+    }, 1500);
+
+    const timeout2 = setTimeout(() => {
+      if (spinSequenceRef.current !== sequenceId) {
+        return;
+      }
+      setIsSpinning(s => [s[0], false, s[2]]);
+      setDigits(d => [d[0], winningNumber[1] || '0', d[2]]);
+    }, 2500);
+
+    const timeout3 = setTimeout(() => {
+      if (spinSequenceRef.current !== sequenceId) {
+        return;
+      }
+      setIsSpinning(s => [s[0], s[1], false]);
+      setDigits(d => [d[0], d[1], winningNumber[2] || '0']);
+      setShowConfetti(true);
+      triggerConfetti();
+    }, 3500);
+
+    timeoutsRef.current = [timeout1, timeout2, timeout3];
+
+    return () => {
+      timeoutsRef.current.forEach(timeoutId => clearTimeout(timeoutId));
+      timeoutsRef.current = [];
+    };
   }, [isOpen, winningNumber]);
 
   const triggerConfetti = () => {
